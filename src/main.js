@@ -135,6 +135,98 @@ function buildContours(exag) {
 
 buildContours(100);
 
+// --- Nomenclature labels ---
+
+const nomenclature = await fetch('/data/processed/nomenclature/features.geojson').then(r => r.json());
+
+const labelCollection = viewer.scene.primitives.add(new Cesium.LabelCollection());
+
+// labelData holds metadata alongside each Cesium label for visibility + search
+const labelData = [];
+
+for (const feature of nomenclature.features) {
+    const [lon, lat] = feature.geometry.coordinates;
+    const { name, diameter_km } = feature.properties;
+
+    const label = labelCollection.add({
+        position: Cesium.Cartesian3.fromDegrees(lon, lat),
+        text: name,
+        show: false,
+        font: '13px sans-serif',
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 2,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        pixelOffset: new Cesium.Cartesian2(0, -8),
+        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+    });
+
+    labelData.push({ label, lon, lat, name, diameterKm: diameter_km });
+}
+
+// Show labels based on camera altitude above the Mars ellipsoid.
+// Observed range: ~100k m (zoomed in) to ~100M m (zoomed way out).
+function updateLabels() {
+    const alt = viewer.camera.positionCartographic.height;
+    for (const { label, diameterKm } of labelData) {
+        if (alt > 10_000_000) {
+            label.show = diameterKm >= 500;   // planetary: ~15 major features
+        } else if (alt > 2_000_000) {
+            label.show = diameterKm >= 100;   // regional: ~65 features
+        } else {
+            label.show = true;                // local: all 2046
+        }
+    }
+}
+
+// postRender fires every frame; throttle to ~2x/sec to avoid iterating 2k labels constantly
+let lastLabelUpdate = 0;
+viewer.scene.postRender.addEventListener(() => {
+    const now = Date.now();
+    if (now - lastLabelUpdate < 500) return;
+    lastLabelUpdate = now;
+    updateLabels();
+});
+
+// --- Search bar ---
+
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+    searchResults.innerHTML = '';
+    if (!q) return;
+
+    const matches = labelData.filter(d => d.name.toLowerCase().includes(q)).slice(0, 10);
+    for (const match of matches) {
+        const item = document.createElement('div');
+        item.className = 'search-item';
+        item.textContent = match.name;
+        item.addEventListener('click', () => {
+            const flyAlt = match.diameterKm >= 500 ? 1_500_000
+                         : match.diameterKm >= 100 ? 500_000
+                         : match.diameterKm >= 10  ? 200_000
+                         : 100_000;
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(match.lon, match.lat, flyAlt),
+                duration: 1.5,
+            });
+            searchInput.value = match.name;
+            searchResults.innerHTML = '';
+        });
+        searchResults.appendChild(item);
+    }
+});
+
+// Dismiss results when clicking outside the search widget
+document.addEventListener('click', e => {
+    if (!document.getElementById('searchWrap').contains(e.target)) {
+        searchResults.innerHTML = '';
+    }
+});
+
 let exaggerated = true;
 const btn = document.getElementById('exagToggle');
 btn.addEventListener('click', () => {

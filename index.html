@@ -32,12 +32,67 @@
         #exagToggle:hover {
             background: rgba(0, 0, 0, 0.8);
         }
+
+        #searchWrap {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 280px;
+            z-index: 100;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 7px 14px;
+            background: rgba(0, 0, 0, 0.55);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+            font-size: 12px;
+            letter-spacing: 0.04em;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        #searchInput::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        #searchInput:focus {
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        #searchResults {
+            margin-top: 2px;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .search-item {
+            padding: 7px 14px;
+            font-size: 12px;
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: 0.03em;
+        }
+
+        .search-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 
 <body>
     <div id="cesiumContainer"></div>
     <button id="exagToggle">True shape</button>
+    <div id="searchWrap">
+        <input id="searchInput" type="text" placeholder="Search features…" autocomplete="off" />
+        <div id="searchResults"></div>
+    </div>
     <script type="module" src="/src/main.js"></script>
 </body>
 
