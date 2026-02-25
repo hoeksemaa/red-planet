@@ -14,11 +14,30 @@
             width: 100vw;
             height: 100vh;
         }
+
+        #exagToggle {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 6px 14px;
+            background: rgba(0, 0, 0, 0.55);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+            font-size: 12px;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+        }
+
+        #exagToggle:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
     </style>
 </head>
 
 <body>
     <div id="cesiumContainer"></div>
+    <button id="exagToggle">True shape</button>
     <script type="module" src="/src/main.js"></script>
 </body>
 

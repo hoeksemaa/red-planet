@@ -21,6 +21,9 @@ Thumbs.db
 # Raw Data (MOLA MEGDRs, etc. — too large for git)
 data/raw/
 
+# Processed Data (generated artifacts — regenerate locally)
+data/processed/
+
 # Build
 dist/
 build/
