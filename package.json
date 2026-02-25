@@ -1,0 +1,28 @@
+{
+  "name": "red-planet",
+  "version": "1.0.0",
+  "description": "red planet",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hoeksemaa/red-planet.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/hoeksemaa/red-planet/issues"
+  },
+  "homepage": "https://github.com/hoeksemaa/red-planet#readme",
+  "dependencies": {
+    "cesium": "^1.138.0",
+    "three": "^0.183.1",
+    "vite": "^7.3.1",
+    "vite-plugin-cesium": "^1.2.23"
+  }
+}

@@ -6,6 +6,7 @@ vendor/
 .env
 .env.*
 !.env.example
+.venv/
 
 # OS
 .DS_Store
@@ -16,6 +17,9 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Raw Data (MOLA MEGDRs, etc. — too large for git)
+data/raw/
 
 # Build
 dist/
