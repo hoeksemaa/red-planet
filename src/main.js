@@ -54,7 +54,11 @@ const viewer = new Cesium.Viewer('cesiumContainer', {
     creditContainer: document.createElement('div'),  // hides the Cesium credit
 });
 
-viewer.scene.globe.show = false;
+viewer.scene.globe.show = true;
+viewer.scene.globe.enableLighting = false;  // prevent Earth-date sun from darkening half the globe
+
+const imageryProvider = await Cesium.TileMapServiceImageryProvider.fromUrl('/data/raw/terraformed/');
+viewer.imageryLayers.addImageryProvider(imageryProvider);
 viewer.scene.verticalExaggeration = 100;
 viewer.scene.skyAtmosphere.show = false;
 viewer.scene.fog.enabled = false;
