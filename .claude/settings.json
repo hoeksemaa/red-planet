@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(lattice *)",
+      "Bash(lattice status RP-1 planned --actor agent:claude)",
+      "Bash(lattice status RP-1 in_progress --actor agent:claude)",
+      "Bash(lattice comment RP-1 \"Added CSS spinner to index.html, hidden on renderer.render\\(\\) call\" --actor agent:claude)",
+      "Bash(lattice status RP-1 review --actor agent:claude)",
+      "Bash(lattice create \"Choose elevation exaggeration scale range\" --actor human:john)",
+      "Bash(lattice status RP-2 in_progress --actor agent:claude)",
+      "Bash(lattice status RP-2 needs_human --actor agent:claude)",
+      "Bash(lattice comment RP-2 \"Need: what should the min/max exaggeration range be — 1x–5x or 1x–20x?\" --actor agent:claude)",
+      "Bash(lattice status --help)",
+      "Bash(lattice comments RP-2)",
+      "Bash(lattice dashboard --help)",
+      "Bash(cat src/*.ts src/*.js)",
+      "Bash(lattice show RP-2)",
+      "Bash(lattice show rp-2)",
+      "Bash(lattice status rp-2 cancelled --actor human:john)",
+      "Bash(lattice next --help)",
+      "Bash(lattice link --help)",
+      "Bash(lattice create --help)",
+      "Bash(lattice stats)",
+      "Read(//Users/john/.local/share/uv/tools/lattice-tracker/**)",
+      "WebFetch(domain:cesium.com)",
+      "Bash(lattice create \"Add constants.ts for shared magic numbers\" --complexity low --priority medium --description \"Create src/constants.ts to hold arbitrary numeric constants — starting with EXAGGERATION_SCALE \\(currently 100\\). Currently 100 is hardcoded in multiple places. This file should be the single source of truth for tunable constants so they can be changed without hunting the codebase. Resolves RP-2.\" --actor agent:claude-sonnet-4-6 --quiet)",
+      "Bash(lattice create \"Architecture refactor: layer registry + features/ directory\" --complexity high --priority high --description \"Blow up features.ts \\(currently ~300 lines, does terrain/imagery/contours/labels\\) into a features/ directory — one file per layer. Implement a layer registry pattern where each layer self-registers with a common interface \\(id, name, init, show, hide, destroy\\). Slim AppState to { exaggeration: 1|EXAGGERATION_SCALE, layers: Record<LayerId, boolean> }. Renderer becomes a thin orchestrator. UI holds zero rendering knowledge. This is the foundational task that makes all future layer additions trivial — one new file = one new layer. Files: features/terrain.ts, features/imagery.ts, features/contours.ts, features/labels.ts, features/registry.ts \\(or similar\\).\" --actor agent:claude-sonnet-4-6 --quiet)",
+      "Bash(lattice comment RP-6 \"VISUAL SPEC FROM MOCKUPS \\(docs/mockups/\\)::*)",
+      "Bash(lattice comment RP-8 \"VISUAL SPEC FROM MOCKUPS \\(docs/mockups/SEARCH BAR TYPING.png, SEARCH SELECTED.png, LOAD SCREEN.png\\)::*)",
+      "Bash(lattice comment RP-9 \"VISUAL SPEC FROM MOCKUPS \\(docs/mockups/LAYER PANEL CLICKED.png, SEARCH SELECTED.png\\)::*)",
+      "Bash(lattice comment RP-10 \"VISUAL SPEC FROM MOCKUPS \\(docs/mockups/LOAD SCREEN.png\\)::*)",
+      "Bash(lattice comment RP-11 \"VISUAL SPEC FROM MOCKUPS \\(docs/mockups/LOAD SCREEN.png, ZOOM SCREEN.png\\)::*)"
+    ],
+    "additionalDirectories": [
+      "/Users/john/Desktop"
+    ]
+  }
+}
