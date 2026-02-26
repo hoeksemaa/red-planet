@@ -29,10 +29,18 @@ body {
   height: 100vh;
 }
 
-/* ── Title bar ─────────────────────────────────────────────── */
+/* ── Card / panel base ─────────────────────────────────────── */
+.rp-card {
+  background: var(--bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ── Title ─────────────────────────────────────────────────── */
 #rp-title {
   position: absolute;
-  top: 18px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
   color: #ffffff;
@@ -44,80 +52,68 @@ body {
   z-index: 10;
 }
 
-/* ── Card / panel base ─────────────────────────────────────── */
-.rp-card {
-  background: var(--bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-
-/* ── Exaggeration toggle ───────────────────────────────────── */
-#exagToggle {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  padding: 6px 14px;
-  background: var(--bg);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  font-family: var(--font);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  z-index: 10;
-}
-
-#exagToggle:hover {
-  background: #f8f9fa;
-}
-
-/* ── Search ────────────────────────────────────────────────── */
+/* ── Search (top-left) ─────────────────────────────────────── */
 #searchWrap {
   position: absolute;
-  top: 44px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 16px;
+  left: 16px;
   width: 280px;
   z-index: 100;
+  overflow: hidden;
+}
+
+#searchInputRow {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  gap: 6px;
+}
+
+#searchIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 #searchInput {
-  width: 100%;
-  padding: 9px 14px;
-  background: var(--bg);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  flex: 1;
+  border: none;
+  outline: none;
   font-family: var(--font);
   font-size: var(--font-size);
-  outline: none;
+  color: var(--text-primary);
+  background: transparent;
 }
 
 #searchInput::placeholder {
   color: var(--text-secondary);
 }
 
-#searchInput:focus {
-  border-color: #1a73e8;
-  box-shadow: 0 1px 3px rgba(26,115,232,0.2);
+#searchClear {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 13px;
+  padding: 2px 4px;
+  border-radius: 50%;
+  line-height: 1;
+  display: none;
+}
+
+#searchClear:hover {
+  background: #f1f3f4;
 }
 
 #searchResults {
-  margin-top: 4px;
-  background: var(--bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  max-height: 300px;
+  border-top: 1px solid var(--border-color);
+  max-height: 240px;
   overflow-y: auto;
+  display: none;
 }
 
 .search-item {
-  padding: 9px 14px;
+  padding: 10px 14px;
   font-size: var(--font-size);
   color: var(--text-primary);
   cursor: pointer;
@@ -127,16 +123,11 @@ body {
   background: #f8f9fa;
 }
 
-/* ── Feature info panel ────────────────────────────────────── */
+/* ── Feature info (inside search card) ────────────────────── */
 #featurePanel {
+  border-top: 1px solid var(--border-color);
+  padding: 14px 14px 12px;
   display: none;
-  position: absolute;
-  top: 116px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 280px;
-  padding: 14px 16px;
-  z-index: 100;
 }
 
 #fpName {
@@ -163,4 +154,100 @@ body {
   color: var(--text-primary);
   font-size: 12px;
   line-height: 1.4;
+}
+
+/* ── Layers button (bottom-left) ───────────────────────────── */
+#layersBtn {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  padding: 0;
+}
+
+#layersBtn svg {
+  width: 20px;
+  height: 20px;
+}
+
+#layersBtn:hover {
+  background: #f8f9fa;
+}
+
+/* ── Layers panel (bottom-left, above button) ──────────────── */
+#layersPanel {
+  position: absolute;
+  bottom: 72px;
+  left: 20px;
+  width: 220px;
+  padding: 12px 0 8px;
+  z-index: 10;
+}
+
+#layersPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px 10px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 6px;
+}
+
+#layersPanelClose {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 50%;
+  line-height: 1;
+}
+
+#layersPanelClose:hover {
+  background: #f1f3f4;
+}
+
+.layers-section-title {
+  padding: 4px 14px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-size: var(--font-size);
+  color: var(--text-primary);
+}
+
+.layer-item:hover {
+  background: #f8f9fa;
+}
+
+.layer-item input {
+  margin: 0;
+  cursor: pointer;
+  accent-color: #1a73e8;
+}
+
+.layers-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 6px 0;
 }

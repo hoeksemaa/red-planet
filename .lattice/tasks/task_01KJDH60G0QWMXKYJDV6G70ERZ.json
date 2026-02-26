@@ -25,10 +25,10 @@
   "reopened_count": 0,
   "schema_version": 1,
   "short_id": "RP-13",
-  "status": "backlog",
+  "status": "done",
   "tags": null,
   "title": "Research rover data sources (traverses, image metadata, panoramas)",
   "type": "spike",
-  "updated_at": "2026-02-26T17:50:55Z",
+  "updated_at": "2026-02-26T19:05:47.651903+00:00",
   "urgency": null
 }

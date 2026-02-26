@@ -30,10 +30,10 @@
   "reopened_count": 1,
   "schema_version": 1,
   "short_id": "RP-3",
-  "status": "backlog",
+  "status": "done",
   "tags": null,
   "title": "Add constants.ts for shared magic numbers",
   "type": "task",
-  "updated_at": "2026-02-26T18:33:51Z",
+  "updated_at": "2026-02-26T18:44:07.868526Z",
   "urgency": null
 }

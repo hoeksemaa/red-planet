@@ -79,7 +79,9 @@ export const contours: Feature = {
     buildContours();
   },
 
-  apply(_state: AppState) {},
+  apply(state: AppState) {
+    if (contourCollection) contourCollection.show = state.layers.contours;
+  },
 
   destroy() {
     contourCollection.removeAll();

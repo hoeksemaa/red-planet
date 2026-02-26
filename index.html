@@ -8,18 +8,71 @@
 
 <body>
     <div id="cesiumContainer"></div>
+
+    <!-- Title -->
     <div id="rp-title">RED PLANET</div>
-    <button id="exagToggle">True shape</button>
-    <div id="searchWrap">
-        <input id="searchInput" type="text" placeholder="Search features…" autocomplete="off" />
+
+    <!-- Search (top-left) -->
+    <div id="searchWrap" class="rp-card">
+        <div id="searchInputRow">
+            <svg id="searchIcon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="8.5" cy="8.5" r="5.5" stroke="#5f6368" stroke-width="1.5"/>
+                <line x1="12.5" y1="12.5" x2="17" y2="17" stroke="#5f6368" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <input id="searchInput" type="text" placeholder="Search features…" autocomplete="off" />
+            <button id="searchClear" aria-label="Clear search">✕</button>
+        </div>
         <div id="searchResults"></div>
+        <div id="featurePanel">
+            <div id="fpName"></div>
+            <div class="fp-row"><span class="fp-label">Type</span><span id="fpType"></span></div>
+            <div class="fp-row"><span class="fp-label">Diameter</span><span id="fpDiameter"></span></div>
+            <div class="fp-row"><span class="fp-label">Origin</span><span id="fpOrigin"></span></div>
+        </div>
     </div>
-    <div id="featurePanel" class="rp-card">
-        <div id="fpName"></div>
-        <div class="fp-row"><span class="fp-label">Type</span><span id="fpType"></span></div>
-        <div class="fp-row"><span class="fp-label">Diameter</span><span id="fpDiameter"></span></div>
-        <div class="fp-row"><span class="fp-label">Origin</span><span id="fpOrigin"></span></div>
+
+    <!-- Layers button (bottom-left) -->
+    <button id="layersBtn" class="rp-card" aria-label="Toggle layers panel">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="#5f6368" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M2 12l10 5 10-5" stroke="#5f6368" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17l10 5 10-5" stroke="#5f6368" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+
+    <!-- Layers panel (bottom-left, above button) -->
+    <div id="layersPanel" class="rp-card" hidden>
+        <div id="layersPanelHeader">
+            <span>Layers</span>
+            <button id="layersPanelClose" aria-label="Close">✕</button>
+        </div>
+
+        <div class="layers-section-title">Imagery</div>
+        <label class="layer-item">
+            <input type="radio" name="imagery" value="terraformed" checked />
+            <span>Terraformed</span>
+        </label>
+        <label class="layer-item">
+            <input type="radio" name="imagery" value="real" />
+            <span>Real Mars</span>
+        </label>
+
+        <div class="layers-divider"></div>
+
+        <label class="layer-item">
+            <input type="checkbox" id="layerExag" checked />
+            <span>Exaggerated topography</span>
+        </label>
+        <label class="layer-item">
+            <input type="checkbox" id="layerContours" checked />
+            <span>Topography lines</span>
+        </label>
+        <label class="layer-item">
+            <input type="checkbox" id="layerLabels" checked />
+            <span>Place names</span>
+        </label>
     </div>
+
     <script type="module" src="/src/main.ts"></script>
 </body>
 

@@ -81,7 +81,9 @@ export const labels: Feature = {
     removeClickHandler = () => clickHandler.destroy();
   },
 
-  apply(_state: AppState) {},
+  apply(state: AppState) {
+    if (labelCollection) labelCollection.show = state.layers.labels;
+  },
 
   destroy() {
     removeListener?.();
