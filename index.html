@@ -83,6 +83,49 @@
         .search-item:hover {
             background: rgba(255, 255, 255, 0.1);
         }
+
+        #featurePanel {
+            display: none;
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 280px;
+            padding: 12px 14px;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            font-size: 12px;
+            letter-spacing: 0.03em;
+            z-index: 100;
+        }
+
+        #fpName {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: 0.04em;
+        }
+
+        .fp-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            gap: 8px;
+        }
+
+        .fp-label {
+            color: rgba(255, 255, 255, 0.5);
+            flex-shrink: 0;
+        }
+
+        #fpOrigin {
+            text-align: right;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 11px;
+            line-height: 1.4;
+        }
     </style>
 </head>
 
@@ -93,7 +136,13 @@
         <input id="searchInput" type="text" placeholder="Search features…" autocomplete="off" />
         <div id="searchResults"></div>
     </div>
-    <script type="module" src="/src/main.js"></script>
+    <div id="featurePanel">
+        <div id="fpName"></div>
+        <div class="fp-row"><span class="fp-label">Type</span><span id="fpType"></span></div>
+        <div class="fp-row"><span class="fp-label">Diameter</span><span id="fpDiameter"></span></div>
+        <div class="fp-row"><span class="fp-label">Origin</span><span id="fpOrigin"></span></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
 </body>
 
 </html>
