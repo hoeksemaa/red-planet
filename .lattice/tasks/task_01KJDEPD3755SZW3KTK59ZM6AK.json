@@ -1,0 +1,34 @@
+{
+  "assigned_to": null,
+  "branch_links": [],
+  "comment_count": 0,
+  "complexity": "medium",
+  "created_at": "2026-02-26T17:07:11Z",
+  "created_by": "agent:claude-sonnet-4-6",
+  "custom_fields": {},
+  "description": "Add OpenPlanetaryMap XYZ tiles as the 'satellite' (real Mars today) imagery option alongside the existing terraformed imagery. OPM provides free, public, multi-LOD XYZ tiles consumable via CesiumJS UrlTemplateImageryProvider. Best candidates: OPM Mars Basemap v0.2 (colorized) or Viking MDIM 2.1. Implement as a proper layer in features/imagery.ts (after RP-4). The layers panel toggle switches between terraformed and real Mars. Depends on RP-4.",
+  "done_at": null,
+  "evidence_refs": [],
+  "id": "task_01KJDEPD3755SZW3KTK59ZM6AK",
+  "last_event_id": "ev_01KJDEQ6N2GP08K7XT7C58XMN3",
+  "last_status_changed_at": "2026-02-26T17:07:11Z",
+  "priority": "medium",
+  "relationships_out": [
+    {
+      "created_at": "2026-02-26T17:07:37Z",
+      "created_by": "agent:claude-sonnet-4-6",
+      "note": null,
+      "target_task_id": "task_01KJDEN3285YHNXQ48RDHG30X5",
+      "type": "depends_on"
+    }
+  ],
+  "reopened_count": 0,
+  "schema_version": 1,
+  "short_id": "RP-7",
+  "status": "backlog",
+  "tags": null,
+  "title": "Add OPM real Mars imagery as second imagery layer",
+  "type": "task",
+  "updated_at": "2026-02-26T17:07:37Z",
+  "urgency": null
+}

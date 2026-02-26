@@ -1,0 +1,47 @@
+{
+  "assigned_to": null,
+  "branch_links": [
+    {
+      "branch": "feat/RP-4-layer-registry",
+      "linked_at": "2026-02-26T18:15:45Z",
+      "linked_by": "agent:claude-sonnet-4-6",
+      "repo": null
+    }
+  ],
+  "comment_count": 4,
+  "complexity": "high",
+  "created_at": "2026-02-26T17:06:28Z",
+  "created_by": "agent:claude-sonnet-4-6",
+  "custom_fields": {},
+  "description": "Blow up features.ts (currently ~300 lines, does terrain/imagery/contours/labels) into a features/ directory \u2014 one file per layer. Implement a layer registry pattern where each layer self-registers with a common interface (id, name, init, show, hide, destroy). Slim AppState to { exaggeration: 1|EXAGGERATION_SCALE, layers: Record<LayerId, boolean> }. Renderer becomes a thin orchestrator. UI holds zero rendering knowledge. This is the foundational task that makes all future layer additions trivial \u2014 one new file = one new layer. Files: features/terrain.ts, features/imagery.ts, features/contours.ts, features/labels.ts, features/registry.ts (or similar).",
+  "done_at": "2026-02-26T18:27:21Z",
+  "evidence_refs": [
+    {
+      "id": "ev_01KJDK61ZE81DH6RVTW1MC529Q",
+      "role": "review",
+      "source_type": "comment"
+    }
+  ],
+  "id": "task_01KJDEN3285YHNXQ48RDHG30X5",
+  "last_event_id": "ev_01KJDK95YPXH2793WXWNPC63V0",
+  "last_status_changed_at": "2026-02-26T18:27:21Z",
+  "priority": "high",
+  "relationships_out": [
+    {
+      "created_at": "2026-02-26T17:53:06Z",
+      "created_by": "agent:claude-sonnet-4-6",
+      "note": null,
+      "target_task_id": "task_01KJDH7T9D3HPT4HP2PMMSFJ99",
+      "type": "depends_on"
+    }
+  ],
+  "reopened_count": 0,
+  "schema_version": 1,
+  "short_id": "RP-4",
+  "status": "done",
+  "tags": null,
+  "title": "Architecture refactor: layer registry + features/ directory",
+  "type": "task",
+  "updated_at": "2026-02-26T18:27:21Z",
+  "urgency": null
+}

@@ -1,0 +1,41 @@
+{
+  "assigned_to": null,
+  "branch_links": [],
+  "comment_count": 2,
+  "complexity": "medium",
+  "created_at": "2026-02-26T17:07:16Z",
+  "created_by": "agent:claude-sonnet-4-6",
+  "custom_fields": {},
+  "description": "Redesign search bar with two states: collapsed (just the input, minimal footprint) and expanded (full results list or feature info card). Clicking a map label populates the search bar and expands the feature card below it showing name, type, diameter, origin. Clicking away collapses to just the bar. Styled per RP-6 (Google Maps tokens). Depends on RP-4 (labels as a layer), RP-6 (design system).",
+  "done_at": null,
+  "evidence_refs": [],
+  "id": "task_01KJDEPJ74PEF93DK4ZPQFS2RE",
+  "last_event_id": "ev_01KJDGS40ZXN8APDVEKZ7N8WKB",
+  "last_status_changed_at": "2026-02-26T17:07:16Z",
+  "priority": "medium",
+  "relationships_out": [
+    {
+      "created_at": "2026-02-26T17:07:37Z",
+      "created_by": "agent:claude-sonnet-4-6",
+      "note": null,
+      "target_task_id": "task_01KJDEN3285YHNXQ48RDHG30X5",
+      "type": "depends_on"
+    },
+    {
+      "created_at": "2026-02-26T17:07:37Z",
+      "created_by": "agent:claude-sonnet-4-6",
+      "note": null,
+      "target_task_id": "task_01KJDEP8GTV7HYPYJDKM7V6M8W",
+      "type": "depends_on"
+    }
+  ],
+  "reopened_count": 0,
+  "schema_version": 1,
+  "short_id": "RP-8",
+  "status": "backlog",
+  "tags": null,
+  "title": "Search bar: collapse/expand states + feature info card",
+  "type": "task",
+  "updated_at": "2026-02-26T17:43:37Z",
+  "urgency": null
+}

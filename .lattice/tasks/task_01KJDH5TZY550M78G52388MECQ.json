@@ -1,0 +1,47 @@
+{
+  "assigned_to": null,
+  "branch_links": [
+    {
+      "branch": "feat/RP-12-imagery-research",
+      "linked_at": "2026-02-26T18:15:15Z",
+      "linked_by": "agent:claude-sonnet-4-6",
+      "repo": null
+    }
+  ],
+  "comment_count": 2,
+  "complexity": "medium",
+  "created_at": "2026-02-26T17:50:34Z",
+  "created_by": "agent:claude-sonnet-4-6",
+  "custom_fields": {},
+  "description": "Determine the best imagery source for beautiful high-quality Mars surface rendering and acquire/verify access. Candidates: (1) Casey Handmer R2 tiles already partially integrated at pub-3c6ee3900f804513bd3b2a3e4df337bd.r2.dev \u2014 verify tile URL structure, LOD coverage, and completeness; (2) OPM XYZ tiles (Viking MDIM 2.1, OPM Mars Basemap v0.2) \u2014 free, public, no auth; (3) Murray Lab CTX raw GeoTIFFs \u2014 ~5.6 TB, would need self-hosting pipeline (likely impractical). IMPORTANT: Do NOT download raw Murray Lab GeoTIFFs without confirming a tile-serving plan first \u2014 the full dataset is too large to naively self-host. Goal: identify which source gives best visual quality at full LOD range, confirm access, and document the tile URL pattern and Cesium provider type. Deliverable is a documented decision + working tile URL, not necessarily a download. Must complete before RP-4 (arch refactor) and RP-7 (imagery layer) are finalized.",
+  "done_at": "2026-02-26T18:15:36Z",
+  "evidence_refs": [
+    {
+      "id": "ev_01KJDJKNRD18W9DG4JFPPMDEKK",
+      "role": "review",
+      "source_type": "comment"
+    }
+  ],
+  "id": "task_01KJDH5TZY550M78G52388MECQ",
+  "last_event_id": "ev_01KJDJKNVE9GVA76H44Q09N1KF",
+  "last_status_changed_at": "2026-02-26T18:15:36Z",
+  "priority": "high",
+  "relationships_out": [
+    {
+      "created_at": "2026-02-26T17:50:55Z",
+      "created_by": "agent:claude-sonnet-4-6",
+      "note": null,
+      "target_task_id": "task_01KJDEPD3755SZW3KTK59ZM6AK",
+      "type": "depends_on"
+    }
+  ],
+  "reopened_count": 0,
+  "schema_version": 1,
+  "short_id": "RP-12",
+  "status": "done",
+  "tags": null,
+  "title": "Research + acquire high-quality Mars surface imagery tiles",
+  "type": "spike",
+  "updated_at": "2026-02-26T18:15:36Z",
+  "urgency": null
+}

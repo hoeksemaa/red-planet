@@ -1,0 +1,3 @@
+# RP-15: Rover layer: traverse paths + image pins on globe
+
+Implement a rover feature layer (features/rovers.ts) using data from RP-14. Two visual elements: (1) Traverse path — polyline per rover rendered on globe surface showing the rover's full path. Color-coded by rover (Curiosity, Perseverance, etc.); (2) Image pins — map pins/icons at each image location. Clicking a pin opens an info card (using the same card style as the feature info card from RP-8) showing: rover name, sol, camera, thumbnail image, and a link or lightbox for the full panorama. Layer is toggleable via the layers panel (RP-9). Depends on RP-4 (layer registry), RP-14 (rover data), RP-8 (info card UI component).

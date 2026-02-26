@@ -1,0 +1,34 @@
+{
+  "assigned_to": null,
+  "branch_links": [],
+  "comment_count": 0,
+  "complexity": "medium",
+  "created_at": "2026-02-26T17:50:40Z",
+  "created_by": "agent:claude-sonnet-4-6",
+  "custom_fields": {},
+  "description": "Research all publicly available Mars rover data suitable for display on the globe. Rovers of interest: Perseverance (Jezero, 2021\u2013present), Curiosity (Gale, 2012\u2013present), Opportunity (Meridiani, 2004\u20132019), Spirit (Gusev, 2004\u20132010), Sojourner (Pathfinder, 1997). For each: (1) Traverse path \u2014 does a GeoJSON or CSV of the rover's path exist? Sources: NASA PDS, USGS GIS, JPL; (2) Image metadata \u2014 do per-image coordinates exist (lat/lon of where each photo was taken)? Sources: NASA Mars Rover Photos API (api.nasa.gov), PDS image archives; (3) Panoramas \u2014 are stitched panoramas publicly available with location metadata? Deliverable: a documented table of what data exists, what format it's in, and what URL/download path to use. This drives the data format decisions for RP-4 (layer registry) before architecture is locked in.",
+  "done_at": null,
+  "evidence_refs": [],
+  "id": "task_01KJDH60G0QWMXKYJDV6G70ERZ",
+  "last_event_id": "ev_01KJDH6FHQ8ERE70M1R341B0B0",
+  "last_status_changed_at": "2026-02-26T17:50:40Z",
+  "priority": "high",
+  "relationships_out": [
+    {
+      "created_at": "2026-02-26T17:50:55Z",
+      "created_by": "agent:claude-sonnet-4-6",
+      "note": null,
+      "target_task_id": "task_01KJDEN3285YHNXQ48RDHG30X5",
+      "type": "depends_on"
+    }
+  ],
+  "reopened_count": 0,
+  "schema_version": 1,
+  "short_id": "RP-13",
+  "status": "backlog",
+  "tags": null,
+  "title": "Research rover data sources (traverses, image metadata, panoramas)",
+  "type": "spike",
+  "updated_at": "2026-02-26T17:50:55Z",
+  "urgency": null
+}

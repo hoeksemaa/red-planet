@@ -1,0 +1,3 @@
+# RP-14: Download and process rover traverse + image location data
+
+Using findings from RP-13: download rover traverse path data and per-image location metadata for all available rovers. Process into GeoJSON FeatureCollections: (1) traverse.geojson — LineString per rover showing full path; (2) images.geojson — Point features per image/panorama with properties: rover name, sol (Martian day), timestamp, image URL or local path, camera type, caption if available. Add a preprocessing script per rover to scripts/rovers/. Output goes to data/processed/rovers/. Format must be compatible with the layer architecture established in RP-4.

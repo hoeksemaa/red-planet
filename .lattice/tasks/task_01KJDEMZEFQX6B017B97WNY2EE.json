@@ -1,0 +1,39 @@
+{
+  "assigned_to": null,
+  "branch_links": [
+    {
+      "branch": "feat/RP-3-constants-ts",
+      "linked_at": "2026-02-26T18:03:53Z",
+      "linked_by": "agent:claude-sonnet-4-6",
+      "repo": null
+    }
+  ],
+  "comment_count": 1,
+  "complexity": "low",
+  "created_at": "2026-02-26T17:06:24Z",
+  "created_by": "agent:claude-sonnet-4-6",
+  "custom_fields": {},
+  "description": "Create src/constants.ts to hold arbitrary numeric constants \u2014 starting with EXAGGERATION_SCALE (currently 100). Currently 100 is hardcoded in multiple places. This file should be the single source of truth for tunable constants so they can be changed without hunting the codebase. Resolves RP-2.",
+  "done_at": "2026-02-26T18:08:41Z",
+  "evidence_refs": [
+    {
+      "id": "ev_01KJDJ6ZY904BKSGKBK5GDS46K",
+      "role": "review",
+      "source_type": "comment"
+    }
+  ],
+  "id": "task_01KJDEMZEFQX6B017B97WNY2EE",
+  "last_event_id": "ev_01KJDJ701B28SJG42Q30PDQFM0",
+  "last_status_changed_at": "2026-02-26T18:08:41Z",
+  "priority": "medium",
+  "relationships_out": [],
+  "reopened_count": 0,
+  "schema_version": 1,
+  "short_id": "RP-3",
+  "status": "done",
+  "tags": null,
+  "title": "Add constants.ts for shared magic numbers",
+  "type": "task",
+  "updated_at": "2026-02-26T18:08:41Z",
+  "urgency": null
+}
