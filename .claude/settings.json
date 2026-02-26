@@ -36,10 +36,25 @@
       "WebFetch(domain:an.rsl.wustl.edu)",
       "WebFetch(domain:proulxp.github.io)",
       "WebFetch(domain:dev.to)",
-      "Bash(python scripts/rovers/fetch_rovers.py)"
+      "Bash(python scripts/rovers/fetch_rovers.py)",
+      "WebFetch(domain:www.arcgis.com)",
+      "WebFetch(domain:tiles.arcgis.com)",
+      "WebFetch(domain:astro.arcgis.com)",
+      "WebFetch(domain:trek.nasa.gov)",
+      "Bash(# Try to find the actual tile URL structure from scripts/rovers or any notes about Handmer tiles grep -r \"\"handmer\\\\|r2.dev\\\\|pub-3c6ee\"\" /Users/john/Dev/red-planet/scripts/)",
+      "Bash(python -c \"import tqdm\")",
+      "Bash(python -m py_compile scripts/fetch_celestia.py)",
+      "Bash(pip install tqdm -q)",
+      "WebFetch(domain:planetarymaps.usgs.gov)",
+      "Bash(for source in \"viking_mdim21_global\" \"mola-gray\" \"mola-color\")",
+      "Bash(do)",
+      "Bash(echo -n \"$source z=6: \")",
+      "Bash(for z in 9 10 11)",
+      "Bash(echo -n \"mola-gray z=$z: \")"
     ],
     "additionalDirectories": [
-      "/Users/john/Desktop"
+      "/Users/john/Desktop",
+      "/Users/john/Dev/red-planet/data/raw/celestia"
     ]
   }
 }

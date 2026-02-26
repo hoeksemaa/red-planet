@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import type { Feature, FeatureData, ContourGeoJSON } from './types';
 import type { AppState } from '../state';
+import { DEFAULT_STATE } from '../state';
 
 // GLSL limb-fade: contour lines fade out at the globe's edges
 const CONTOUR_GLSL = `
@@ -29,10 +30,15 @@ function elevationToColor(elev: number): Cesium.Color {
 }
 
 let contourCollection: Cesium.PrimitiveCollection;
-let geojson: ContourGeoJSON;
+let geojson: ContourGeoJSON | null = null;
+let lastExaggeration: number = DEFAULT_STATE.exaggeration;
 
-function buildContours(): void {
+// Primitive positions are absolute world coords — verticalExaggeration does NOT scale them.
+// We must multiply elevation by exaggeration ourselves and rebuild on toggle.
+function buildContours(exaggeration: number): void {
   contourCollection.removeAll();
+
+  if (!geojson) return;
 
   for (const feature of geojson.features) {
     const elev = feature.properties.elevation;
@@ -40,9 +46,8 @@ function buildContours(): void {
     const instances: Cesium.GeometryInstance[] = [];
 
     for (const coordArray of feature.geometry.coordinates) {
-      // Use true elevation — Cesium's verticalExaggeration handles scaling
       const positions = coordArray.map(([lon, lat]) =>
-        Cesium.Cartesian3.fromDegrees(lon, lat, elev)
+        Cesium.Cartesian3.fromDegrees(lon, lat, elev * exaggeration)
       );
       if (positions.length < 2) continue;
       instances.push(
@@ -76,11 +81,16 @@ export const contours: Feature = {
   init(viewer: Cesium.Viewer, data: FeatureData) {
     geojson = data.contourGeoJSON;
     contourCollection = viewer.scene.primitives.add(new Cesium.PrimitiveCollection());
-    buildContours();
+    buildContours(lastExaggeration);
   },
 
   apply(state: AppState) {
-    if (contourCollection) contourCollection.show = state.layers.contours;
+    if (!contourCollection) return;
+    contourCollection.show = state.layers.contours;
+    if (state.exaggeration !== lastExaggeration) {
+      lastExaggeration = state.exaggeration;
+      buildContours(state.exaggeration);
+    }
   },
 
   destroy() {

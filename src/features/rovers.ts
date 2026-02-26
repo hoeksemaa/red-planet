@@ -14,10 +14,35 @@ const ROVER_COLORS: Record<string, Cesium.Color> = {
   curiosity:    Cesium.Color.fromCssColorString('#4CAF50'),
 };
 
+// Canvas dot matching the old PointPrimitive look: pixelSize 7, white outline 1.5px.
+// BillboardCollection requires an image; we draw one per rover color and reuse it.
+function makeDotCanvas(color: Cesium.Color): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = 14;
+  canvas.height = 14;
+  const ctx = canvas.getContext('2d')!;
+  // white outline ring
+  ctx.beginPath();
+  ctx.arc(7, 7, 6, 0, Math.PI * 2);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  // colored fill
+  ctx.beginPath();
+  ctx.arc(7, 7, 4.5, 0, Math.PI * 2);
+  ctx.fillStyle = color.toCssColorString();
+  ctx.fill();
+  return canvas;
+}
+
+// One canvas per rover — keyed by rover id, computed once at module load.
+const PIN_IMAGES: Map<string, HTMLCanvasElement> = new Map(
+  Object.entries(ROVER_COLORS).map(([id, color]) => [id, makeDotCanvas(color)])
+);
+
 // Module-level state
 let traversePrimitives: Cesium.PrimitiveCollection;
-let pinCollection: Cesium.PointPrimitiveCollection;
-let pinData: Array<{ pin: Cesium.PointPrimitive } & RoverPinEntry> = [];
+let pinCollection: Cesium.BillboardCollection;
+let pinData: Array<{ pin: Cesium.Billboard } & RoverPinEntry> = [];
 let removeClickHandler: (() => void) | null = null;
 let onPinClick: ((entry: RoverPinEntry) => void) | null = null;
 let onPinMiss: (() => void) | null = null;
@@ -37,7 +62,7 @@ export const rovers: Feature = {
     ]);
 
     traversePrimitives = viewer.scene.primitives.add(new Cesium.PrimitiveCollection());
-    pinCollection = viewer.scene.primitives.add(new Cesium.PointPrimitiveCollection());
+    pinCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection());
     pinData = [];
 
     // Traverse polylines — one GroundPolylinePrimitive per rover
@@ -62,7 +87,7 @@ export const rovers: Feature = {
       );
     }
 
-    // Image waypoint pins — colored dots, one per drive sol
+    // Image waypoint pins — one billboard per drive sol, clamped to terrain
     for (const feature of imagesGeo.features) {
       const { rover, id, sol, color } = feature.properties as {
         rover: string; id: string; sol: number | null; color: string;
@@ -72,16 +97,15 @@ export const rovers: Feature = {
 
       const pin = pinCollection.add({
         position: Cesium.Cartesian3.fromDegrees(lon, lat),
-        color: cesiumColor,
-        pixelSize: 7,
-        outlineColor: Cesium.Color.WHITE,
-        outlineWidth: 1.5,
+        image: PIN_IMAGES.get(id) ?? makeDotCanvas(cesiumColor),
+        heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
+        verticalOrigin: Cesium.VerticalOrigin.CENTER,
       });
 
       pinData.push({ pin, rover, id, sol });
     }
 
-    // Click handler — picks point primitives, fires callbacks
+    // Click handler — picks billboards, fires callbacks
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction((movement: { position: Cesium.Cartesian2 }) => {
       const picked = viewer.scene.pick(movement.position);

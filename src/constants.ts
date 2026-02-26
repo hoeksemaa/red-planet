@@ -17,8 +17,8 @@ export const CONTOURS_DATA_URL     = '/data/processed/MOLA/contours.geojson';
 export const NOMENCLATURE_DATA_URL = '/data/processed/nomenclature/features.geojson';
 export const IMAGERY_BASE_URL      = '/data/raw/terraformed/';
 
-// OPM real Mars imagery (XYZ tiles, Web Mercator, zoom 0–6)
-export const OPM_IMAGERY_URL = 'http://s3-eu-west-1.amazonaws.com/whereonmars.cartodb.net/celestia_mars-shaded-16k_global/{z}/{x}/{y}.png';
+// OPM viking_mdim21_global imagery (XYZ tiles, equirectangular) — fetched via scripts/fetch_viking.py
+export const VIKING_IMAGERY_URL = '/data/raw/viking/{z}/{x}/{y}.png';
 
 // Rover traverse + waypoint data (NASA MMGIS, processed by scripts/rovers/fetch_rovers.py)
 export const ROVER_TRAVERSE_URL = '/data/processed/rovers/traverse.geojson';

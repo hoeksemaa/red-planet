@@ -9,8 +9,8 @@ export interface Feature {
 
 export interface FeatureData {
   heights: Float32Array;
-  contourGeoJSON: ContourGeoJSON;
-  nomenclatureGeoJSON: NomenclatureGeoJSON;
+  contourGeoJSON: ContourGeoJSON | null;
+  nomenclatureGeoJSON: NomenclatureGeoJSON | null;
 }
 
 export interface ContourFeature {

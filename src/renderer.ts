@@ -4,9 +4,9 @@ import type { AppState } from './state';
 import type { FeatureData } from './features/types';
 import { createTerrainProvider } from './features/terrain';
 import { imagery } from './features/imagery';
-import { contours } from './features/contours';
-import { labels } from './features/labels';
-import { rovers } from './features/rovers';
+// import { contours } from './features/contours';
+// import { labels } from './features/labels';
+// import { rovers } from './features/rovers';
 import { LayerRegistry } from './features/registry';
 import { INITIAL_CAMERA_HEIGHT } from './constants';
 
@@ -39,6 +39,7 @@ export async function init(data: FeatureData, initialState: AppState): Promise<v
   viewer.scene.moon!.show = false;
   viewer.scene.sun!.show = false;
   viewer.scene.globe.depthTestAgainstTerrain = false;
+  viewer.scene.globe.baseColor = new Cesium.Color(0.55, 0.27, 0.13, 1.0); // Mars brown for polar tile gaps
 
   // Camera constraints
   const ssc = viewer.scene.screenSpaceCameraController;
@@ -52,9 +53,9 @@ export async function init(data: FeatureData, initialState: AppState): Promise<v
   });
 
   registry.register('imagery', imagery);
-  registry.register('contours', contours);
-  registry.register('labels', labels);
-  registry.register('rovers', rovers);
+  // registry.register('contours', contours);
+  // registry.register('labels', labels);
+  // registry.register('rovers', rovers);
   await registry.initAll(viewer, data);
 
   apply(initialState);
