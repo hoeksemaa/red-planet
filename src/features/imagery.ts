@@ -21,11 +21,8 @@ export const imagery: Feature = {
 
     const realProvider = new Cesium.UrlTemplateImageryProvider({
       url: VIKING_IMAGERY_URL,
-      tilingScheme: new Cesium.GeographicTilingScheme({
-        numberOfLevelZeroTilesX: 1,
-        numberOfLevelZeroTilesY: 1,
-      }),
-      maximumLevel: 5,
+      tilingScheme: new Cesium.WebMercatorTilingScheme(),
+      maximumLevel: 7,
     });
     realLayer = viewer.imageryLayers.addImageryProvider(realProvider);
     realLayer.show = false;

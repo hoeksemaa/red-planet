@@ -17,8 +17,8 @@ export const CONTOURS_DATA_URL     = '/data/processed/MOLA/contours.geojson';
 export const NOMENCLATURE_DATA_URL = '/data/processed/nomenclature/features.geojson';
 export const IMAGERY_BASE_URL      = '/data/raw/terraformed/';
 
-// OPM viking_mdim21_global imagery (XYZ tiles, equirectangular) — fetched via scripts/fetch_viking.py
-export const VIKING_IMAGERY_URL = '/data/raw/viking/{z}/{x}/{y}.png';
+// OPM viking_mdim21_global imagery (XYZ tiles, Web Mercator) — fetched via scripts/fetch_viking.py
+export const VIKING_IMAGERY_URL = '/data/raw/viking/{z}/{x}/{reverseY}.png';
 
 // Rover traverse + waypoint data (NASA MMGIS, processed by scripts/rovers/fetch_rovers.py)
 export const ROVER_TRAVERSE_URL = '/data/processed/rovers/traverse.geojson';
