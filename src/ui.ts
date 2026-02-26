@@ -1,5 +1,6 @@
 import type { AppState } from './state';
 import type { LabelEntry } from './features/types';
+import type { RoverPinEntry } from './features/rovers';
 import { EXAGGERATION_SCALE } from './constants';
 
 export interface SearchResult {
@@ -13,6 +14,18 @@ export interface UICallbacks {
   onStateChange: (state: AppState) => void;
   onSearch: (query: string) => SearchResult[];
   onSelect: (result: SearchResult) => void;
+}
+
+function roverGalleryUrl(id: string, sol: number | null): string {
+  if (id === 'perseverance') {
+    const base = 'https://mars.nasa.gov/mars2020/multimedia/raw-images/';
+    return sol !== null ? `${base}?order=sol+asc&per_page=25&page=0&feed=raw_images&mission=mars2020&condition_2=sol%3Aeq%3A${sol}` : base;
+  }
+  if (id === 'curiosity') {
+    const base = 'https://mars.nasa.gov/msl/multimedia/raw-images/';
+    return sol !== null ? `${base}?order=sol+asc&per_page=25&page=0&feed=raw_images&mission=msl&condition_2=sol%3Aeq%3A${sol}` : base;
+  }
+  return '#';
 }
 
 export class UI {
@@ -32,6 +45,10 @@ export class UI {
   private layerExag        = document.getElementById('layerExag') as HTMLInputElement;
   private layerContours    = document.getElementById('layerContours') as HTMLInputElement;
   private layerLabels      = document.getElementById('layerLabels') as HTMLInputElement;
+  private layerRovers      = document.getElementById('layerRovers') as HTMLInputElement;
+
+  // Rover info panel
+  private roverPanel = document.getElementById('roverPanel') as HTMLDivElement;
 
   constructor(state: AppState, callbacks: UICallbacks) {
     this.state = state;
@@ -115,6 +132,20 @@ export class UI {
     this.featurePanel.style.display = 'none';
   }
 
+  showRoverInfo(entry: RoverPinEntry): void {
+    (document.getElementById('rpRover') as HTMLElement).textContent = entry.rover;
+    (document.getElementById('rpSol') as HTMLElement).textContent =
+      entry.sol !== null ? `Sol ${entry.sol}` : '—';
+    const link = document.getElementById('rpLink') as HTMLAnchorElement;
+    link.href = roverGalleryUrl(entry.id, entry.sol);
+    this.hideFeatureInfo();
+    this.roverPanel.style.display = 'block';
+  }
+
+  hideRoverInfo(): void {
+    this.roverPanel.style.display = 'none';
+  }
+
   // ── Layers panel ────────────────────────────────────────────
 
   private initLayersPanel(): void {
@@ -149,6 +180,11 @@ export class UI {
 
     this.layerLabels.addEventListener('change', () => {
       this.state.layers.labels = this.layerLabels.checked;
+      this.callbacks.onStateChange(this.state);
+    });
+
+    this.layerRovers.addEventListener('change', () => {
+      this.state.layers.rovers = this.layerRovers.checked;
       this.callbacks.onStateChange(this.state);
     });
 

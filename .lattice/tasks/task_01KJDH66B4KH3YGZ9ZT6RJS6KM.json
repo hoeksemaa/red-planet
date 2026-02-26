@@ -7,11 +7,11 @@
   "created_by": "agent:claude-sonnet-4-6",
   "custom_fields": {},
   "description": "Using findings from RP-13: download rover traverse path data and per-image location metadata for all available rovers. Process into GeoJSON FeatureCollections: (1) traverse.geojson \u2014 LineString per rover showing full path; (2) images.geojson \u2014 Point features per image/panorama with properties: rover name, sol (Martian day), timestamp, image URL or local path, camera type, caption if available. Add a preprocessing script per rover to scripts/rovers/. Output goes to data/processed/rovers/. Format must be compatible with the layer architecture established in RP-4.",
-  "done_at": null,
+  "done_at": "2026-02-26T20:30:00Z",
   "evidence_refs": [],
   "id": "task_01KJDH66B4KH3YGZ9ZT6RJS6KM",
   "last_event_id": "ev_01KJDH6FMT7CP96G1MHZGDG4WB",
-  "last_status_changed_at": "2026-02-26T17:50:46Z",
+  "last_status_changed_at": "2026-02-26T20:30:00Z",
   "priority": "high",
   "relationships_out": [
     {
@@ -25,7 +25,7 @@
   "reopened_count": 0,
   "schema_version": 1,
   "short_id": "RP-14",
-  "status": "backlog",
+  "status": "done",
   "tags": null,
   "title": "Download and process rover traverse + image location data",
   "type": "task",

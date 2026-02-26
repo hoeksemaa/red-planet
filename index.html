@@ -29,6 +29,13 @@
             <div class="fp-row"><span class="fp-label">Diameter</span><span id="fpDiameter"></span></div>
             <div class="fp-row"><span class="fp-label">Origin</span><span id="fpOrigin"></span></div>
         </div>
+        <div id="roverPanel" style="display:none">
+            <div id="rpRover"></div>
+            <div class="fp-row"><span class="fp-label">Position</span><span id="rpSol"></span></div>
+            <div class="fp-row">
+                <a id="rpLink" href="" target="_blank" rel="noopener" class="rover-link">View photos →</a>
+            </div>
+        </div>
     </div>
 
     <!-- Layers button (bottom-left) -->
@@ -70,6 +77,10 @@
         <label class="layer-item">
             <input type="checkbox" id="layerLabels" checked />
             <span>Place names</span>
+        </label>
+        <label class="layer-item">
+            <input type="checkbox" id="layerRovers" checked />
+            <span>Rover traverses</span>
         </label>
     </div>
 

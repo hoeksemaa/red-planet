@@ -7,11 +7,11 @@
   "created_by": "agent:claude-sonnet-4-6",
   "custom_fields": {},
   "description": "RP-1 added a loading spinner as an example task. The final design (see docs/mockups/LOAD SCREEN.png) has no spinner \u2014 the globe just loads. Remove the spinner markup and any JS that shows/hides it. Should be done as part of or after RP-4 (arch refactor) since the init flow will change anyway.",
-  "done_at": null,
+  "done_at": "2026-02-26T20:00:00Z",
   "evidence_refs": [],
   "id": "task_01KJDHND6QFV1E37A976F5T369",
   "last_event_id": "ev_01KJDHNJY5JQPAW8W74ASMNY13",
-  "last_status_changed_at": "2026-02-26T17:59:04Z",
+  "last_status_changed_at": "2026-02-26T20:00:00Z",
   "priority": "low",
   "relationships_out": [
     {
@@ -25,7 +25,7 @@
   "reopened_count": 0,
   "schema_version": 1,
   "short_id": "RP-17",
-  "status": "backlog",
+  "status": "done",
   "tags": null,
   "title": "Remove loading spinner",
   "type": "chore",

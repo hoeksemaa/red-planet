@@ -183,6 +183,37 @@ export interface AppState {
 
 ---
 
+### Rover traverses (`data/processed/rovers/`)
+
+**What it is:** Rover traverse paths and per-drive waypoints for Perseverance and Curiosity.
+
+**Raw source:** NASA MMGIS GeoJSON endpoints (fetched at script runtime — no raw files stored)
+- Perseverance: `https://mars.nasa.gov/mmgis-maps/M20/Layers/json/M20_traverse.json`
+- Curiosity: `https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_traverse.json`
+
+**Processing script:** `scripts/rovers/fetch_rovers.py`
+- Downloads traverse GeoJSON from each MMGIS endpoint
+- Flattens all drive segments into one LineString per rover (2D, elevation dropped)
+- Extracts one waypoint per sol (Perseverance) or samples every N coords (Curiosity — no sol data)
+- Writes two output files
+
+**Output files:**
+- `traverse.geojson` — `FeatureCollection<LineString>`, one feature per rover
+  - Properties: `rover` (display name), `id` (perseverance|curiosity), `color` (hex)
+- `images.geojson` — `FeatureCollection<Point>`, one feature per drive waypoint
+  - Properties: `rover`, `id`, `sol` (int or null), `color`
+
+**Cesium consumer:** `GroundPolylinePrimitive` (traverse lines) + `PointPrimitiveCollection` (waypoint pins)
+
+**TypeScript data contract:**
+```ts
+// Fetched inside features/rovers.ts init() — not passed through FeatureData
+const ROVER_TRAVERSE_URL = '/data/processed/rovers/traverse.geojson';
+const ROVER_IMAGES_URL   = '/data/processed/rovers/images.geojson';
+```
+
+---
+
 ## Adding a New Dataset
 
 Checklist for adding a new layer:

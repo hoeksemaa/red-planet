@@ -7,6 +7,7 @@ export interface AppState {
   layers: {
     contours: boolean;
     labels: boolean;
+    rovers: boolean;
   };
 }
 
@@ -17,5 +18,6 @@ export const DEFAULT_STATE: AppState = {
   layers: {
     contours: true,
     labels: true,
+    rovers: true,
   },
 };

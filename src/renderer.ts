@@ -6,6 +6,7 @@ import { createTerrainProvider } from './features/terrain';
 import { imagery } from './features/imagery';
 import { contours } from './features/contours';
 import { labels } from './features/labels';
+import { rovers } from './features/rovers';
 import { LayerRegistry } from './features/registry';
 import { INITIAL_CAMERA_HEIGHT } from './constants';
 
@@ -53,6 +54,7 @@ export async function init(data: FeatureData, initialState: AppState): Promise<v
   registry.register('imagery', imagery);
   registry.register('contours', contours);
   registry.register('labels', labels);
+  registry.register('rovers', rovers);
   await registry.initAll(viewer, data);
 
   apply(initialState);

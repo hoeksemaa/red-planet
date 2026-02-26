@@ -31,7 +31,12 @@
       "Bash(lattice comment RP-10 \"VISUAL SPEC FROM MOCKUPS \\(docs/mockups/LOAD SCREEN.png\\)::*)",
       "Bash(lattice comment RP-11 \"VISUAL SPEC FROM MOCKUPS \\(docs/mockups/LOAD SCREEN.png, ZOOM SCREEN.png\\)::*)",
       "Bash(for f in .lattice/tasks/*.json)",
-      "Bash(do python3 -c \":*)"
+      "Bash(do python3 -c \":*)",
+      "WebFetch(domain:api.nasa.gov)",
+      "WebFetch(domain:an.rsl.wustl.edu)",
+      "WebFetch(domain:proulxp.github.io)",
+      "WebFetch(domain:dev.to)",
+      "Bash(python scripts/rovers/fetch_rovers.py)"
     ],
     "additionalDirectories": [
       "/Users/john/Desktop"

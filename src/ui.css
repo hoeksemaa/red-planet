@@ -156,6 +156,27 @@ body {
   line-height: 1.4;
 }
 
+/* ── Rover info (inside search card, same style as featurePanel) */
+#roverPanel {
+  border-top: 1px solid var(--border-color);
+  padding: 14px 14px 12px;
+}
+
+#rpRover {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.rover-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.rover-link:hover {
+  text-decoration: underline;
+}
+
 /* ── Layers button (bottom-left) ───────────────────────────── */
 #layersBtn {
   position: absolute;
