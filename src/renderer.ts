@@ -1,11 +1,16 @@
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
-import type { AppState, Feature, FeatureData } from './state';
-import { createTerrainProvider, imagery, contours, labels } from './features';
+import type { AppState } from './state';
+import type { FeatureData } from './features/types';
+import { createTerrainProvider } from './features/terrain';
+import { imagery } from './features/imagery';
+import { contours } from './features/contours';
+import { labels } from './features/labels';
+import { LayerRegistry } from './features/registry';
+import { INITIAL_CAMERA_HEIGHT } from './constants';
 
 let viewer: Cesium.Viewer;
-
-const features: Feature[] = [imagery, contours, labels];
+const registry = new LayerRegistry();
 
 export async function init(data: FeatureData, initialState: AppState): Promise<void> {
   const terrainProvider = createTerrainProvider(data.heights);
@@ -42,21 +47,20 @@ export async function init(data: FeatureData, initialState: AppState): Promise<v
 
   // Initial camera position
   viewer.camera.setView({
-    destination: Cesium.Cartesian3.fromDegrees(133, -10, 6_000_000),
+    destination: Cesium.Cartesian3.fromDegrees(133, -10, INITIAL_CAMERA_HEIGHT),
   });
 
-  // Init all features (some async)
-  await Promise.all(features.map((f) => f.init(viewer, data)));
+  registry.register('imagery', imagery);
+  registry.register('contours', contours);
+  registry.register('labels', labels);
+  await registry.initAll(viewer, data);
 
-  // Apply initial state
   apply(initialState);
 }
 
 export function apply(state: AppState): void {
   viewer.scene.verticalExaggeration = state.exaggeration;
-  for (const f of features) {
-    f.apply(state);
-  }
+  registry.applyAll(state);
 }
 
 export function getViewer(): Cesium.Viewer {
@@ -68,11 +72,4 @@ export function flyTo(lon: number, lat: number, altitude: number): void {
     destination: Cesium.Cartesian3.fromDegrees(lon, lat, altitude),
     duration: 1.5,
   });
-}
-
-export function destroy(): void {
-  for (const f of features) {
-    f.destroy();
-  }
-  viewer.destroy();
 }

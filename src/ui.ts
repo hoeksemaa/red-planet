@@ -1,4 +1,6 @@
-import type { AppState, LabelEntry } from './state';
+import type { AppState } from './state';
+import type { LabelEntry } from './features/types';
+import { EXAGGERATION_SCALE } from './constants';
 
 export interface SearchResult {
   name: string;
@@ -30,7 +32,7 @@ export class UI {
     const btn = document.getElementById('exagToggle') as HTMLButtonElement;
     btn.addEventListener('click', () => {
       this.state.exaggerated = !this.state.exaggerated;
-      this.state.exaggeration = this.state.exaggerated ? 100 : 1;
+      this.state.exaggeration = this.state.exaggerated ? EXAGGERATION_SCALE : 1;
       btn.textContent = this.state.exaggerated ? 'True shape' : 'Exaggerated';
       this.callbacks.onStateChange(this.state);
     });

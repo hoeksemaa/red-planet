@@ -1,14 +1,16 @@
+import './ui.css';
 import { DEFAULT_STATE } from './state';
 import * as renderer from './renderer';
-import { searchLabels, flyToAltitude, setOnLabelClick, setOnLabelMiss } from './features';
+import { searchLabels, flyToAltitude, setOnLabelClick, setOnLabelMiss } from './features/labels';
 import { UI } from './ui';
+import { TERRAIN_DATA_URL, CONTOURS_DATA_URL, NOMENCLATURE_DATA_URL } from './constants';
 
 async function main(): Promise<void> {
   // Load all data in parallel
   const [heightsBuf, contourGeoJSON, nomenclatureGeoJSON] = await Promise.all([
-    fetch('/data/processed/MOLA/mola_16ppd.f32').then((r) => r.arrayBuffer()),
-    fetch('/data/processed/MOLA/contours.geojson').then((r) => r.json()),
-    fetch('/data/processed/nomenclature/features.geojson').then((r) => r.json()),
+    fetch(TERRAIN_DATA_URL).then((r) => r.arrayBuffer()),
+    fetch(CONTOURS_DATA_URL).then((r) => r.json()),
+    fetch(NOMENCLATURE_DATA_URL).then((r) => r.json()),
   ]);
 
   const heights = new Float32Array(heightsBuf);

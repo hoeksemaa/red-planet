@@ -1,0 +1,166 @@
+/* ── Design tokens ─────────────────────────────────────────── */
+:root {
+  --bg:             #ffffff;
+  --border-color:   #dadce0;
+  --shadow:         0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  --radius:         8px;
+  --font:           'Google Sans', Roboto, system-ui, sans-serif;
+  --font-size:      14px;
+  --text-primary:   #202124;
+  --text-secondary: #5f6368;
+}
+
+/* ── Base ──────────────────────────────────────────────────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  position: relative;
+  font-family: var(--font);
+  font-size: var(--font-size);
+  color: var(--text-primary);
+}
+
+#cesiumContainer {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* ── Title bar ─────────────────────────────────────────────── */
+#rp-title {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ── Card / panel base ─────────────────────────────────────── */
+.rp-card {
+  background: var(--bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+/* ── Exaggeration toggle ───────────────────────────────────── */
+#exagToggle {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  padding: 6px 14px;
+  background: var(--bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-family: var(--font);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  z-index: 10;
+}
+
+#exagToggle:hover {
+  background: #f8f9fa;
+}
+
+/* ── Search ────────────────────────────────────────────────── */
+#searchWrap {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  z-index: 100;
+}
+
+#searchInput {
+  width: 100%;
+  padding: 9px 14px;
+  background: var(--bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-family: var(--font);
+  font-size: var(--font-size);
+  outline: none;
+}
+
+#searchInput::placeholder {
+  color: var(--text-secondary);
+}
+
+#searchInput:focus {
+  border-color: #1a73e8;
+  box-shadow: 0 1px 3px rgba(26,115,232,0.2);
+}
+
+#searchResults {
+  margin-top: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.search-item {
+  padding: 9px 14px;
+  font-size: var(--font-size);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.search-item:hover {
+  background: #f8f9fa;
+}
+
+/* ── Feature info panel ────────────────────────────────────── */
+#featurePanel {
+  display: none;
+  position: absolute;
+  top: 116px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px;
+  padding: 14px 16px;
+  z-index: 100;
+}
+
+#fpName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.fp-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  gap: 8px;
+}
+
+.fp-label {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+#fpOrigin {
+  text-align: right;
+  color: var(--text-primary);
+  font-size: 12px;
+  line-height: 1.4;
+}
