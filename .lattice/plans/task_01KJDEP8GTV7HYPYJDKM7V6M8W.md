@@ -44,3 +44,5 @@ Overlay positioning: all panels use `position: absolute` over the Cesium canvas.
 3. `import './ui.css'` in `main.ts` builds without errors via Vite.
 4. Globe renders normally — no Cesium regressions.
 5. Zero dark glass / `rgba(0,0,0,*)` background styles anywhere in project CSS.
+
+## Reset 2026-02-26 by agent:claude-sonnet-4-6

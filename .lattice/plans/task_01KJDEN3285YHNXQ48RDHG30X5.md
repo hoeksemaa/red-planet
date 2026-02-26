@@ -47,3 +47,5 @@ src/
 6. `src/state.ts` exports `AppState` and `defaultState`
 7. `npx tsc --noEmit` exits clean
 8. No files created beyond the specified list
+
+## Reset 2026-02-26 by agent:claude-sonnet-4-6

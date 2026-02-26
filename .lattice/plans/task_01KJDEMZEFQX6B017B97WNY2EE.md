@@ -19,3 +19,5 @@ Project is pure JS — this task also bootstraps TypeScript (per CLAUDE.md: TS o
 - `npm run dev` still works; globe renders identically
 - No bare numeric literals for the above values remain in main.ts
 - `src/constants.ts` is the single source of truth
+
+## Reset 2026-02-26 by agent:claude-sonnet-4-6
