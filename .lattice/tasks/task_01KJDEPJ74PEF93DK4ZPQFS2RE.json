@@ -32,10 +32,10 @@
   "reopened_count": 0,
   "schema_version": 1,
   "short_id": "RP-8",
-  "status": "backlog",
+  "status": "done",
   "tags": null,
   "title": "Search bar: collapse/expand states + feature info card",
   "type": "task",
-  "updated_at": "2026-02-26T17:43:37Z",
+  "updated_at": "2026-02-26T19:08:35.344254+00:00",
   "urgency": null
 }

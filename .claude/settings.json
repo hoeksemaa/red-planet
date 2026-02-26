@@ -29,7 +29,9 @@
       "Bash(lattice comment RP-8 \"VISUAL SPEC FROM MOCKUPS \\(docs/mockups/SEARCH BAR TYPING.png, SEARCH SELECTED.png, LOAD SCREEN.png\\)::*)",
       "Bash(lattice comment RP-9 \"VISUAL SPEC FROM MOCKUPS \\(docs/mockups/LAYER PANEL CLICKED.png, SEARCH SELECTED.png\\)::*)",
       "Bash(lattice comment RP-10 \"VISUAL SPEC FROM MOCKUPS \\(docs/mockups/LOAD SCREEN.png\\)::*)",
-      "Bash(lattice comment RP-11 \"VISUAL SPEC FROM MOCKUPS \\(docs/mockups/LOAD SCREEN.png, ZOOM SCREEN.png\\)::*)"
+      "Bash(lattice comment RP-11 \"VISUAL SPEC FROM MOCKUPS \\(docs/mockups/LOAD SCREEN.png, ZOOM SCREEN.png\\)::*)",
+      "Bash(for f in .lattice/tasks/*.json)",
+      "Bash(do python3 -c \":*)"
     ],
     "additionalDirectories": [
       "/Users/john/Desktop"
