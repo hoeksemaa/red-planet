@@ -3,24 +3,6 @@ import type { Feature, FeatureData, ContourGeoJSON } from './types';
 import type { AppState } from '../state';
 import { DEFAULT_STATE } from '../state';
 
-// GLSL limb-fade: contour lines fade out at the globe's edges
-const CONTOUR_GLSL = `
-czm_material czm_getMaterial(czm_materialInput materialInput) {
-    czm_material m = czm_getDefaultMaterial(materialInput);
-    vec4 posEC = czm_windowToEyeCoordinates(gl_FragCoord);
-    vec3 fragmentEC = posEC.xyz / posEC.w;
-    vec3 globeCenterEC = (czm_view * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
-    vec3 surfaceNormal = normalize(fragmentEC - globeCenterEC);
-    vec3 toCamera = normalize(-fragmentEC);
-    float facing = dot(surfaceNormal, toCamera);
-    float alpha = smoothstep(0.0, 0.3, facing);
-    m.diffuse = lineColor.rgb;
-    m.emission = lineColor.rgb;
-    m.alpha = lineColor.a * alpha;
-    return m;
-}
-`;
-
 function elevationToColor(elev: number): Cesium.Color {
   const raw = Math.max(0, Math.min(1, (elev + 8000) / 29000));
   const t = Math.pow(raw, 0.6);
@@ -53,6 +35,9 @@ function buildContours(exaggeration: number): void {
       instances.push(
         new Cesium.GeometryInstance({
           geometry: new Cesium.PolylineGeometry({ positions, width: 2.0 }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(color),
+          },
         })
       );
     }
@@ -61,15 +46,8 @@ function buildContours(exaggeration: number): void {
     contourCollection.add(
       new Cesium.Primitive({
         geometryInstances: instances,
-        appearance: new Cesium.PolylineMaterialAppearance({
-          translucent: true,
-          material: new Cesium.Material({
-            translucent: true,
-            fabric: {
-              uniforms: { lineColor: color },
-              source: CONTOUR_GLSL,
-            },
-          }),
+        appearance: new Cesium.PolylineColorAppearance({
+          translucent: false,
         }),
         asynchronous: false,
       })
