@@ -1,20 +1,23 @@
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import type { AppState } from './state';
-import type { FeatureData } from './features/types';
-import { createTerrainProvider } from './features/terrain';
-import { imagery } from './features/imagery';
-import { contours } from './features/contours';
-import { labels } from './features/labels';
-import { rovers } from './features/rovers';
+import type { Feature } from './features/types';
+import { createTerrainProvider } from './terrain';
 import { LayerRegistry } from './features/registry';
 import { INITIAL_CAMERA_HEIGHT } from './constants';
 
 let viewer: Cesium.Viewer;
 const registry = new LayerRegistry();
 
-export async function init(data: FeatureData, initialState: AppState): Promise<void> {
-  const terrainProvider = createTerrainProvider(data.heights);
+let pickCallback: ((featureId: string, result: unknown) => void) | null = null;
+let pickMissCallback: (() => void) | null = null;
+
+export function register(id: string, feature: Feature): void {
+  registry.register(id, feature);
+}
+
+export async function init(heights: Float32Array, initialState: AppState): Promise<void> {
+  const terrainProvider = createTerrainProvider(heights);
 
   viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider,
@@ -54,11 +57,23 @@ export async function init(data: FeatureData, initialState: AppState): Promise<v
     destination: Cesium.Cartesian3.fromDegrees(133, -10, INITIAL_CAMERA_HEIGHT),
   });
 
-  registry.register('imagery', imagery);
-  registry.register('contours', contours);
-  registry.register('labels', labels);
-  registry.register('rovers', rovers);
-  await registry.initAll(viewer, data);
+  await registry.initAll(viewer);
+
+  // Single pick dispatcher — iterates features, first to claim wins
+  const clickHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+  clickHandler.setInputAction((movement: { position: Cesium.Cartesian2 }) => {
+    const picked = viewer.scene.pick(movement.position);
+    for (const [id, feature] of registry.entries()) {
+      if (feature.pick) {
+        const result = feature.pick(picked);
+        if (result !== undefined) {
+          pickCallback?.(id, result);
+          return;
+        }
+      }
+    }
+    pickMissCallback?.();
+  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
   apply(initialState);
 }
@@ -77,4 +92,12 @@ export function flyTo(lon: number, lat: number, altitude: number): void {
     destination: Cesium.Cartesian3.fromDegrees(lon, lat, altitude),
     duration: 1.5,
   });
+}
+
+export function onPick(fn: (featureId: string, result: unknown) => void): void {
+  pickCallback = fn;
+}
+
+export function onPickMiss(fn: () => void): void {
+  pickMissCallback = fn;
 }

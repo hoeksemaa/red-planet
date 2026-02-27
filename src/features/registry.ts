@@ -1,5 +1,5 @@
 import type * as Cesium from 'cesium';
-import type { Feature, FeatureData } from './types';
+import type { Feature } from './types';
 import type { AppState } from '../state';
 
 export class LayerRegistry {
@@ -9,8 +9,8 @@ export class LayerRegistry {
     this.features.set(id, feature);
   }
 
-  async initAll(viewer: Cesium.Viewer, data: FeatureData): Promise<void> {
-    await Promise.all([...this.features.values()].map((f) => f.init(viewer, data)));
+  async initAll(viewer: Cesium.Viewer): Promise<void> {
+    await Promise.all([...this.features.values()].map((f) => f.init(viewer)));
   }
 
   applyAll(state: AppState): void {
@@ -21,5 +21,9 @@ export class LayerRegistry {
 
   get(id: string): Feature | undefined {
     return this.features.get(id);
+  }
+
+  entries(): IterableIterator<[string, Feature]> {
+    return this.features.entries();
   }
 }

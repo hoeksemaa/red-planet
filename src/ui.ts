@@ -1,14 +1,7 @@
 import type { AppState } from './state';
-import type { LabelEntry } from './features/types';
+import type { FeatureInfo, SearchResult } from './features/types';
 import type { RoverPinEntry } from './features/rovers';
 import { EXAGGERATION_SCALE } from './constants';
-
-export interface SearchResult {
-  name: string;
-  lon: number;
-  lat: number;
-  diameterKm: number;
-}
 
 export interface UICallbacks {
   onStateChange: (state: AppState) => void;
@@ -115,7 +108,7 @@ export class UI {
     this.searchResults.innerHTML = '';
   }
 
-  showFeatureInfo(entry: LabelEntry): void {
+  showFeatureInfo(entry: FeatureInfo): void {
     (document.getElementById('fpName') as HTMLElement).textContent = entry.name;
     (document.getElementById('fpType') as HTMLElement).textContent = entry.featureType;
     (document.getElementById('fpDiameter') as HTMLElement).textContent =
