@@ -24,8 +24,8 @@ czm_material czm_getMaterial(czm_materialInput materialInput) {
 function elevationToColor(elev: number): Cesium.Color {
   const raw = Math.max(0, Math.min(1, (elev + 8000) / 29000));
   const t = Math.pow(raw, 0.6);
-  const hue = 0.72 * (1 - t);
-  const lightness = 0.4 + 0.3 * t;
+  const hue = 0.75 * Math.pow(1 - t, 1.5);
+  const lightness = 0.4 + 0.15 * t;
   return Cesium.Color.fromHsl(hue, 1.0, lightness);
 }
 
