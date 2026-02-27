@@ -1,4 +1,4 @@
-red planet
+google mars
 
 ## Setup
 

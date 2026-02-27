@@ -1,7 +1,7 @@
 {
-  "name": "red-planet",
+  "name": "google-mars",
   "version": "1.0.0",
-  "description": "red planet",
+  "description": "google mars",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
@@ -10,16 +10,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hoeksemaa/red-planet.git"
+    "url": "git+https://github.com/hoeksemaa/google-mars.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/hoeksemaa/red-planet/issues"
+    "url": "https://github.com/hoeksemaa/google-mars/issues"
   },
-  "homepage": "https://github.com/hoeksemaa/red-planet#readme",
+  "homepage": "https://github.com/hoeksemaa/google-mars#readme",
   "dependencies": {
     "cesium": "^1.138.0",
     "three": "^0.183.1",

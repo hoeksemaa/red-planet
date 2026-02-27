@@ -1,4 +1,4 @@
-# Red Planet — Data Pipeline Playbook
+# Google Mars — Data Pipeline Playbook
 
 ## Philosophy
 

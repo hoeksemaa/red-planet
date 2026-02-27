@@ -1,4 +1,4 @@
-# Red Planet — PRD
+# Google Mars — PRD
 
 ## One-liner
 

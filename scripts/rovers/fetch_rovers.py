@@ -44,7 +44,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 def fetch_json(url: str) -> dict:
     print(f"  Fetching {url} ...")
-    req = urllib.request.Request(url, headers={"User-Agent": "red-planet/1.0 (research)"})
+    req = urllib.request.Request(url, headers={"User-Agent": "google-mars/1.0 (research)"})
     with urllib.request.urlopen(req, timeout=30) as resp:
         return json.loads(resp.read())
 
