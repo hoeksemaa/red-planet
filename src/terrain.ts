@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import { HM_W, HM_H, TERRAIN_TILE_SIZE } from '../constants';
+import { HM_W, HM_H, TERRAIN_TILE_SIZE } from './constants';
 
 function sampleMOLA(heights: Float32Array, lon: number, lat: number): number {
   const u = ((lon + 360) % 360) / 360;

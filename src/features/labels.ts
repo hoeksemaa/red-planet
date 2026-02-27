@@ -1,20 +1,21 @@
 import * as Cesium from 'cesium';
-import type { Feature, FeatureData, LabelEntry } from './types';
+import type { Feature, FeatureInfo, NomenclatureGeoJSON, SearchResult } from './types';
 import type { AppState } from '../state';
+import { NOMENCLATURE_DATA_URL } from '../constants';
+
+interface LabelEntry {
+  label: Cesium.Label;
+  lon: number;
+  lat: number;
+  name: string;
+  diameterKm: number;
+  featureType: string;
+  origin: string;
+}
 
 let labelCollection: Cesium.LabelCollection;
 let labelData: LabelEntry[] = [];
 let removeListener: (() => void) | null = null;
-let removeClickHandler: (() => void) | null = null;
-let onLabelClick: ((entry: LabelEntry) => void) | null = null;
-let onLabelMiss: (() => void) | null = null;
-
-export function setOnLabelClick(fn: (entry: LabelEntry) => void): void {
-  onLabelClick = fn;
-}
-export function setOnLabelMiss(fn: () => void): void {
-  onLabelMiss = fn;
-}
 
 function updateLabels(camera: Cesium.Camera): void {
   const alt = camera.positionCartographic.height;
@@ -30,11 +31,12 @@ function updateLabels(camera: Cesium.Camera): void {
 }
 
 export const labels: Feature = {
-  init(viewer: Cesium.Viewer, data: FeatureData) {
-    labelCollection = viewer.scene.primitives.add(new Cesium.LabelCollection());
+  async init(viewer: Cesium.Viewer) {
+    const nomenclatureGeoJSON: NomenclatureGeoJSON = await fetch(NOMENCLATURE_DATA_URL).then((r) => r.json());
+    labelCollection = viewer.scene.primitives.add(new Cesium.LabelCollection({ scene: viewer.scene }));
     labelData = [];
 
-    for (const feature of data.nomenclatureGeoJSON.features) {
+    for (const feature of nomenclatureGeoJSON.features) {
       const [lon, lat] = feature.geometry.coordinates;
       const { name, diameter_km, feature_type, origin } = feature.properties;
 
@@ -42,6 +44,7 @@ export const labels: Feature = {
         position: Cesium.Cartesian3.fromDegrees(lon, lat),
         text: name,
         show: false,
+        heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
         font: '13px sans-serif',
         fillColor: Cesium.Color.WHITE,
         outlineColor: Cesium.Color.BLACK,
@@ -66,19 +69,13 @@ export const labels: Feature = {
     };
     viewer.scene.postRender.addEventListener(handler);
     removeListener = () => viewer.scene.postRender.removeEventListener(handler);
+  },
 
-    // Click handler — pick label under cursor, fire callback
-    const clickHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-    clickHandler.setInputAction((movement: { position: Cesium.Cartesian2 }) => {
-      const picked = viewer.scene.pick(movement.position);
-      const matchedEntry = labelData.find((e) => e.label === picked?.primitive);
-      if (matchedEntry) {
-        onLabelClick?.(matchedEntry);
-      } else {
-        onLabelMiss?.();
-      }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-    removeClickHandler = () => clickHandler.destroy();
+  pick(picked: any): FeatureInfo | undefined {
+    const entry = labelData.find((e) => e.label === picked?.primitive);
+    if (!entry) return undefined;
+    const { name, featureType, diameterKm, origin, lon, lat } = entry;
+    return { name, featureType, diameterKm, origin, lon, lat };
   },
 
   apply(state: AppState) {
@@ -88,18 +85,9 @@ export const labels: Feature = {
   destroy() {
     removeListener?.();
     removeListener = null;
-    removeClickHandler?.();
-    removeClickHandler = null;
     labelData = [];
   },
 };
-
-export interface SearchResult {
-  name: string;
-  lon: number;
-  lat: number;
-  diameterKm: number;
-}
 
 export function searchLabels(query: string): SearchResult[] {
   const q = query.trim().toLowerCase();
@@ -108,11 +96,4 @@ export function searchLabels(query: string): SearchResult[] {
     .filter((d) => d.name.toLowerCase().includes(q))
     .slice(0, 10)
     .map(({ name, lon, lat, diameterKm }) => ({ name, lon, lat, diameterKm }));
-}
-
-export function flyToAltitude(diameterKm: number): number {
-  if (diameterKm >= 500) return 1_500_000;
-  if (diameterKm >= 100) return 500_000;
-  if (diameterKm >= 10) return 200_000;
-  return 100_000;
 }

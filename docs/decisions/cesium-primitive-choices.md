@@ -114,8 +114,6 @@ const positions = coords.map(([lon, lat]) =>
 
 This means contour geometry must be **rebuilt** when exaggeration changes. That is the correct tradeoff — do not try to patch it with a global scale.
 
-> **Bug note**: `src/features/contours.ts:43` has a comment claiming Cesium's verticalExaggeration handles this automatically. It does not. Contours are currently buried under exaggerated terrain.
-
 ---
 
 ## Rule 6 — 3D models → `Model` with `heightReference` + `enableVerticalExaggeration`

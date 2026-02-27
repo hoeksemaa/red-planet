@@ -1,7 +1,8 @@
 import * as Cesium from 'cesium';
-import type { Feature, FeatureData, ContourGeoJSON } from './types';
+import type { Feature, ContourGeoJSON } from './types';
 import type { AppState } from '../state';
 import { DEFAULT_STATE } from '../state';
+import { CONTOURS_DATA_URL } from '../constants';
 
 function elevationToColor(elev: number): Cesium.Color {
   const raw = Math.max(0, Math.min(1, (elev + 8000) / 29000));
@@ -56,8 +57,8 @@ function buildContours(exaggeration: number): void {
 }
 
 export const contours: Feature = {
-  init(viewer: Cesium.Viewer, data: FeatureData) {
-    geojson = data.contourGeoJSON;
+  async init(viewer: Cesium.Viewer) {
+    geojson = await fetch(CONTOURS_DATA_URL).then((r) => r.json());
     contourCollection = viewer.scene.primitives.add(new Cesium.PrimitiveCollection());
     buildContours(lastExaggeration);
   },
