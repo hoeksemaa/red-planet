@@ -98,7 +98,7 @@ export const rovers: Feature = {
       const pin = pinCollection.add({
         position: Cesium.Cartesian3.fromDegrees(lon, lat),
         image: PIN_IMAGES.get(id) ?? makeDotCanvas(cesiumColor),
-        heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
+        heightReference: Cesium.HeightReference.NONE,
         verticalOrigin: Cesium.VerticalOrigin.CENTER,
       });
 

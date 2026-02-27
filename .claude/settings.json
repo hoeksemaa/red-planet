@@ -50,7 +50,16 @@
       "Bash(do)",
       "Bash(echo -n \"$source z=6: \")",
       "Bash(for z in 9 10 11)",
-      "Bash(echo -n \"mola-gray z=$z: \")"
+      "Bash(echo -n \"mola-gray z=$z: \")",
+      "Bash(grep -i \"compass\\\\|scale\\\\|north\\\\|orientation\" /Users/john/Dev/red-planet/src/*.ts)",
+      "Bash(xargs basename -a)",
+      "Bash(# Check average file size at different zoom levels echo \"\"=== Terraformed ===\"\" && for z in 1 5 9; do echo \"\"z=$z:\"\"; du -sh /Users/john/Dev/red-planet/data/raw/terraformed/$z/ ; find /Users/john/Dev/red-planet/data/raw/terraformed/$z/ -name ''*.png'')",
+      "Read(//Users/john/Dev/red-planet/data/raw/viking/**)",
+      "Read(//dev/**)",
+      "Bash(# Let''s check what the viking fetch script does — does it do any processing? cat /Users/john/Dev/red-planet/scripts/fetch_viking.py)",
+      "Bash(# Where did terraformed tiles come from? Check if there''s any script or readme find /Users/john/Dev/red-planet -maxdepth 3 -name ''*.md'' -path ''*/terraformed/*'' -o -name ''*.txt'' -path ''*/terraformed/*'' ls /Users/john/Dev/red-planet/data/raw/terraformed/doc.kml)",
+      "Bash(python scripts/contours.py)",
+      "Bash(lsof -i :5173)"
     ],
     "additionalDirectories": [
       "/Users/john/Desktop",
