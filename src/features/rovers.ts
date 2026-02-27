@@ -12,6 +12,9 @@ export interface RoverPinEntry {
 const ROVER_COLORS: Record<string, Cesium.Color> = {
   perseverance: Cesium.Color.fromCssColorString('#FF6B35'),
   curiosity:    Cesium.Color.fromCssColorString('#4CAF50'),
+  spirit:       Cesium.Color.fromCssColorString('#2196F3'),
+  opportunity:  Cesium.Color.fromCssColorString('#9C27B0'),
+  sojourner:    Cesium.Color.fromCssColorString('#FFD700'),
 };
 
 // Canvas dot matching the old PointPrimitive look: pixelSize 7, white outline 1.5px.

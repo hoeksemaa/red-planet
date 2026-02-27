@@ -38,6 +38,13 @@ ROVERS = [
     },
 ]
 
+
+PIN_ONLY_ROVERS = [
+    {"id": "spirit", "name": "Spirit", "lon": 175.48, "lat": -14.57, "color": "#2196F3"},
+    {"id": "opportunity", "name": "Opportunity", "lon": 354.47, "lat": -1.95, "color": "#9C27B0"},
+    {"id": "sojourner", "name": "Sojourner", "lon": 326.75, "lat": 19.47, "color": "#FFD700"},
+    {"id": "zhurong", "name": "Zhurong", "lon": 109.925, "lat": 25.066, "color": "#E53935"},
+]
 OUT_DIR = Path("data/processed/rovers")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -152,6 +159,25 @@ def process_rover(rover: dict) -> tuple[dict, list[dict]]:
     return traverse_feature, image_features
 
 
+
+def pin_only_features(rovers: list[dict]) -> list[dict]:
+    """Generate a single landing-site pin for rovers without traverse data."""
+    result = []
+    for r in rovers:
+        print("Adding landing site pin for " + r["name"] + "...")
+
+        result.append({
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [r["lon"], r["lat"]]},
+            "properties": {
+                "rover": r["name"],
+                "id": r["id"],
+                "sol": None,
+                "color": r["color"],
+            },
+        })
+    return result
+
 def main() -> None:
     traverse_features = []
     all_image_features = []
@@ -165,6 +191,8 @@ def main() -> None:
         except Exception as e:
             print(f"  ERROR: {e}", file=sys.stderr)
             print(f"  Skipping {rover['name']}")
+
+    all_image_features.extend(pin_only_features(PIN_ONLY_ROVERS))
 
     traverse_path = OUT_DIR / "traverse.geojson"
     traverse_fc = {"type": "FeatureCollection", "features": traverse_features}

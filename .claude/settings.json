@@ -59,7 +59,9 @@
       "Bash(# Let''s check what the viking fetch script does — does it do any processing? cat /Users/john/Dev/red-planet/scripts/fetch_viking.py)",
       "Bash(# Where did terraformed tiles come from? Check if there''s any script or readme find /Users/john/Dev/red-planet -maxdepth 3 -name ''*.md'' -path ''*/terraformed/*'' -o -name ''*.txt'' -path ''*/terraformed/*'' ls /Users/john/Dev/red-planet/data/raw/terraformed/doc.kml)",
       "Bash(python scripts/contours.py)",
-      "Bash(lsof -i :5173)"
+      "Bash(lsof -i :5173)",
+      "WebFetch(domain:www.hou.usra.edu)",
+      "WebFetch(domain:en.wikipedia.org)"
     ],
     "additionalDirectories": [
       "/Users/john/Desktop",
