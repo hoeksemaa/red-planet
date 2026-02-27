@@ -116,12 +116,6 @@ This means contour geometry must be **rebuilt** when exaggeration changes. That 
 
 ---
 
-## Note — `depthTestAgainstTerrain = false` is intentional
-
-`scene.globe.depthTestAgainstTerrain` is set to `false`. This ensures labels and rover pins are always visible regardless of terrain geometry — correct behavior for a 2D-style map. With tilt disabled, there is no viewing angle where "renders through the back of the globe" is observable. If tilt is ever enabled, this becomes a conscious tradeoff (always-visible labels vs. physically-correct occlusion) and should be revisited.
-
----
-
 ## Rule 6 — 3D models → `Model` with `heightReference` + `enableVerticalExaggeration`
 
 ```ts

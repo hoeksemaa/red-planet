@@ -55,7 +55,7 @@ export const rovers: Feature = {
     ]);
 
     traversePrimitives = viewer.scene.primitives.add(new Cesium.PrimitiveCollection());
-    pinCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection());
+    pinCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection({ scene: viewer.scene }));
     pinData = [];
 
     // Traverse polylines — one GroundPolylinePrimitive per rover

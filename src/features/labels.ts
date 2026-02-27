@@ -33,7 +33,7 @@ function updateLabels(camera: Cesium.Camera): void {
 export const labels: Feature = {
   async init(viewer: Cesium.Viewer) {
     const nomenclatureGeoJSON: NomenclatureGeoJSON = await fetch(NOMENCLATURE_DATA_URL).then((r) => r.json());
-    labelCollection = viewer.scene.primitives.add(new Cesium.LabelCollection());
+    labelCollection = viewer.scene.primitives.add(new Cesium.LabelCollection({ scene: viewer.scene }));
     labelData = [];
 
     for (const feature of nomenclatureGeoJSON.features) {
