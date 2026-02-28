@@ -8,6 +8,7 @@ export interface AppState {
     contours: boolean;
     labels: boolean;
     rovers: boolean;
+    satellites: boolean;
   };
 }
 
@@ -19,5 +20,6 @@ export const DEFAULT_STATE: AppState = {
     contours: true,
     labels: true,
     rovers: true,
+    satellites: true,
   },
 };

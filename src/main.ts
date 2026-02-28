@@ -3,6 +3,7 @@ import { DEFAULT_STATE } from './state';
 import * as renderer from './renderer';
 import { searchLabels, flyToAltitude, setOnLabelClick, setOnLabelMiss } from './features/labels';
 import { setOnRoverPinClick, setOnRoverMiss } from './features/rovers';
+import { setOnSatelliteClick, setOnSatelliteMiss } from './features/satellites';
 import { UI } from './ui';
 import { TERRAIN_DATA_URL, CONTOURS_DATA_URL, NOMENCLATURE_DATA_URL } from './constants';
 
@@ -33,6 +34,9 @@ async function main(): Promise<void> {
 
   setOnRoverPinClick((entry) => ui.showRoverInfo(entry));
   setOnRoverMiss(() => ui.hideRoverInfo());
+
+  setOnSatelliteClick((entry) => ui.showSatelliteInfo(entry));
+  setOnSatelliteMiss(() => ui.hideSatelliteInfo());
 
   void ui;
 }

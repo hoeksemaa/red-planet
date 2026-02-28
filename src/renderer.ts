@@ -7,6 +7,7 @@ import { imagery } from './features/imagery';
 import { contours } from './features/contours';
 import { labels } from './features/labels';
 import { rovers } from './features/rovers';
+import { satellites } from './features/satellites';
 import { LayerRegistry } from './features/registry';
 import { INITIAL_CAMERA_HEIGHT } from './constants';
 
@@ -58,6 +59,7 @@ export async function init(data: FeatureData, initialState: AppState): Promise<v
   registry.register('contours', contours);
   registry.register('labels', labels);
   registry.register('rovers', rovers);
+  registry.register('satellites', satellites);
   await registry.initAll(viewer, data);
 
   apply(initialState);

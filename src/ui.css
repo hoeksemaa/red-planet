@@ -177,6 +177,19 @@ body {
   text-decoration: underline;
 }
 
+/* ── Satellite info (inside search card, same style as roverPanel) */
+#satellitePanel {
+  border-top: 1px solid var(--border-color);
+  padding: 14px 14px 12px;
+}
+
+#spName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
 /* ── Layers button (bottom-left) ───────────────────────────── */
 #layersBtn {
   position: absolute;
