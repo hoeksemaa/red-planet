@@ -57,7 +57,7 @@ body {
   position: absolute;
   top: 16px;
   left: 16px;
-  width: 280px;
+  width: 560px;
   z-index: 100;
   overflow: hidden;
 }
@@ -107,7 +107,8 @@ body {
 
 #searchResults {
   border-top: 1px solid var(--border-color);
-  max-height: 240px;
+  max-height: calc(66vh - 80px);
+  padding-bottom: 8px;
   overflow-y: auto;
   display: none;
 }
