@@ -12,6 +12,8 @@ export interface SatelliteEntry {
   altitudeKm: number;
   periodMinutes: number;
   color: string;
+  description: string;
+  imageUrl: string;
 }
 
 // ── Keplerian math ──────────────────────────────────────────
@@ -168,6 +170,8 @@ export const satellites: Feature = {
       altitudeKm: Math.round(el.semiMajorAxisKm - MARS_RADIUS_KM),
       periodMinutes: Math.round(el.periodSeconds / 60),
       color: el.color,
+      description: el.description,
+      imageUrl: el.imageUrl,
     };
   },
 
@@ -195,5 +199,7 @@ export function searchSatellites(query: string): SatelliteSearchResult[] {
       altitudeKm: Math.round(s.semiMajorAxisKm - MARS_RADIUS_KM),
       periodMinutes: Math.round(s.periodSeconds / 60),
       color: s.color,
+      description: s.description,
+      imageUrl: s.imageUrl,
     }));
 }

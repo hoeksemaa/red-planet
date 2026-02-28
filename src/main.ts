@@ -45,12 +45,17 @@ async function main(): Promise<void> {
     switch (result.kind) {
       case 'location':
         renderer.flyTo(result.lon, result.lat, flyToAltitude(result.diameterKm));
+        ui.showFeatureInfo({
+          name: result.name, lon: result.lon, lat: result.lat,
+          diameterKm: result.diameterKm, featureType: result.featureType, origin: result.origin,
+        });
         break;
       case 'rover':
         renderer.flyTo(result.lon, result.lat, 50_000);
+        ui.showRoverInfo({ rover: result.name, id: result.id, sol: null, color: result.color });
         break;
       case 'satellite':
-        renderer.flyTo(0, 0, result.altitudeKm * 1000 * 10);
+        renderer.flyTo(0, 0, Math.max(result.altitudeKm * 1000 * 10, 30_000_000));
         ui.showSatelliteInfo(result);
         break;
     }

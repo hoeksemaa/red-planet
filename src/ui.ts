@@ -1,6 +1,6 @@
 import type { AppState } from './state';
 import type { FeatureInfo, UnifiedSearchResult } from './features/types';
-import type { RoverPinEntry } from './features/rovers';
+import { type RoverPinEntry, ROVER_META } from './features/rovers';
 import type { SatelliteEntry } from './features/satellites';
 import { EXAGGERATION_SCALE } from './constants';
 
@@ -42,6 +42,10 @@ export class UI {
   private layerRovers      = document.getElementById('layerRovers') as HTMLInputElement;
   private layerSatellites  = document.getElementById('layerSatellites') as HTMLInputElement;
 
+  // Keyboard nav state
+  private activeIndex = -1;
+  private currentResults: UnifiedSearchResult[] = [];
+
   // Rover info panel
   private roverPanel = document.getElementById('roverPanel') as HTMLDivElement;
 
@@ -77,6 +81,32 @@ export class UI {
       this.searchClear.style.display = 'none';
       this.hideResults();
       this.hideFeatureInfo();
+      this.hideRoverInfo();
+      this.hideSatelliteInfo();
+    });
+
+    // Keyboard navigation
+    this.searchInput.addEventListener('keydown', (e) => {
+      const items = this.searchResults.querySelectorAll<HTMLElement>('.search-item');
+      if (!items.length) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        this.activeIndex = (this.activeIndex + 1) % items.length;
+        this.updateHighlight(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        this.activeIndex = (this.activeIndex - 1 + items.length) % items.length;
+        this.updateHighlight(items);
+      } else if (e.key === 'Enter' && this.activeIndex >= 0) {
+        e.preventDefault();
+        const r = this.currentResults[this.activeIndex];
+        this.searchInput.value = r.name;
+        this.hideResults();
+        this.callbacks.onSelect(r);
+      } else if (e.key === 'Escape') {
+        this.hideResults();
+      }
     });
 
     // Collapse on outside click
@@ -90,6 +120,8 @@ export class UI {
 
   private showResults(results: UnifiedSearchResult[]): void {
     this.searchResults.innerHTML = '';
+    this.activeIndex = -1;
+    this.currentResults = results;
     if (results.length === 0) {
       this.searchResults.style.display = 'none';
       return;
@@ -103,6 +135,16 @@ export class UI {
       badge.textContent = r.kind === 'location' ? 'Place'
                         : r.kind === 'rover' ? 'Rover' : 'Satellite';
       item.appendChild(badge);
+
+      if (r.kind === 'rover' || r.kind === 'satellite') {
+        const thumb = document.createElement('img');
+        thumb.className = 'search-thumb';
+        thumb.src = r.kind === 'rover'
+          ? (ROVER_META[r.id]?.imageUrl ?? '')
+          : r.imageUrl;
+        thumb.alt = '';
+        item.appendChild(thumb);
+      }
 
       const name = document.createElement('span');
       name.textContent = r.name;
@@ -128,6 +170,15 @@ export class UI {
   private hideResults(): void {
     this.searchResults.style.display = 'none';
     this.searchResults.innerHTML = '';
+    this.activeIndex = -1;
+    this.currentResults = [];
+  }
+
+  private updateHighlight(items: NodeListOf<HTMLElement>): void {
+    for (let i = 0; i < items.length; i++) {
+      items[i].classList.toggle('search-item--active', i === this.activeIndex);
+    }
+    items[this.activeIndex]?.scrollIntoView({ block: 'nearest' });
   }
 
   showFeatureInfo(entry: FeatureInfo): void {
@@ -150,6 +201,15 @@ export class UI {
   }
 
   showRoverInfo(entry: RoverPinEntry): void {
+    const meta = ROVER_META[entry.id];
+    const img = document.getElementById('rpImage') as HTMLImageElement;
+    if (meta?.imageUrl) {
+      img.src = meta.imageUrl;
+      img.alt = entry.rover;
+      img.style.display = '';
+    } else {
+      img.style.display = 'none';
+    }
     const nameEl = document.getElementById('rpRover') as HTMLElement;
     nameEl.textContent = entry.rover;
     const dot = document.createElement('span');
@@ -160,6 +220,8 @@ export class UI {
       entry.sol !== null ? `Sol ${entry.sol}` : '—';
     const link = document.getElementById('rpLink') as HTMLAnchorElement;
     link.href = roverGalleryUrl(entry.id, entry.sol);
+    (document.getElementById('rpDesc') as HTMLElement).textContent =
+      meta?.description ?? '';
     this.hideFeatureInfo();
     this.hideSatelliteInfo();
     this.roverPanel.style.display = 'block';
@@ -170,6 +232,9 @@ export class UI {
   }
 
   showSatelliteInfo(entry: SatelliteEntry): void {
+    const img = document.getElementById('spImage') as HTMLImageElement;
+    img.src = entry.imageUrl;
+    img.alt = entry.name;
     const nameEl = document.getElementById('spName') as HTMLElement;
     nameEl.textContent = entry.name;
     const dot = document.createElement('span');
@@ -181,6 +246,7 @@ export class UI {
       entry.periodMinutes >= 120
         ? `${(entry.periodMinutes / 60).toFixed(1)} hr`
         : `${entry.periodMinutes} min`;
+    (document.getElementById('spDesc') as HTMLElement).textContent = entry.description;
     this.hideFeatureInfo();
     this.hideRoverInfo();
     this.satellitePanel.style.display = 'block';
