@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import type { Feature, FeatureData } from './types';
+import type { Feature, FeatureData, RoverSearchResult } from './types';
 import type { AppState } from '../state';
 import { ROVER_TRAVERSE_URL, ROVER_IMAGES_URL } from '../constants';
 
@@ -46,6 +46,7 @@ const PIN_IMAGES: Map<string, HTMLCanvasElement> = new Map(
 let traversePrimitives: Cesium.PrimitiveCollection;
 let pinCollection: Cesium.BillboardCollection;
 let pinData: Array<{ pin: Cesium.Billboard } & RoverPinEntry> = [];
+let roverSites: Array<{ name: string; id: string; lon: number; lat: number }> = [];
 let removeClickHandler: (() => void) | null = null;
 let onPinClick: ((entry: RoverPinEntry) => void) | null = null;
 let onPinMiss: (() => void) | null = null;
@@ -91,12 +92,20 @@ export const rovers: Feature = {
     }
 
     // Image waypoint pins — one billboard per drive sol, clamped to terrain
+    const seenRovers = new Set<string>();
+    roverSites = [];
     for (const feature of imagesGeo.features) {
       const { rover, id, sol, color } = feature.properties as {
         rover: string; id: string; sol: number | null; color: string;
       };
       const [lon, lat] = feature.geometry.coordinates as [number, number];
       const cesiumColor = ROVER_COLORS[id] ?? Cesium.Color.fromCssColorString(color);
+
+      // First feature per rover ≈ landing site (sol-sorted for traverse rovers, exact for pin-only)
+      if (!seenRovers.has(id)) {
+        seenRovers.add(id);
+        roverSites.push({ name: rover, id, lon, lat });
+      }
 
       const pin = pinCollection.add({
         position: Cesium.Cartesian3.fromDegrees(lon, lat),
@@ -131,5 +140,15 @@ export const rovers: Feature = {
     removeClickHandler?.();
     removeClickHandler = null;
     pinData = [];
+    roverSites = [];
   },
 };
+
+export function searchRovers(query: string): RoverSearchResult[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const all = q === '*';
+  return roverSites
+    .filter((r) => all || r.name.toLowerCase().includes(q))
+    .map((r) => ({ kind: 'rover' as const, name: r.name, id: r.id, lon: r.lon, lat: r.lat }));
+}

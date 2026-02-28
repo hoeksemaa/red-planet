@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import type { Feature, FeatureData, LabelEntry } from './types';
+import type { Feature, FeatureData, LabelEntry, LocationSearchResult } from './types';
 import type { AppState } from '../state';
 
 let labelCollection: Cesium.LabelCollection;
@@ -94,20 +94,14 @@ export const labels: Feature = {
   },
 };
 
-export interface SearchResult {
-  name: string;
-  lon: number;
-  lat: number;
-  diameterKm: number;
-}
-
-export function searchLabels(query: string): SearchResult[] {
+export function searchLabels(query: string): LocationSearchResult[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
+  const all = q === '*';
   return labelData
-    .filter((d) => d.name.toLowerCase().includes(q))
+    .filter((d) => all || d.name.toLowerCase().includes(q))
     .slice(0, 10)
-    .map(({ name, lon, lat, diameterKm }) => ({ name, lon, lat, diameterKm }));
+    .map(({ name, lon, lat, diameterKm }) => ({ kind: 'location' as const, name, lon, lat, diameterKm }));
 }
 
 export function flyToAltitude(diameterKm: number): number {

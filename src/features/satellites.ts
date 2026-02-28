@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import type { Feature, FeatureData } from './types';
+import type { Feature, FeatureData, SatelliteSearchResult } from './types';
 import type { AppState } from '../state';
 import {
   SATELLITES, SATELLITE_TIME_MULTIPLIER,
@@ -203,3 +203,18 @@ export const satellites: Feature = {
     dotData = [];
   },
 };
+
+export function searchSatellites(query: string): SatelliteSearchResult[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const all = q === '*';
+  return SATELLITES
+    .filter((s) => all || s.name.toLowerCase().includes(q))
+    .map((s) => ({
+      kind: 'satellite' as const,
+      name: s.name,
+      altitudeKm: Math.round(s.semiMajorAxisKm - MARS_RADIUS_KM),
+      periodMinutes: Math.round(s.periodSeconds / 60),
+      color: s.color,
+    }));
+}

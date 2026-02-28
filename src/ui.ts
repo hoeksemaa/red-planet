@@ -1,20 +1,13 @@
 import type { AppState } from './state';
-import type { LabelEntry } from './features/types';
+import type { LabelEntry, UnifiedSearchResult } from './features/types';
 import type { RoverPinEntry } from './features/rovers';
 import type { SatelliteEntry } from './features/satellites';
 import { EXAGGERATION_SCALE } from './constants';
 
-export interface SearchResult {
-  name: string;
-  lon: number;
-  lat: number;
-  diameterKm: number;
-}
-
 export interface UICallbacks {
   onStateChange: (state: AppState) => void;
-  onSearch: (query: string) => SearchResult[];
-  onSelect: (result: SearchResult) => void;
+  onSearch: (query: string) => UnifiedSearchResult[];
+  onSelect: (result: UnifiedSearchResult) => void;
 }
 
 function roverGalleryUrl(id: string, sol: number | null): string {
@@ -95,7 +88,7 @@ export class UI {
     });
   }
 
-  private showResults(results: SearchResult[]): void {
+  private showResults(results: UnifiedSearchResult[]): void {
     this.searchResults.innerHTML = '';
     if (results.length === 0) {
       this.searchResults.style.display = 'none';
@@ -104,7 +97,17 @@ export class UI {
     for (const r of results) {
       const item = document.createElement('div');
       item.className = 'search-item';
-      item.textContent = r.name;
+
+      const badge = document.createElement('span');
+      badge.className = `search-badge search-badge--${r.kind}`;
+      badge.textContent = r.kind === 'location' ? 'Place'
+                        : r.kind === 'rover' ? 'Rover' : 'Satellite';
+      item.appendChild(badge);
+
+      const name = document.createElement('span');
+      name.textContent = r.name;
+      item.appendChild(name);
+
       item.addEventListener('click', () => {
         this.searchInput.value = r.name;
         this.hideResults();

@@ -50,3 +50,34 @@ export interface LabelEntry {
   featureType: string;
   origin: string;
 }
+
+// ── Unified search ──────────────────────────────────────────
+
+export interface LocationSearchResult {
+  kind: 'location';
+  name: string;
+  lon: number;
+  lat: number;
+  diameterKm: number;
+}
+
+export interface RoverSearchResult {
+  kind: 'rover';
+  name: string;
+  id: string;
+  lon: number;
+  lat: number;
+}
+
+export interface SatelliteSearchResult {
+  kind: 'satellite';
+  name: string;
+  altitudeKm: number;
+  periodMinutes: number;
+  color: string;
+}
+
+export type UnifiedSearchResult =
+  | LocationSearchResult
+  | RoverSearchResult
+  | SatelliteSearchResult;

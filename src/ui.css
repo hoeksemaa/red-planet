@@ -113,6 +113,8 @@ body {
 }
 
 .search-item {
+  display: flex;
+  align-items: center;
   padding: 10px 14px;
   font-size: var(--font-size);
   color: var(--text-primary);
@@ -122,6 +124,21 @@ body {
 .search-item:hover {
   background: #f8f9fa;
 }
+
+.search-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-right: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+.search-badge--location  { background: #e8f0fe; color: #1a73e8; }
+.search-badge--rover     { background: #e6f4ea; color: #137333; }
+.search-badge--satellite { background: #fce8e6; color: #c5221f; }
 
 /* ── Feature info (inside search card) ────────────────────── */
 #featurePanel {
