@@ -182,7 +182,13 @@ export class UI {
   }
 
   showFeatureInfo(entry: FeatureInfo): void {
-    (document.getElementById('fpName') as HTMLElement).textContent = entry.name;
+    const nameEl = document.getElementById('fpName') as HTMLElement;
+    nameEl.textContent = '';
+    const badge = document.createElement('span');
+    badge.className = 'search-badge search-badge--location';
+    badge.textContent = 'Place';
+    nameEl.appendChild(badge);
+    nameEl.appendChild(document.createTextNode(entry.name));
     (document.getElementById('fpType') as HTMLElement).textContent = entry.featureType;
     (document.getElementById('fpDiameter') as HTMLElement).textContent =
       `${entry.diameterKm.toFixed(1)} km`;
@@ -211,7 +217,12 @@ export class UI {
       img.style.display = 'none';
     }
     const nameEl = document.getElementById('rpRover') as HTMLElement;
-    nameEl.textContent = entry.rover;
+    nameEl.textContent = '';
+    const badge = document.createElement('span');
+    badge.className = 'search-badge search-badge--rover';
+    badge.textContent = 'Rover';
+    nameEl.appendChild(badge);
+    nameEl.appendChild(document.createTextNode(entry.rover));
     const dot = document.createElement('span');
     dot.className = 'search-color-bar';
     dot.style.backgroundColor = entry.color;
@@ -236,7 +247,12 @@ export class UI {
     img.src = entry.imageUrl;
     img.alt = entry.name;
     const nameEl = document.getElementById('spName') as HTMLElement;
-    nameEl.textContent = entry.name;
+    nameEl.textContent = '';
+    const badge = document.createElement('span');
+    badge.className = 'search-badge search-badge--satellite';
+    badge.textContent = 'Satellite';
+    nameEl.appendChild(badge);
+    nameEl.appendChild(document.createTextNode(entry.name));
     const dot = document.createElement('span');
     dot.className = 'search-color-bar';
     dot.style.backgroundColor = entry.color;
