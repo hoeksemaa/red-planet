@@ -1,8 +1,7 @@
 import * as Cesium from 'cesium';
 import type { Feature, ContourGeoJSON } from './types';
 import type { AppState } from '../state';
-import { DEFAULT_STATE } from '../state';
-import { CONTOURS_DATA_URL } from '../constants';
+import { EXAGGERATION_SCALE, CONTOURS_DATA_URL } from '../constants';
 
 function elevationToColor(elev: number): Cesium.Color {
   const raw = Math.max(0, Math.min(1, (elev + 8000) / 29000));
@@ -12,16 +11,16 @@ function elevationToColor(elev: number): Cesium.Color {
   return Cesium.Color.fromHsl(hue, 1.0, lightness);
 }
 
-let contourCollection: Cesium.PrimitiveCollection;
-let geojson: ContourGeoJSON | null = null;
-let lastExaggeration: number = DEFAULT_STATE.exaggeration;
+// Precomputed collections for each exaggeration level.
+// Primitive positions are absolute world coords — verticalExaggeration does NOT scale them,
+// so we build both variants at init and swap visibility on toggle (instant).
+const collections = new Map<number, Cesium.PrimitiveCollection>();
 
-// Primitive positions are absolute world coords — verticalExaggeration does NOT scale them.
-// We must multiply elevation by exaggeration ourselves and rebuild on toggle.
-function buildContours(exaggeration: number): void {
-  contourCollection.removeAll();
-
-  if (!geojson) return;
+function buildCollection(
+  geojson: ContourGeoJSON,
+  exaggeration: number,
+): Cesium.PrimitiveCollection {
+  const collection = new Cesium.PrimitiveCollection();
 
   for (const feature of geojson.features) {
     const elev = feature.properties.elevation;
@@ -30,7 +29,7 @@ function buildContours(exaggeration: number): void {
 
     for (const coordArray of feature.geometry.coordinates) {
       const positions = coordArray.map(([lon, lat]) =>
-        Cesium.Cartesian3.fromDegrees(lon, lat, elev * exaggeration)
+        Cesium.Cartesian3.fromDegrees(lon, lat, elev * exaggeration),
       );
       if (positions.length < 2) continue;
       instances.push(
@@ -39,40 +38,45 @@ function buildContours(exaggeration: number): void {
           attributes: {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(color),
           },
-        })
+        }),
       );
     }
     if (instances.length === 0) continue;
 
-    contourCollection.add(
+    collection.add(
       new Cesium.Primitive({
         geometryInstances: instances,
-        appearance: new Cesium.PolylineColorAppearance({
-          translucent: false,
-        }),
+        appearance: new Cesium.PolylineColorAppearance({ translucent: false }),
         asynchronous: false,
-      })
+      }),
     );
   }
+
+  return collection;
 }
 
 export const contours: Feature = {
   async init(viewer: Cesium.Viewer) {
-    geojson = await fetch(CONTOURS_DATA_URL).then((r) => r.json());
-    contourCollection = viewer.scene.primitives.add(new Cesium.PrimitiveCollection());
-    buildContours(lastExaggeration);
+    const geojson: ContourGeoJSON = await fetch(CONTOURS_DATA_URL).then((r) =>
+      r.json(),
+    );
+
+    for (const scale of [1, EXAGGERATION_SCALE]) {
+      const col = buildCollection(geojson, scale);
+      viewer.scene.primitives.add(col);
+      collections.set(scale, col);
+    }
   },
 
   apply(state: AppState) {
-    if (!contourCollection) return;
-    contourCollection.show = state.layers.contours;
-    if (state.exaggeration !== lastExaggeration) {
-      lastExaggeration = state.exaggeration;
-      buildContours(state.exaggeration);
+    const visible = state.layers.contours;
+    for (const [scale, col] of collections) {
+      col.show = visible && state.exaggeration === scale;
     }
   },
 
   destroy() {
-    contourCollection.removeAll();
+    for (const col of collections.values()) col.removeAll();
+    collections.clear();
   },
 };
