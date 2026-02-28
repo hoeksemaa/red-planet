@@ -9,7 +9,7 @@ export const TERRAIN_TILE_SIZE = 32;
 export const EXAGGERATION_SCALE = 100;
 
 // Starting camera altitude in meters
-export const INITIAL_CAMERA_HEIGHT = 6_000_000;
+export const INITIAL_CAMERA_HEIGHT = 24_000_000;
 
 // Data URLs
 export const TERRAIN_DATA_URL = '/data/processed/MOLA/mola_16ppd.f32';
