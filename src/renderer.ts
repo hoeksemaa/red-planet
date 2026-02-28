@@ -31,6 +31,7 @@ export async function init(heights: Float32Array, initialState: AppState): Promi
     timeline: false,
     infoBox: false,
     selectionIndicator: false,
+    fullscreenButton: false,
     creditContainer: document.createElement('div'),
   });
 
