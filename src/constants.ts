@@ -61,9 +61,9 @@ export const SATELLITES: SatelliteElements[] = [
   },
   {
     name: 'MAVEN',
-    semiMajorAxisKm: 5500, eccentricity: 0.47, inclinationDeg: 75,
+    semiMajorAxisKm: 6565, eccentricity: 0.46, inclinationDeg: 75,
     raanDeg: 200, argPeriapsisDeg: 150, meanAnomalyDeg: 45,
-    periodSeconds: 264 * 60, color: '#AB47BC',
+    periodSeconds: 270 * 60, color: '#AB47BC',
   },
   {
     name: 'Mars Express',
