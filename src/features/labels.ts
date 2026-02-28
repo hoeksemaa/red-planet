@@ -15,19 +15,28 @@ interface LabelEntry {
 
 let labelCollection: Cesium.LabelCollection;
 let labelData: LabelEntry[] = [];
-let removeListener: (() => void) | null = null;
 
-function updateLabels(camera: Cesium.Camera): void {
-  const alt = camera.positionCartographic.height;
-  for (const { label, diameterKm } of labelData) {
-    if (alt > 10_000_000) {
-      label.show = diameterKm >= 500;
-    } else if (alt > 2_000_000) {
-      label.show = diameterKm >= 100;
-    } else {
-      label.show = true;
-    }
-  }
+// Label visibility: fade in when camera is within `diameterKm * SCALE` meters.
+// Floor ensures tiny features still appear at close zoom.
+const VISIBILITY_SCALE = 16_000;  // far (m) = diameter (km) × 16k → labels appear 16× sooner than 1:1
+const FLOOR_DISTANCE = 50_000;   // 50 km — minimum visibility distance for any label
+const FADE_RATIO = 0.6;          // fully opaque within 60% of max distance
+
+// Font size: log-scaled 3× range (11px–33px) based on diameter
+const MIN_FONT = 6;
+const MAX_FONT = 17;
+const LOG_MAX = Math.log(6000);  // ≈ max diameter in km
+
+function labelFont(diameterKm: number): string {
+  const t = Math.log(Math.max(diameterKm, 1)) / LOG_MAX;  // 0..1
+  const size = Math.round(MIN_FONT + (MAX_FONT - MIN_FONT) * Math.min(t, 1));
+  return `${size}px sans-serif`;
+}
+
+function labelFade(diameterKm: number): Cesium.NearFarScalar {
+  const far = Math.max(diameterKm * VISIBILITY_SCALE, FLOOR_DISTANCE);
+  const near = far * FADE_RATIO;
+  return new Cesium.NearFarScalar(near, 1.0, far, 0.0);
 }
 
 export const labels: Feature = {
@@ -43,9 +52,8 @@ export const labels: Feature = {
       const label = labelCollection.add({
         position: Cesium.Cartesian3.fromDegrees(lon, lat),
         text: name,
-        show: false,
         heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
-        font: '13px sans-serif',
+        font: labelFont(diameter_km),
         fillColor: Cesium.Color.WHITE,
         outlineColor: Cesium.Color.BLACK,
         outlineWidth: 2,
@@ -53,22 +61,12 @@ export const labels: Feature = {
         pixelOffset: new Cesium.Cartesian2(0, -8),
         horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        translucencyByDistance: labelFade(diameter_km),
       });
 
       labelData.push({ label, lon, lat, name, diameterKm: diameter_km,
                        featureType: feature_type, origin });
     }
-
-    // Throttled postRender listener — ~2 checks/sec for 2k labels
-    let lastUpdate = 0;
-    const handler = () => {
-      const now = Date.now();
-      if (now - lastUpdate < 500) return;
-      lastUpdate = now;
-      updateLabels(viewer.camera);
-    };
-    viewer.scene.postRender.addEventListener(handler);
-    removeListener = () => viewer.scene.postRender.removeEventListener(handler);
   },
 
   pick(picked: any): FeatureInfo | undefined {
@@ -83,8 +81,6 @@ export const labels: Feature = {
   },
 
   destroy() {
-    removeListener?.();
-    removeListener = null;
     labelData = [];
   },
 };

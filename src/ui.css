@@ -142,6 +142,15 @@ body {
 .search-badge--rover     { background: #e6f4ea; color: #137333; }
 .search-badge--satellite { background: #fce8e6; color: #c5221f; }
 
+.search-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
 .search-color-bar {
   margin-left: auto;
   width: 10px;
@@ -187,6 +196,16 @@ body {
 #roverPanel {
   border-top: 1px solid var(--border-color);
   padding: 14px 14px 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+#rpImage {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 12px;
 }
 
 #rpRover {
@@ -197,6 +216,14 @@ body {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 10px;
+}
+
+#rpDesc {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  white-space: pre-line;
 }
 
 .rover-link {
@@ -213,6 +240,19 @@ body {
   padding: 14px 14px 12px;
 }
 
+#satellitePanel {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+#spImage {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
 #spName {
   display: flex;
   align-items: center;
@@ -221,6 +261,14 @@ body {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 10px;
+}
+
+#spDesc {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  white-space: pre-line;
 }
 
 /* ── Layers button (bottom-left) ───────────────────────────── */

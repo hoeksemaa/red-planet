@@ -1,6 +1,6 @@
 import type { AppState } from './state';
 import type { FeatureInfo, UnifiedSearchResult } from './features/types';
-import type { RoverPinEntry } from './features/rovers';
+import { type RoverPinEntry, ROVER_META } from './features/rovers';
 import type { SatelliteEntry } from './features/satellites';
 import { EXAGGERATION_SCALE } from './constants';
 
@@ -81,6 +81,8 @@ export class UI {
       this.searchClear.style.display = 'none';
       this.hideResults();
       this.hideFeatureInfo();
+      this.hideRoverInfo();
+      this.hideSatelliteInfo();
     });
 
     // Keyboard navigation
@@ -133,6 +135,16 @@ export class UI {
       badge.textContent = r.kind === 'location' ? 'Place'
                         : r.kind === 'rover' ? 'Rover' : 'Satellite';
       item.appendChild(badge);
+
+      if (r.kind === 'rover' || r.kind === 'satellite') {
+        const thumb = document.createElement('img');
+        thumb.className = 'search-thumb';
+        thumb.src = r.kind === 'rover'
+          ? (ROVER_META[r.id]?.imageUrl ?? '')
+          : r.imageUrl;
+        thumb.alt = '';
+        item.appendChild(thumb);
+      }
 
       const name = document.createElement('span');
       name.textContent = r.name;
@@ -189,6 +201,15 @@ export class UI {
   }
 
   showRoverInfo(entry: RoverPinEntry): void {
+    const meta = ROVER_META[entry.id];
+    const img = document.getElementById('rpImage') as HTMLImageElement;
+    if (meta?.imageUrl) {
+      img.src = meta.imageUrl;
+      img.alt = entry.rover;
+      img.style.display = '';
+    } else {
+      img.style.display = 'none';
+    }
     const nameEl = document.getElementById('rpRover') as HTMLElement;
     nameEl.textContent = entry.rover;
     const dot = document.createElement('span');
@@ -199,6 +220,8 @@ export class UI {
       entry.sol !== null ? `Sol ${entry.sol}` : '—';
     const link = document.getElementById('rpLink') as HTMLAnchorElement;
     link.href = roverGalleryUrl(entry.id, entry.sol);
+    (document.getElementById('rpDesc') as HTMLElement).textContent =
+      meta?.description ?? '';
     this.hideFeatureInfo();
     this.hideSatelliteInfo();
     this.roverPanel.style.display = 'block';
@@ -209,6 +232,9 @@ export class UI {
   }
 
   showSatelliteInfo(entry: SatelliteEntry): void {
+    const img = document.getElementById('spImage') as HTMLImageElement;
+    img.src = entry.imageUrl;
+    img.alt = entry.name;
     const nameEl = document.getElementById('spName') as HTMLElement;
     nameEl.textContent = entry.name;
     const dot = document.createElement('span');
@@ -220,6 +246,7 @@ export class UI {
       entry.periodMinutes >= 120
         ? `${(entry.periodMinutes / 60).toFixed(1)} hr`
         : `${entry.periodMinutes} min`;
+    (document.getElementById('spDesc') as HTMLElement).textContent = entry.description;
     this.hideFeatureInfo();
     this.hideRoverInfo();
     this.satellitePanel.style.display = 'block';

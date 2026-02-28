@@ -71,6 +71,7 @@ export interface RoverSearchResult {
   lon: number;
   lat: number;
   color: string;
+  imageUrl?: string;
 }
 
 export interface SatelliteSearchResult {
@@ -79,6 +80,8 @@ export interface SatelliteSearchResult {
   altitudeKm: number;
   periodMinutes: number;
   color: string;
+  description: string;
+  imageUrl: string;
 }
 
 export type UnifiedSearchResult =
