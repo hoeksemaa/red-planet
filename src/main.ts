@@ -6,7 +6,7 @@ import { searchRovers, setOnRoverPinClick, setOnRoverMiss } from './features/rov
 import { searchSatellites, setOnSatelliteClick, setOnSatelliteMiss } from './features/satellites';
 import type { UnifiedSearchResult } from './features/types';
 import { UI } from './ui';
-import { TERRAIN_DATA_URL, CONTOURS_DATA_URL, NOMENCLATURE_DATA_URL, INITIAL_CAMERA_HEIGHT } from './constants';
+import { TERRAIN_DATA_URL, CONTOURS_DATA_URL, NOMENCLATURE_DATA_URL } from './constants';
 
 async function main(): Promise<void> {
   const [heightsBuf, contourGeoJSON, nomenclatureGeoJSON] = await Promise.all([
@@ -46,7 +46,7 @@ async function main(): Promise<void> {
         renderer.flyTo(result.lon, result.lat, 50_000);
         break;
       case 'satellite':
-        renderer.flyTo(0, 0, INITIAL_CAMERA_HEIGHT);
+        renderer.flyTo(0, 0, result.altitudeKm * 1000 * 10);
         ui.showSatelliteInfo(result);
         break;
     }
