@@ -140,3 +140,38 @@ const model = viewer.scene.primitives.add(Cesium.Model.fromGltf({
 | `Primitive` (geometry) | No — must multiply heights manually |
 | `Model` with `enableVerticalExaggeration: true` | Yes |
 | `Cesium3DTileset` | Only if tileset's own `verticalExaggeration` is set |
+
+---
+
+## Rule 7 — Billboard/Label depth ordering vs polyline layers
+
+Billboards and labels ARE rendered after opaque geometry in Cesium's pipeline. However,
+`Primitive`-based polylines (contours, graticule) write to the depth buffer at their
+world-space positions. When a billboard/label sits at the same pixel, it is depth-tested
+against those values and can be clipped if the line's depth wins.
+
+The fix is `disableDepthTestDistance` on each `Billboard`/`Label`:
+
+```ts
+// On billboard.add() / label.add():
+disableDepthTestDistance: 6.4e6,   // ≈ Mars diameter in metres
+```
+
+This skips depth testing when the camera is closer than 6.4 Mm to the primitive —
+which covers all practical zoom levels on the visible hemisphere.
+
+**Do NOT use `Number.POSITIVE_INFINITY`.** That disables depth testing at any distance,
+causing labels/icons near the limb to render visibly through the planet body when the
+camera is zoomed out.
+
+---
+
+## Root cause — contour/graticule lines visually above icons at 100× exaggeration
+
+At 100× vertical exaggeration, contour and graticule `Primitive` positions are placed at
+`elevation × 100` in world coordinates — potentially kilometers above the rendered terrain
+surface. Billboards clamped with `CLAMP_TO_TERRAIN` sit at the actual rendered surface.
+At oblique viewing angles, an exaggerated contour line that passes near a billboard's map
+position can be physically above it in 3D space and will visually occlude it regardless of
+depth-test settings. This is not a rendering-order or depth-buffer artifact — the line
+literally floats above the icon in world space.

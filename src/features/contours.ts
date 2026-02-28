@@ -15,6 +15,7 @@ function elevationToColor(elev: number): Cesium.Color {
 // Primitive positions are absolute world coords — verticalExaggeration does NOT scale them,
 // so we build both variants at init and swap visibility on toggle (instant).
 const collections = new Map<number, Cesium.PrimitiveCollection>();
+let prefetchedData: ContourGeoJSON | null = null;
 
 function buildCollection(
   geojson: ContourGeoJSON,
@@ -56,10 +57,12 @@ function buildCollection(
 }
 
 export const contours: Feature = {
+  async prefetch() {
+    prefetchedData = await fetch(CONTOURS_DATA_URL).then((r) => r.json());
+  },
+
   async init(viewer: Cesium.Viewer) {
-    const geojson: ContourGeoJSON = await fetch(CONTOURS_DATA_URL).then((r) =>
-      r.json(),
-    );
+    const geojson = prefetchedData ?? (await fetch(CONTOURS_DATA_URL).then((r) => r.json()));
 
     for (const scale of [1, EXAGGERATION_SCALE]) {
       const col = buildCollection(geojson, scale);

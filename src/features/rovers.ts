@@ -259,13 +259,24 @@ let pinCollection: Cesium.BillboardCollection;
 let pinData: Array<{ pin: Cesium.Billboard } & RoverPinEntry> = [];
 let photoData: Array<{ pin: Cesium.Billboard } & RoverPhotoEntry> = [];
 let roverSites: Array<{ name: string; id: string; lon: number; lat: number }> = [];
+let prefetchedTraverse: any = null;
+let prefetchedImages: any = null;
 
 export const rovers: Feature = {
-  async init(viewer: Cesium.Viewer): Promise<void> {
-    const [traverseGeo, imagesGeo] = await Promise.all([
+  async prefetch() {
+    [prefetchedTraverse, prefetchedImages] = await Promise.all([
       fetch(ROVER_TRAVERSE_URL).then((r) => r.json()),
       fetch(ROVER_IMAGES_URL).then((r) => r.json()),
     ]);
+  },
+
+  async init(viewer: Cesium.Viewer): Promise<void> {
+    const [traverseGeo, imagesGeo] = prefetchedTraverse
+      ? [prefetchedTraverse, prefetchedImages]
+      : await Promise.all([
+          fetch(ROVER_TRAVERSE_URL).then((r) => r.json()),
+          fetch(ROVER_IMAGES_URL).then((r) => r.json()),
+        ]);
 
     traversePrimitives = viewer.scene.primitives.add(new Cesium.PrimitiveCollection());
     pinCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection({ scene: viewer.scene }));
@@ -293,8 +304,9 @@ export const rovers: Feature = {
       );
     }
 
-    // Image waypoint pins — one billboard per drive sol, clamped to terrain
+    // Image waypoint pins — landing site dot only on first load; remaining deferred
     const seenRovers = new Set<string>();
+    const deferredFeatures: typeof imagesGeo.features = [];
     roverSites = [];
     for (const feature of imagesGeo.features) {
       const { rover, id, sol, color } = feature.properties as {
@@ -303,22 +315,41 @@ export const rovers: Feature = {
       const [lon, lat] = feature.geometry.coordinates as [number, number];
       const cesiumColor = ROVER_COLORS[id] ?? Cesium.Color.fromCssColorString(color);
 
-      // First feature per rover ≈ landing site (sol-sorted for traverse rovers, exact for pin-only)
       if (!seenRovers.has(id)) {
+        // First feature per rover ≈ landing site — add immediately
         seenRovers.add(id);
         roverSites.push({ name: rover, id, lon, lat });
+        const pin = pinCollection.add({
+          position: Cesium.Cartesian3.fromDegrees(lon, lat),
+          image: PIN_IMAGES.get(id) ?? makeDotCanvas(cesiumColor),
+          heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
+          verticalOrigin: Cesium.VerticalOrigin.CENTER,
+          disableDepthTestDistance: 6.4e6,
+        });
+        pinData.push({ pin, kind: 'pin', rover, id, sol, color: cesiumColor.toCssColorString() });
+      } else {
+        deferredFeatures.push(feature);
       }
-
-      const pin = pinCollection.add({
-        position: Cesium.Cartesian3.fromDegrees(lon, lat),
-        image: PIN_IMAGES.get(id) ?? makeDotCanvas(cesiumColor),
-        heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
-        verticalOrigin: Cesium.VerticalOrigin.CENTER,
-        disableDepthTestDistance: 6.4e6,
-      });
-
-      pinData.push({ pin, kind: 'pin', rover, id, sol, color: cesiumColor.toCssColorString() });
     }
+
+    // Remaining drive-sol dots — added after critical path clears
+    setTimeout(() => {
+      for (const feature of deferredFeatures) {
+        const { rover, id, sol, color } = feature.properties as {
+          rover: string; id: string; sol: number | null; color: string;
+        };
+        const [lon, lat] = feature.geometry.coordinates as [number, number];
+        const cesiumColor = ROVER_COLORS[id] ?? Cesium.Color.fromCssColorString(color);
+        const pin = pinCollection.add({
+          position: Cesium.Cartesian3.fromDegrees(lon, lat),
+          image: PIN_IMAGES.get(id) ?? makeDotCanvas(cesiumColor),
+          heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
+          verticalOrigin: Cesium.VerticalOrigin.CENTER,
+          disableDepthTestDistance: 6.4e6,
+        });
+        pinData.push({ pin, kind: 'pin', rover, id, sol, color: cesiumColor.toCssColorString() });
+      }
+    }, 0);
 
     // Photo icons — curated photos placed at known coordinates
     photoData = [];
