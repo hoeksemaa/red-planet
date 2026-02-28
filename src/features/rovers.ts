@@ -4,11 +4,26 @@ import type { AppState } from '../state';
 import { ROVER_TRAVERSE_URL, ROVER_IMAGES_URL } from '../constants';
 
 export interface RoverPinEntry {
+  kind: 'pin';
   rover: string;
   id: string;
   sol: number | null;
   color: string;
 }
+
+export interface RoverPhotoEntry {
+  kind: 'photo';
+  rover: string;
+  id: string;
+  sol: number;
+  camera: string;
+  caption: string;
+  imageUrl: string;
+  lon: number;
+  lat: number;
+}
+
+export type RoverPickResult = RoverPinEntry | RoverPhotoEntry;
 
 const ROVER_COLORS: Record<string, Cesium.Color> = {
   perseverance: Cesium.Color.fromCssColorString('#FF6B35'),
@@ -43,6 +58,54 @@ function makeDotCanvas(color: Cesium.Color): HTMLCanvasElement {
 const PIN_IMAGES: Map<string, HTMLCanvasElement> = new Map(
   Object.entries(ROVER_COLORS).map(([id, color]) => [id, makeDotCanvas(color)])
 );
+
+// Camera icon — white circle with colored camera glyph, visually distinct from dot pins.
+function makeCameraCanvas(color: Cesium.Color): HTMLCanvasElement {
+  const s = 24;
+  const canvas = document.createElement('canvas');
+  canvas.width = s;
+  canvas.height = s;
+  const ctx = canvas.getContext('2d')!;
+  // white circle background
+  ctx.beginPath();
+  ctx.arc(s / 2, s / 2, s / 2 - 1, 0, Math.PI * 2);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  // camera body
+  const c = color.toCssColorString();
+  ctx.strokeStyle = c;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(5, 9, 14, 10, 2);
+  ctx.stroke();
+  // lens
+  ctx.beginPath();
+  ctx.arc(12, 14, 3, 0, Math.PI * 2);
+  ctx.stroke();
+  // viewfinder bump
+  ctx.beginPath();
+  ctx.roundRect(9, 6, 6, 4, 1);
+  ctx.stroke();
+  return canvas;
+}
+
+const CAMERA_IMAGES: Map<string, HTMLCanvasElement> = new Map(
+  Object.entries(ROVER_COLORS).map(([id, color]) => [id, makeCameraCanvas(color)])
+);
+
+// ── Curated rover photos (tracer bullet: one hardcoded entry) ────────
+const CURATED_PHOTOS: Omit<RoverPhotoEntry, 'kind'>[] = [
+  {
+    rover: 'Perseverance',
+    id: 'perseverance',
+    sol: 198,
+    camera: 'WATSON (SHERLOC)',
+    caption: 'Perseverance\'s first full selfie — taken by the WATSON camera on the SHERLOC instrument at the end of the robotic arm, this composite of 62 images shows the rover alongside the Ingenuity helicopter shortly before its historic first flight on Sol 58.',
+    imageUrl: '/images/rover-photos/perseverance-selfie-ingenuity.jpg',
+    lon: 77.45093957,
+    lat: 18.44486877,
+  },
+];
 
 // ── Rover metadata (descriptions + hero images) ───────────────────────
 export const ROVER_META: Record<string, { description: string; imageUrl: string }> = {
@@ -94,6 +157,7 @@ export const ROVER_META: Record<string, { description: string; imageUrl: string 
 let traversePrimitives: Cesium.PrimitiveCollection;
 let pinCollection: Cesium.BillboardCollection;
 let pinData: Array<{ pin: Cesium.Billboard } & RoverPinEntry> = [];
+let photoData: Array<{ pin: Cesium.Billboard } & RoverPhotoEntry> = [];
 let roverSites: Array<{ name: string; id: string; lon: number; lat: number }> = [];
 
 export const rovers: Feature = {
@@ -153,14 +217,33 @@ export const rovers: Feature = {
         disableDepthTestDistance: 6.4e6,
       });
 
-      pinData.push({ pin, rover, id, sol, color: cesiumColor.toCssColorString() });
+      pinData.push({ pin, kind: 'pin', rover, id, sol, color: cesiumColor.toCssColorString() });
+    }
+
+    // Photo icons — curated photos placed at known coordinates
+    photoData = [];
+    for (const photo of CURATED_PHOTOS) {
+      const pin = pinCollection.add({
+        position: Cesium.Cartesian3.fromDegrees(photo.lon, photo.lat),
+        image: CAMERA_IMAGES.get(photo.id) ?? makeCameraCanvas(Cesium.Color.WHITE),
+        heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
+        verticalOrigin: Cesium.VerticalOrigin.CENTER,
+        disableDepthTestDistance: 6.4e6,
+      });
+      photoData.push({ pin, kind: 'photo', ...photo });
     }
   },
 
-  pick(picked: any): RoverPinEntry | undefined {
+  pick(picked: any): RoverPickResult | undefined {
+    // Photo icons first (fewer, more specific)
+    const photo = photoData.find((e) => e.pin === picked?.primitive);
+    if (photo) {
+      const { pin: _, ...data } = photo;
+      return data;
+    }
     const entry = pinData.find((e) => e.pin === picked?.primitive);
     if (!entry) return undefined;
-    return { rover: entry.rover, id: entry.id, sol: entry.sol, color: entry.color };
+    return { kind: 'pin', rover: entry.rover, id: entry.id, sol: entry.sol, color: entry.color };
   },
 
   apply(state: AppState) {
@@ -170,6 +253,7 @@ export const rovers: Feature = {
 
   destroy() {
     pinData = [];
+    photoData = [];
     roverSites = [];
   },
 };

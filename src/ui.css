@@ -256,6 +256,40 @@ body {
   text-decoration: underline;
 }
 
+/* ── Rover photo info (inside search card, same style as roverPanel) */
+#roverPhotoPanel {
+  border-top: 1px solid var(--border-color);
+  padding: 14px 14px 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+#rphImage {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+#rphName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+#rphCaption {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  white-space: pre-line;
+}
+
 /* ── Satellite info (inside search card, same style as roverPanel) */
 #satellitePanel {
   border-top: 1px solid var(--border-color);

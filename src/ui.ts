@@ -1,6 +1,6 @@
 import type { AppState } from './state';
 import type { FeatureInfo, UnifiedSearchResult } from './features/types';
-import { type RoverPinEntry, ROVER_META } from './features/rovers';
+import { type RoverPinEntry, type RoverPhotoEntry, ROVER_META } from './features/rovers';
 import { PLACE_META } from './features/place-meta';
 import type { SatelliteEntry } from './features/satellites';
 import { EXAGGERATION_SCALE } from './constants';
@@ -41,6 +41,7 @@ export class UI {
   private layerContours    = document.getElementById('layerContours') as HTMLInputElement;
   private layerLabels      = document.getElementById('layerLabels') as HTMLInputElement;
   private layerRovers      = document.getElementById('layerRovers') as HTMLInputElement;
+  private layerGraticule   = document.getElementById('layerGraticule') as HTMLInputElement;
   private layerSatellites  = document.getElementById('layerSatellites') as HTMLInputElement;
 
   // Keyboard nav state
@@ -49,6 +50,9 @@ export class UI {
 
   // Rover info panel
   private roverPanel = document.getElementById('roverPanel') as HTMLDivElement;
+
+  // Rover photo panel
+  private roverPhotoPanel = document.getElementById('roverPhotoPanel') as HTMLDivElement;
 
   // Satellite info panel
   private satellitePanel = document.getElementById('satellitePanel') as HTMLDivElement;
@@ -83,6 +87,7 @@ export class UI {
       this.hideResults();
       this.hideFeatureInfo();
       this.hideRoverInfo();
+      this.hideRoverPhotoInfo();
       this.hideSatelliteInfo();
     });
 
@@ -212,6 +217,7 @@ export class UI {
     this.searchClear.style.display = 'block';
     this.hideResults();
     this.hideRoverInfo();
+    this.hideRoverPhotoInfo();
     this.hideSatelliteInfo();
     this.featurePanel.style.display = 'block';
   }
@@ -248,6 +254,7 @@ export class UI {
     (document.getElementById('rpDesc') as HTMLElement).textContent =
       meta?.description ?? '';
     this.hideFeatureInfo();
+    this.hideRoverPhotoInfo();
     this.hideSatelliteInfo();
     this.roverPanel.style.display = 'block';
   }
@@ -279,11 +286,41 @@ export class UI {
     (document.getElementById('spDesc') as HTMLElement).textContent = entry.description;
     this.hideFeatureInfo();
     this.hideRoverInfo();
+    this.hideRoverPhotoInfo();
     this.satellitePanel.style.display = 'block';
   }
 
   hideSatelliteInfo(): void {
     this.satellitePanel.style.display = 'none';
+  }
+
+  showRoverPhotoInfo(entry: RoverPhotoEntry): void {
+    const img = document.getElementById('rphImage') as HTMLImageElement;
+    img.src = entry.imageUrl;
+    img.alt = entry.caption;
+
+    const nameEl = document.getElementById('rphName') as HTMLElement;
+    nameEl.textContent = '';
+    const badge = document.createElement('span');
+    badge.className = 'search-badge search-badge--rover';
+    badge.textContent = 'Photo';
+    nameEl.appendChild(badge);
+    nameEl.appendChild(document.createTextNode(entry.rover));
+
+    (document.getElementById('rphSol') as HTMLElement).textContent = `Sol ${entry.sol}`;
+    (document.getElementById('rphCamera') as HTMLElement).textContent = entry.camera;
+    (document.getElementById('rphLat') as HTMLElement).textContent = `${entry.lat.toFixed(4)}°`;
+    (document.getElementById('rphLon') as HTMLElement).textContent = `${entry.lon.toFixed(4)}°`;
+    (document.getElementById('rphCaption') as HTMLElement).textContent = entry.caption;
+
+    this.hideFeatureInfo();
+    this.hideRoverInfo();
+    this.hideSatelliteInfo();
+    this.roverPhotoPanel.style.display = 'block';
+  }
+
+  hideRoverPhotoInfo(): void {
+    this.roverPhotoPanel.style.display = 'none';
   }
 
   // ── Layers panel ────────────────────────────────────────────
@@ -325,6 +362,11 @@ export class UI {
 
     this.layerRovers.addEventListener('change', () => {
       this.state.layers.rovers = this.layerRovers.checked;
+      this.callbacks.onStateChange(this.state);
+    });
+
+    this.layerGraticule.addEventListener('change', () => {
+      this.state.layers.graticule = this.layerGraticule.checked;
       this.callbacks.onStateChange(this.state);
     });
 

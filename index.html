@@ -41,6 +41,15 @@
             </div>
             <div id="rpDesc"></div>
         </div>
+        <div id="roverPhotoPanel" style="display:none">
+            <img id="rphImage" alt="" />
+            <div id="rphName"></div>
+            <div class="fp-row"><span class="fp-label">Sol</span><span id="rphSol"></span></div>
+            <div class="fp-row"><span class="fp-label">Camera</span><span id="rphCamera"></span></div>
+            <div class="fp-row"><span class="fp-label">Latitude</span><span id="rphLat"></span></div>
+            <div class="fp-row"><span class="fp-label">Longitude</span><span id="rphLon"></span></div>
+            <div id="rphCaption"></div>
+        </div>
         <div id="satellitePanel" style="display:none">
             <img id="spImage" alt="" />
             <div id="spName"></div>
@@ -85,6 +94,10 @@
         <label class="layer-item">
             <input type="checkbox" id="layerContours" checked />
             <span>Topography lines</span>
+        </label>
+        <label class="layer-item">
+            <input type="checkbox" id="layerGraticule" checked />
+            <span>Lat/long grid</span>
         </label>
         <label class="layer-item">
             <input type="checkbox" id="layerLabels" checked />
