@@ -19,7 +19,7 @@ let hoveredLabel: Cesium.Label | null = null;
 
 // Label visibility: fade in when camera is within `diameterKm * SCALE` meters.
 // Floor ensures tiny features still appear at close zoom.
-const VISIBILITY_SCALE = 16_000;  // far (m) = diameter (km) × 16k → labels appear 16× sooner than 1:1
+const VISIBILITY_SCALE = 12_000;  // far (m) = diameter (km) × 12k → labels appear 12× sooner than 1:1
 const FLOOR_DISTANCE = 50_000;   // 50 km — minimum visibility distance for any label
 const FADE_RATIO = 0.6;          // fully opaque within 60% of max distance
 

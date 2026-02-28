@@ -20,7 +20,7 @@ async function main(): Promise<void> {
 
   renderer.register('imagery', imagery);
   renderer.register('contours', contours);
-  renderer.register('graticule', createGraticule(heights));
+  renderer.register('graticule', createGraticule());
   renderer.register('labels', labels);
   renderer.register('rovers', rovers);
   renderer.register('satellites', satellites);

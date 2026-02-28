@@ -2,7 +2,7 @@ import * as Cesium from 'cesium';
 import type { Feature } from './types';
 import type { AppState } from '../state';
 import { EXAGGERATION_SCALE } from '../constants';
-import { sampleMOLA } from '../terrain';
+import { parallelHeights, meridianHeights } from './graticule-heights';
 
 // 30° graticule — standard interval for USGS/MOLA global Mars maps.
 // Parallels: -60, -30, 0, +30, +60  (5 lines)
@@ -12,27 +12,29 @@ const STEP = 30;
 const SAMPLE_DEG = 1;
 const LINE_WIDTH = 1;
 
-function buildCollection(heights: Float32Array, exaggeration: number): Cesium.PrimitiveCollection {
+function buildCollection(exaggeration: number): Cesium.PrimitiveCollection {
   const collection = new Cesium.PrimitiveCollection();
   const instances: Cesium.GeometryInstance[] = [];
 
-  // Parallels
+  // Parallels — parallelHeights is laid out as [lat0_lon0, lat0_lon1, ..., lat1_lon0, ...]
+  let pi = 0;
   for (let lat = -90 + STEP; lat < 90; lat += STEP) {
     const positions: Cesium.Cartesian3[] = [];
     for (let lon = -180; lon <= 180; lon += SAMPLE_DEG) {
-      positions.push(Cesium.Cartesian3.fromDegrees(lon, lat, sampleMOLA(heights, lon, lat) * exaggeration));
+      positions.push(Cesium.Cartesian3.fromDegrees(lon, lat, parallelHeights[pi++] * exaggeration));
     }
     instances.push(new Cesium.GeometryInstance({
       geometry: new Cesium.PolylineGeometry({ positions, width: LINE_WIDTH }),
     }));
   }
 
-  // Meridians
+  // Meridians — meridianHeights is laid out as [lon0_lat0, lon0_lat1, ..., lon1_lat0, ...]
+  let mi = 0;
   for (let lon = 0; lon < 360; lon += STEP) {
     const actualLon = lon >= 180 ? lon - 360 : lon;
     const positions: Cesium.Cartesian3[] = [];
     for (let lat = -90; lat <= 90; lat += SAMPLE_DEG) {
-      positions.push(Cesium.Cartesian3.fromDegrees(actualLon, lat, sampleMOLA(heights, actualLon, lat) * exaggeration));
+      positions.push(Cesium.Cartesian3.fromDegrees(actualLon, lat, meridianHeights[mi++] * exaggeration));
     }
     instances.push(new Cesium.GeometryInstance({
       geometry: new Cesium.PolylineGeometry({ positions, width: LINE_WIDTH }),
@@ -99,22 +101,31 @@ function makeLabels(viewer: Cesium.Viewer): Cesium.LabelCollection {
   return lc;
 }
 
-export function createGraticule(heights: Float32Array): Feature {
+export function createGraticule(): Feature {
   const collections = new Map<number, Cesium.PrimitiveCollection>();
   let labelCollection: Cesium.LabelCollection;
+  let viewer: Cesium.Viewer;
+  let built = false;
+
+  function buildAll() {
+    for (const scale of [1, EXAGGERATION_SCALE]) {
+      const col = buildCollection(scale);
+      viewer.scene.primitives.add(col);
+      collections.set(scale, col);
+    }
+    labelCollection = makeLabels(viewer);
+    built = true;
+  }
 
   return {
-    init(viewer: Cesium.Viewer) {
-      for (const scale of [1, EXAGGERATION_SCALE]) {
-        const col = buildCollection(heights, scale);
-        viewer.scene.primitives.add(col);
-        collections.set(scale, col);
-      }
-      labelCollection = makeLabels(viewer);
+    init(v: Cesium.Viewer) {
+      viewer = v;
     },
 
     apply(state: AppState) {
       const visible = state.layers.graticule;
+      if (visible && !built) buildAll();
+      if (!built) return;
       for (const [scale, col] of collections) {
         col.show = visible && state.exaggeration === scale;
       }
@@ -124,7 +135,7 @@ export function createGraticule(heights: Float32Array): Feature {
     destroy() {
       for (const col of collections.values()) col.removeAll();
       collections.clear();
-      labelCollection.removeAll();
+      if (labelCollection) labelCollection.removeAll();
     },
   };
 }
