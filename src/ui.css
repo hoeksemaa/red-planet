@@ -165,6 +165,16 @@ body {
   border-top: 1px solid var(--border-color);
   padding: 14px 14px 12px;
   display: none;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+#fpImage {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 12px;
 }
 
 #fpName {
@@ -175,6 +185,14 @@ body {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 10px;
+}
+
+#fpDesc {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  white-space: pre-line;
 }
 
 .fp-row {

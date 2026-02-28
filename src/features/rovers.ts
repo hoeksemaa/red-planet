@@ -150,6 +150,7 @@ export const rovers: Feature = {
         image: PIN_IMAGES.get(id) ?? makeDotCanvas(cesiumColor),
         heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
         verticalOrigin: Cesium.VerticalOrigin.CENTER,
+        disableDepthTestDistance: 6.4e6,
       });
 
       pinData.push({ pin, rover, id, sol, color: cesiumColor.toCssColorString() });

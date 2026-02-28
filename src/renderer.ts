@@ -78,6 +78,17 @@ export async function init(heights: Float32Array, initialState: AppState): Promi
     pickMissCallback?.();
   }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
+  // Hover highlight — delegates to each feature's hover()
+  const hoverHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+  hoverHandler.setInputAction((movement: { endPosition: Cesium.Cartesian2 }) => {
+    const picked = viewer.scene.pick(movement.endPosition);
+    let claimed = false;
+    for (const [, feature] of registry.entries()) {
+      if (feature.hover?.(picked)) claimed = true;
+    }
+    viewer.scene.canvas.style.cursor = claimed ? 'pointer' : '';
+  }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
   apply(initialState);
 }
 

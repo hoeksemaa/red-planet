@@ -1,6 +1,7 @@
 import type { AppState } from './state';
 import type { FeatureInfo, UnifiedSearchResult } from './features/types';
 import { type RoverPinEntry, ROVER_META } from './features/rovers';
+import { PLACE_META } from './features/place-meta';
 import type { SatelliteEntry } from './features/satellites';
 import { EXAGGERATION_SCALE } from './constants';
 
@@ -136,12 +137,14 @@ export class UI {
                         : r.kind === 'rover' ? 'Rover' : 'Satellite';
       item.appendChild(badge);
 
-      if (r.kind === 'rover' || r.kind === 'satellite') {
+      const thumbUrl =
+        r.kind === 'rover' ? (ROVER_META[r.id]?.imageUrl ?? '')
+        : r.kind === 'satellite' ? r.imageUrl
+        : (PLACE_META[r.name]?.imageUrl ?? '');
+      if (thumbUrl) {
         const thumb = document.createElement('img');
         thumb.className = 'search-thumb';
-        thumb.src = r.kind === 'rover'
-          ? (ROVER_META[r.id]?.imageUrl ?? '')
-          : r.imageUrl;
+        thumb.src = thumbUrl;
         thumb.alt = '';
         item.appendChild(thumb);
       }
@@ -182,6 +185,15 @@ export class UI {
   }
 
   showFeatureInfo(entry: FeatureInfo): void {
+    const meta = PLACE_META[entry.name];
+    const img = document.getElementById('fpImage') as HTMLImageElement;
+    if (meta?.imageUrl) {
+      img.src = meta.imageUrl;
+      img.alt = entry.name;
+      img.style.display = '';
+    } else {
+      img.style.display = 'none';
+    }
     const nameEl = document.getElementById('fpName') as HTMLElement;
     nameEl.textContent = '';
     const badge = document.createElement('span');
@@ -193,6 +205,8 @@ export class UI {
     (document.getElementById('fpDiameter') as HTMLElement).textContent =
       `${entry.diameterKm.toFixed(1)} km`;
     (document.getElementById('fpOrigin') as HTMLElement).textContent = entry.origin;
+    (document.getElementById('fpDesc') as HTMLElement).textContent =
+      meta?.description ?? '';
 
     this.searchInput.value = entry.name;
     this.searchClear.style.display = 'block';

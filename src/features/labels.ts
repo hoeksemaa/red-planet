@@ -15,6 +15,7 @@ interface LabelEntry {
 
 let labelCollection: Cesium.LabelCollection;
 let labelData: LabelEntry[] = [];
+let hoveredLabel: Cesium.Label | null = null;
 
 // Label visibility: fade in when camera is within `diameterKm * SCALE` meters.
 // Floor ensures tiny features still appear at close zoom.
@@ -67,6 +68,19 @@ export const labels: Feature = {
       labelData.push({ label, lon, lat, name, diameterKm: diameter_km,
                        featureType: feature_type, origin });
     }
+  },
+
+  hover(picked: any): boolean {
+    const entry = labelData.find((e) => e.label === picked?.primitive);
+    const label = entry?.label ?? null;
+
+    if (label === hoveredLabel) return label !== null;
+
+    if (hoveredLabel) hoveredLabel.fillColor = Cesium.Color.WHITE;
+    hoveredLabel = label;
+    if (hoveredLabel) hoveredLabel.fillColor = Cesium.Color.fromCssColorString('#8ab4f8');
+
+    return hoveredLabel !== null;
   },
 
   pick(picked: any): FeatureInfo | undefined {
