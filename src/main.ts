@@ -6,7 +6,7 @@ import { contours } from './features/contours';
 import { labels, searchLabels } from './features/labels';
 import { rovers, searchRovers } from './features/rovers';
 import { satellites, searchSatellites, type SatelliteEntry } from './features/satellites';
-import { graticule } from './features/graticule';
+import { createGraticule } from './features/graticule';
 import type { UnifiedSearchResult } from './features/types';
 import { UI } from './ui';
 import { TERRAIN_DATA_URL, flyToAltitude } from './constants';
@@ -20,7 +20,7 @@ async function main(): Promise<void> {
 
   renderer.register('imagery', imagery);
   renderer.register('contours', contours);
-  renderer.register('graticule', graticule);
+  renderer.register('graticule', createGraticule(heights));
   renderer.register('labels', labels);
   renderer.register('rovers', rovers);
   renderer.register('satellites', satellites);

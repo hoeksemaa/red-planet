@@ -296,6 +296,14 @@ export class UI {
 
   showRoverPhotoInfo(entry: RoverPhotoEntry): void {
     const img = document.getElementById('rphImage') as HTMLImageElement;
+    img.style.maxHeight = '';
+    img.style.objectFit = '';
+    img.onload = () => {
+      if (img.naturalWidth / img.naturalHeight > 2.5) {
+        img.style.maxHeight = 'none';
+        img.style.objectFit = 'contain';
+      }
+    };
     img.src = entry.imageUrl;
     img.alt = entry.caption;
 
@@ -309,8 +317,12 @@ export class UI {
 
     (document.getElementById('rphSol') as HTMLElement).textContent = `Sol ${entry.sol}`;
     (document.getElementById('rphCamera') as HTMLElement).textContent = entry.camera;
-    (document.getElementById('rphLat') as HTMLElement).textContent = `${entry.lat.toFixed(4)}°`;
-    (document.getElementById('rphLon') as HTMLElement).textContent = `${entry.lon.toFixed(4)}°`;
+    const lat = entry.lat;
+    const lon = entry.lon;
+    (document.getElementById('rphLat') as HTMLElement).textContent =
+      lat === 0 ? '0°' : lat > 0 ? `${lat.toFixed(4)}°N` : `${(-lat).toFixed(4)}°S`;
+    (document.getElementById('rphLon') as HTMLElement).textContent =
+      lon === 0 ? '0°' : lon === 180 ? '180°' : `${lon.toFixed(4)}°E`;
     (document.getElementById('rphCaption') as HTMLElement).textContent = entry.caption;
 
     this.hideFeatureInfo();

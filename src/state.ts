@@ -19,7 +19,7 @@ export const DEFAULT_STATE: AppState = {
   imagery: 'terraformed',
   layers: {
     contours: true,
-    graticule: true,
+    graticule: false,
     labels: true,
     rovers: true,
     satellites: true,
