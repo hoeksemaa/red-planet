@@ -7,6 +7,7 @@ export interface RoverPinEntry {
   rover: string;
   id: string;
   sol: number | null;
+  color: string;
 }
 
 const ROVER_COLORS: Record<string, Cesium.Color> = {
@@ -114,7 +115,7 @@ export const rovers: Feature = {
         verticalOrigin: Cesium.VerticalOrigin.CENTER,
       });
 
-      pinData.push({ pin, rover, id, sol });
+      pinData.push({ pin, rover, id, sol, color: cesiumColor.toCssColorString() });
     }
 
     // Click handler — picks billboards, fires callbacks
@@ -123,7 +124,7 @@ export const rovers: Feature = {
       const picked = viewer.scene.pick(movement.position);
       const entry = pinData.find((e) => e.pin === picked?.primitive);
       if (entry) {
-        onPinClick?.({ rover: entry.rover, id: entry.id, sol: entry.sol });
+        onPinClick?.({ rover: entry.rover, id: entry.id, sol: entry.sol, color: entry.color });
       } else {
         onPinMiss?.();
       }
@@ -150,5 +151,8 @@ export function searchRovers(query: string): RoverSearchResult[] {
   const all = q === '*';
   return roverSites
     .filter((r) => all || r.name.toLowerCase().includes(q))
-    .map((r) => ({ kind: 'rover' as const, name: r.name, id: r.id, lon: r.lon, lat: r.lat }));
+    .map((r) => ({
+      kind: 'rover' as const, name: r.name, id: r.id, lon: r.lon, lat: r.lat,
+      color: (ROVER_COLORS[r.id] ?? Cesium.Color.WHITE).toCssColorString(),
+    }));
 }

@@ -108,6 +108,13 @@ export class UI {
       name.textContent = r.name;
       item.appendChild(name);
 
+      if (r.kind === 'rover' || r.kind === 'satellite') {
+        const bar = document.createElement('span');
+        bar.className = 'search-color-bar';
+        bar.style.backgroundColor = r.color;
+        item.appendChild(bar);
+      }
+
       item.addEventListener('click', () => {
         this.searchInput.value = r.name;
         this.hideResults();
@@ -143,7 +150,12 @@ export class UI {
   }
 
   showRoverInfo(entry: RoverPinEntry): void {
-    (document.getElementById('rpRover') as HTMLElement).textContent = entry.rover;
+    const nameEl = document.getElementById('rpRover') as HTMLElement;
+    nameEl.textContent = entry.rover;
+    const dot = document.createElement('span');
+    dot.className = 'search-color-bar';
+    dot.style.backgroundColor = entry.color;
+    nameEl.appendChild(dot);
     (document.getElementById('rpSol') as HTMLElement).textContent =
       entry.sol !== null ? `Sol ${entry.sol}` : '—';
     const link = document.getElementById('rpLink') as HTMLAnchorElement;
@@ -158,7 +170,12 @@ export class UI {
   }
 
   showSatelliteInfo(entry: SatelliteEntry): void {
-    (document.getElementById('spName') as HTMLElement).textContent = entry.name;
+    const nameEl = document.getElementById('spName') as HTMLElement;
+    nameEl.textContent = entry.name;
+    const dot = document.createElement('span');
+    dot.className = 'search-color-bar';
+    dot.style.backgroundColor = entry.color;
+    nameEl.appendChild(dot);
     (document.getElementById('spAlt') as HTMLElement).textContent = `${entry.altitudeKm.toLocaleString()} km`;
     (document.getElementById('spPeriod') as HTMLElement).textContent =
       entry.periodMinutes >= 120

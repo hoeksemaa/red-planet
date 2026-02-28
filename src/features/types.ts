@@ -67,6 +67,7 @@ export interface RoverSearchResult {
   id: string;
   lon: number;
   lat: number;
+  color: string;
 }
 
 export interface SatelliteSearchResult {
