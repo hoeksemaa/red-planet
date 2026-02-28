@@ -15,10 +15,14 @@ export const INITIAL_CAMERA_HEIGHT = 6_000_000;
 export const TERRAIN_DATA_URL = '/data/processed/MOLA/mola_16ppd.f32';
 export const CONTOURS_DATA_URL = '/data/processed/MOLA/contours.geojson';
 export const NOMENCLATURE_DATA_URL = '/data/processed/nomenclature/features.geojson';
-export const IMAGERY_BASE_URL = '/data/raw/terraformed/';
+
+// Tile CDN — empty in dev (serves from local data/raw/), set to CloudFront domain in prod
+const TILE_CDN = import.meta.env.VITE_TILE_CDN_URL ?? '';
+
+export const IMAGERY_BASE_URL = `${TILE_CDN}/data/raw/terraformed/`;
 
 // OPM viking_mdim21_global imagery (XYZ tiles, Web Mercator) — fetched via scripts/fetch_viking.py
-export const VIKING_IMAGERY_URL = '/data/raw/viking/{z}/{x}/{reverseY}.png';
+export const VIKING_IMAGERY_URL = `${TILE_CDN}/data/raw/viking/{z}/{x}/{reverseY}.png`;
 
 // Rover traverse + waypoint data (NASA MMGIS, processed by scripts/rovers/fetch_rovers.py)
 export const ROVER_TRAVERSE_URL = '/data/processed/rovers/traverse.geojson';
