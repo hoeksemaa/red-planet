@@ -6,6 +6,7 @@ vendor/
 .env
 .env.*
 !.env.example
+!.env.production
 .venv/
 
 # OS
@@ -36,3 +37,4 @@ npm-debug.log*
 # Coverage
 coverage/
 .nyc_output/
+.vercel

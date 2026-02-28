@@ -1,0 +1,6 @@
+# Exclude root data/ (raw tiles + processed source), but NOT public/data/ (Vite copies that to dist/)
+/data/
+.venv/
+scripts/
+docs/
+*.py

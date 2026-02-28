@@ -58,6 +58,7 @@ body {
   top: 16px;
   left: 16px;
   width: 560px;
+  max-width: calc(100vw - 32px);
   z-index: 100;
   overflow: hidden;
 }
@@ -301,6 +302,7 @@ body {
   bottom: 72px;
   left: 20px;
   width: 220px;
+  max-width: calc(100vw - 40px);
   padding: 12px 0 8px;
   z-index: 10;
 }
@@ -365,4 +367,40 @@ body {
   height: 1px;
   background: var(--border-color);
   margin: 6px 0;
+}
+
+/* ── Mobile ────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  #searchWrap {
+    top: 0;
+    left: 0;
+    width: 100vw;
+    max-width: none;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+  }
+
+  #layersBtn {
+    bottom: 12px;
+    left: 12px;
+  }
+
+  #layersPanel {
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    max-width: none;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  #rp-title {
+    top: auto;
+    bottom: 20px;
+    font-size: 16px;
+  }
 }
