@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import type { Feature } from './types';
+import type { Feature, RoverSearchResult } from './types';
 import type { AppState } from '../state';
 import { ROVER_TRAVERSE_URL, ROVER_IMAGES_URL } from '../constants';
 
@@ -7,6 +7,7 @@ export interface RoverPinEntry {
   rover: string;
   id: string;
   sol: number | null;
+  color: string;
 }
 
 const ROVER_COLORS: Record<string, Cesium.Color> = {
@@ -46,6 +47,7 @@ const PIN_IMAGES: Map<string, HTMLCanvasElement> = new Map(
 let traversePrimitives: Cesium.PrimitiveCollection;
 let pinCollection: Cesium.BillboardCollection;
 let pinData: Array<{ pin: Cesium.Billboard } & RoverPinEntry> = [];
+let roverSites: Array<{ name: string; id: string; lon: number; lat: number }> = [];
 
 export const rovers: Feature = {
   async init(viewer: Cesium.Viewer): Promise<void> {
@@ -81,12 +83,20 @@ export const rovers: Feature = {
     }
 
     // Image waypoint pins — one billboard per drive sol, clamped to terrain
+    const seenRovers = new Set<string>();
+    roverSites = [];
     for (const feature of imagesGeo.features) {
       const { rover, id, sol, color } = feature.properties as {
         rover: string; id: string; sol: number | null; color: string;
       };
       const [lon, lat] = feature.geometry.coordinates as [number, number];
       const cesiumColor = ROVER_COLORS[id] ?? Cesium.Color.fromCssColorString(color);
+
+      // First feature per rover ≈ landing site (sol-sorted for traverse rovers, exact for pin-only)
+      if (!seenRovers.has(id)) {
+        seenRovers.add(id);
+        roverSites.push({ name: rover, id, lon, lat });
+      }
 
       const pin = pinCollection.add({
         position: Cesium.Cartesian3.fromDegrees(lon, lat),
@@ -95,14 +105,14 @@ export const rovers: Feature = {
         verticalOrigin: Cesium.VerticalOrigin.CENTER,
       });
 
-      pinData.push({ pin, rover, id, sol });
+      pinData.push({ pin, rover, id, sol, color: cesiumColor.toCssColorString() });
     }
   },
 
   pick(picked: any): RoverPinEntry | undefined {
     const entry = pinData.find((e) => e.pin === picked?.primitive);
     if (!entry) return undefined;
-    return { rover: entry.rover, id: entry.id, sol: entry.sol };
+    return { rover: entry.rover, id: entry.id, sol: entry.sol, color: entry.color };
   },
 
   apply(state: AppState) {
@@ -112,5 +122,18 @@ export const rovers: Feature = {
 
   destroy() {
     pinData = [];
+    roverSites = [];
   },
 };
+
+export function searchRovers(query: string): RoverSearchResult[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const all = q === '*';
+  return roverSites
+    .filter((r) => all || r.name.toLowerCase().includes(q))
+    .map((r) => ({
+      kind: 'rover' as const, name: r.name, id: r.id, lon: r.lon, lat: r.lat,
+      color: (ROVER_COLORS[r.id] ?? Cesium.Color.WHITE).toCssColorString(),
+    }));
+}

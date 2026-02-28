@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import type { Feature, FeatureInfo, NomenclatureGeoJSON, SearchResult } from './types';
+import type { Feature, FeatureInfo, NomenclatureGeoJSON, LocationSearchResult } from './types';
 import type { AppState } from '../state';
 import { NOMENCLATURE_DATA_URL } from '../constants';
 
@@ -89,11 +89,12 @@ export const labels: Feature = {
   },
 };
 
-export function searchLabels(query: string): SearchResult[] {
+export function searchLabels(query: string): LocationSearchResult[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
+  const all = q === '*';
   return labelData
-    .filter((d) => d.name.toLowerCase().includes(q))
+    .filter((d) => all || d.name.toLowerCase().includes(q))
     .slice(0, 10)
-    .map(({ name, lon, lat, diameterKm }) => ({ name, lon, lat, diameterKm }));
+    .map(({ name, lon, lat, diameterKm }) => ({ kind: 'location' as const, name, lon, lat, diameterKm }));
 }

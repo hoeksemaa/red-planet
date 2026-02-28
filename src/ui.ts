@@ -1,12 +1,13 @@
 import type { AppState } from './state';
-import type { FeatureInfo, SearchResult } from './features/types';
+import type { FeatureInfo, UnifiedSearchResult } from './features/types';
 import type { RoverPinEntry } from './features/rovers';
+import type { SatelliteEntry } from './features/satellites';
 import { EXAGGERATION_SCALE } from './constants';
 
 export interface UICallbacks {
   onStateChange: (state: AppState) => void;
-  onSearch: (query: string) => SearchResult[];
-  onSelect: (result: SearchResult) => void;
+  onSearch: (query: string) => UnifiedSearchResult[];
+  onSelect: (result: UnifiedSearchResult) => void;
 }
 
 function roverGalleryUrl(id: string, sol: number | null): string {
@@ -39,9 +40,13 @@ export class UI {
   private layerContours    = document.getElementById('layerContours') as HTMLInputElement;
   private layerLabels      = document.getElementById('layerLabels') as HTMLInputElement;
   private layerRovers      = document.getElementById('layerRovers') as HTMLInputElement;
+  private layerSatellites  = document.getElementById('layerSatellites') as HTMLInputElement;
 
   // Rover info panel
   private roverPanel = document.getElementById('roverPanel') as HTMLDivElement;
+
+  // Satellite info panel
+  private satellitePanel = document.getElementById('satellitePanel') as HTMLDivElement;
 
   constructor(state: AppState, callbacks: UICallbacks) {
     this.state = state;
@@ -83,7 +88,7 @@ export class UI {
     });
   }
 
-  private showResults(results: SearchResult[]): void {
+  private showResults(results: UnifiedSearchResult[]): void {
     this.searchResults.innerHTML = '';
     if (results.length === 0) {
       this.searchResults.style.display = 'none';
@@ -92,7 +97,24 @@ export class UI {
     for (const r of results) {
       const item = document.createElement('div');
       item.className = 'search-item';
-      item.textContent = r.name;
+
+      const badge = document.createElement('span');
+      badge.className = `search-badge search-badge--${r.kind}`;
+      badge.textContent = r.kind === 'location' ? 'Place'
+                        : r.kind === 'rover' ? 'Rover' : 'Satellite';
+      item.appendChild(badge);
+
+      const name = document.createElement('span');
+      name.textContent = r.name;
+      item.appendChild(name);
+
+      if (r.kind === 'rover' || r.kind === 'satellite') {
+        const bar = document.createElement('span');
+        bar.className = 'search-color-bar';
+        bar.style.backgroundColor = r.color;
+        item.appendChild(bar);
+      }
+
       item.addEventListener('click', () => {
         this.searchInput.value = r.name;
         this.hideResults();
@@ -118,6 +140,8 @@ export class UI {
     this.searchInput.value = entry.name;
     this.searchClear.style.display = 'block';
     this.hideResults();
+    this.hideRoverInfo();
+    this.hideSatelliteInfo();
     this.featurePanel.style.display = 'block';
   }
 
@@ -126,17 +150,44 @@ export class UI {
   }
 
   showRoverInfo(entry: RoverPinEntry): void {
-    (document.getElementById('rpRover') as HTMLElement).textContent = entry.rover;
+    const nameEl = document.getElementById('rpRover') as HTMLElement;
+    nameEl.textContent = entry.rover;
+    const dot = document.createElement('span');
+    dot.className = 'search-color-bar';
+    dot.style.backgroundColor = entry.color;
+    nameEl.appendChild(dot);
     (document.getElementById('rpSol') as HTMLElement).textContent =
       entry.sol !== null ? `Sol ${entry.sol}` : '—';
     const link = document.getElementById('rpLink') as HTMLAnchorElement;
     link.href = roverGalleryUrl(entry.id, entry.sol);
     this.hideFeatureInfo();
+    this.hideSatelliteInfo();
     this.roverPanel.style.display = 'block';
   }
 
   hideRoverInfo(): void {
     this.roverPanel.style.display = 'none';
+  }
+
+  showSatelliteInfo(entry: SatelliteEntry): void {
+    const nameEl = document.getElementById('spName') as HTMLElement;
+    nameEl.textContent = entry.name;
+    const dot = document.createElement('span');
+    dot.className = 'search-color-bar';
+    dot.style.backgroundColor = entry.color;
+    nameEl.appendChild(dot);
+    (document.getElementById('spAlt') as HTMLElement).textContent = `${entry.altitudeKm.toLocaleString()} km`;
+    (document.getElementById('spPeriod') as HTMLElement).textContent =
+      entry.periodMinutes >= 120
+        ? `${(entry.periodMinutes / 60).toFixed(1)} hr`
+        : `${entry.periodMinutes} min`;
+    this.hideFeatureInfo();
+    this.hideRoverInfo();
+    this.satellitePanel.style.display = 'block';
+  }
+
+  hideSatelliteInfo(): void {
+    this.satellitePanel.style.display = 'none';
   }
 
   // ── Layers panel ────────────────────────────────────────────
@@ -178,6 +229,11 @@ export class UI {
 
     this.layerRovers.addEventListener('change', () => {
       this.state.layers.rovers = this.layerRovers.checked;
+      this.callbacks.onStateChange(this.state);
+    });
+
+    this.layerSatellites.addEventListener('change', () => {
+      this.state.layers.satellites = this.layerSatellites.checked;
       this.callbacks.onStateChange(this.state);
     });
 

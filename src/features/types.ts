@@ -51,3 +51,35 @@ export interface SearchResult {
   lat: number;
   diameterKm: number;
 }
+
+// ── Unified search ──────────────────────────────────────────
+
+export interface LocationSearchResult {
+  kind: 'location';
+  name: string;
+  lon: number;
+  lat: number;
+  diameterKm: number;
+}
+
+export interface RoverSearchResult {
+  kind: 'rover';
+  name: string;
+  id: string;
+  lon: number;
+  lat: number;
+  color: string;
+}
+
+export interface SatelliteSearchResult {
+  kind: 'satellite';
+  name: string;
+  altitudeKm: number;
+  periodMinutes: number;
+  color: string;
+}
+
+export type UnifiedSearchResult =
+  | LocationSearchResult
+  | RoverSearchResult
+  | SatelliteSearchResult;

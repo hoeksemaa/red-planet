@@ -36,6 +36,11 @@
                 <a id="rpLink" href="" target="_blank" rel="noopener" class="rover-link">View photos →</a>
             </div>
         </div>
+        <div id="satellitePanel" style="display:none">
+            <div id="spName"></div>
+            <div class="fp-row"><span class="fp-label">Altitude</span><span id="spAlt"></span></div>
+            <div class="fp-row"><span class="fp-label">Period</span><span id="spPeriod"></span></div>
+        </div>
     </div>
 
     <!-- Layers button (bottom-left) -->
@@ -81,6 +86,10 @@
         <label class="layer-item">
             <input type="checkbox" id="layerRovers" checked />
             <span>Rover traverses</span>
+        </label>
+        <label class="layer-item">
+            <input type="checkbox" id="layerSatellites" checked />
+            <span>Satellites</span>
         </label>
     </div>
 
