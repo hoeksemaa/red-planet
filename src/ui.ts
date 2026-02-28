@@ -42,6 +42,10 @@ export class UI {
   private layerRovers      = document.getElementById('layerRovers') as HTMLInputElement;
   private layerSatellites  = document.getElementById('layerSatellites') as HTMLInputElement;
 
+  // Keyboard nav state
+  private activeIndex = -1;
+  private currentResults: UnifiedSearchResult[] = [];
+
   // Rover info panel
   private roverPanel = document.getElementById('roverPanel') as HTMLDivElement;
 
@@ -79,6 +83,30 @@ export class UI {
       this.hideFeatureInfo();
     });
 
+    // Keyboard navigation
+    this.searchInput.addEventListener('keydown', (e) => {
+      const items = this.searchResults.querySelectorAll<HTMLElement>('.search-item');
+      if (!items.length) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        this.activeIndex = (this.activeIndex + 1) % items.length;
+        this.updateHighlight(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        this.activeIndex = (this.activeIndex - 1 + items.length) % items.length;
+        this.updateHighlight(items);
+      } else if (e.key === 'Enter' && this.activeIndex >= 0) {
+        e.preventDefault();
+        const r = this.currentResults[this.activeIndex];
+        this.searchInput.value = r.name;
+        this.hideResults();
+        this.callbacks.onSelect(r);
+      } else if (e.key === 'Escape') {
+        this.hideResults();
+      }
+    });
+
     // Collapse on outside click
     document.addEventListener('click', (e) => {
       const wrap = document.getElementById('searchWrap') as HTMLElement;
@@ -90,6 +118,8 @@ export class UI {
 
   private showResults(results: UnifiedSearchResult[]): void {
     this.searchResults.innerHTML = '';
+    this.activeIndex = -1;
+    this.currentResults = results;
     if (results.length === 0) {
       this.searchResults.style.display = 'none';
       return;
@@ -128,6 +158,15 @@ export class UI {
   private hideResults(): void {
     this.searchResults.style.display = 'none';
     this.searchResults.innerHTML = '';
+    this.activeIndex = -1;
+    this.currentResults = [];
+  }
+
+  private updateHighlight(items: NodeListOf<HTMLElement>): void {
+    for (let i = 0; i < items.length; i++) {
+      items[i].classList.toggle('search-item--active', i === this.activeIndex);
+    }
+    items[this.activeIndex]?.scrollIntoView({ block: 'nearest' });
   }
 
   showFeatureInfo(entry: FeatureInfo): void {
