@@ -1,24 +1,28 @@
 import './ui.css';
 import { DEFAULT_STATE } from './state';
 import * as renderer from './renderer';
-import { searchLabels, flyToAltitude, setOnLabelClick, setOnLabelMiss } from './features/labels';
-import { searchRovers, setOnRoverPinClick, setOnRoverMiss } from './features/rovers';
-import { searchSatellites, setOnSatelliteClick, setOnSatelliteMiss } from './features/satellites';
+import { imagery } from './features/imagery';
+import { contours } from './features/contours';
+import { labels, searchLabels } from './features/labels';
+import { rovers, searchRovers } from './features/rovers';
+import { satellites, searchSatellites, type SatelliteEntry } from './features/satellites';
 import type { UnifiedSearchResult } from './features/types';
 import { UI } from './ui';
-import { TERRAIN_DATA_URL, CONTOURS_DATA_URL, NOMENCLATURE_DATA_URL } from './constants';
+import { TERRAIN_DATA_URL, flyToAltitude } from './constants';
+import type { FeatureInfo } from './features/types';
+import type { RoverPinEntry } from './features/rovers';
 
 async function main(): Promise<void> {
-  const [heightsBuf, contourGeoJSON, nomenclatureGeoJSON] = await Promise.all([
-    fetch(TERRAIN_DATA_URL).then((r) => r.arrayBuffer()),
-    fetch(CONTOURS_DATA_URL).then((r) => r.json()),
-    fetch(NOMENCLATURE_DATA_URL).then((r) => r.json()),
-  ]);
-
+  const heightsBuf = await fetch(TERRAIN_DATA_URL).then((r) => r.arrayBuffer());
   const heights = new Float32Array(heightsBuf);
   const state = { ...DEFAULT_STATE };
 
-  await renderer.init({ heights, contourGeoJSON, nomenclatureGeoJSON }, state);
+  renderer.register('imagery', imagery);
+  renderer.register('contours', contours);
+  renderer.register('labels', labels);
+  renderer.register('rovers', rovers);
+  renderer.register('satellites', satellites);
+  await renderer.init(heights, state);
 
   function unifiedSearch(query: string): UnifiedSearchResult[] {
     const q = query.trim().toLowerCase();
@@ -58,20 +62,25 @@ async function main(): Promise<void> {
     onSelect: (result) => handleSelect(result),
   });
 
-  setOnLabelClick((entry) => {
-    renderer.flyTo(entry.lon, entry.lat, flyToAltitude(entry.diameterKm));
-    ui.showFeatureInfo(entry);
-    ui.hideRoverInfo();
+  renderer.onPick((featureId, result) => {
+    if (featureId === 'labels') {
+      const info = result as FeatureInfo;
+      renderer.flyTo(info.lon, info.lat, flyToAltitude(info.diameterKm));
+      ui.showFeatureInfo(info);
+      ui.hideRoverInfo();
+      ui.hideSatelliteInfo();
+    } else if (featureId === 'rovers') {
+      ui.showRoverInfo(result as RoverPinEntry);
+      ui.hideSatelliteInfo();
+    } else if (featureId === 'satellites') {
+      ui.showSatelliteInfo(result as SatelliteEntry);
+    }
   });
-  setOnLabelMiss(() => ui.hideFeatureInfo());
-
-  setOnRoverPinClick((entry) => ui.showRoverInfo(entry));
-  setOnRoverMiss(() => ui.hideRoverInfo());
-
-  setOnSatelliteClick((entry) => ui.showSatelliteInfo(entry));
-  setOnSatelliteMiss(() => ui.hideSatelliteInfo());
-
-  void ui;
+  renderer.onPickMiss(() => {
+    ui.hideFeatureInfo();
+    ui.hideRoverInfo();
+    ui.hideSatelliteInfo();
+  });
 }
 
 main();

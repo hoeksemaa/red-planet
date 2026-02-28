@@ -1,5 +1,5 @@
 import type { AppState } from './state';
-import type { LabelEntry, UnifiedSearchResult } from './features/types';
+import type { FeatureInfo, UnifiedSearchResult } from './features/types';
 import type { RoverPinEntry } from './features/rovers';
 import type { SatelliteEntry } from './features/satellites';
 import { EXAGGERATION_SCALE } from './constants';
@@ -130,7 +130,7 @@ export class UI {
     this.searchResults.innerHTML = '';
   }
 
-  showFeatureInfo(entry: LabelEntry): void {
+  showFeatureInfo(entry: FeatureInfo): void {
     (document.getElementById('fpName') as HTMLElement).textContent = entry.name;
     (document.getElementById('fpType') as HTMLElement).textContent = entry.featureType;
     (document.getElementById('fpDiameter') as HTMLElement).textContent =

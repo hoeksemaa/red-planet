@@ -2,15 +2,10 @@ import type * as Cesium from 'cesium';
 import type { AppState } from '../state';
 
 export interface Feature {
-  init(viewer: Cesium.Viewer, data: FeatureData): void | Promise<void>;
+  init(viewer: Cesium.Viewer): void | Promise<void>;
   apply(state: AppState): void;
   destroy(): void;
-}
-
-export interface FeatureData {
-  heights: Float32Array;
-  contourGeoJSON: ContourGeoJSON | null;
-  nomenclatureGeoJSON: NomenclatureGeoJSON | null;
+  pick?(picked: any): unknown | undefined;
 }
 
 export interface ContourFeature {
@@ -41,14 +36,20 @@ export interface NomenclatureGeoJSON {
   features: NomenclatureFeature[];
 }
 
-export interface LabelEntry {
-  label: Cesium.Label;
+export interface FeatureInfo {
+  name: string;
+  featureType: string;
+  diameterKm: number;
+  origin: string;
   lon: number;
   lat: number;
+}
+
+export interface SearchResult {
   name: string;
+  lon: number;
+  lat: number;
   diameterKm: number;
-  featureType: string;
-  origin: string;
 }
 
 // ── Unified search ──────────────────────────────────────────

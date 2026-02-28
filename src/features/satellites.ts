@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import type { Feature, FeatureData, SatelliteSearchResult } from './types';
+import type { Feature, SatelliteSearchResult } from './types';
 import type { AppState } from '../state';
 import {
   SATELLITES, SATELLITE_TIME_MULTIPLIER,
@@ -7,23 +7,11 @@ import {
   type SatelliteElements,
 } from '../constants';
 
-// ── Public click callback wiring (same pattern as rovers) ───
-
 export interface SatelliteEntry {
   name: string;
   altitudeKm: number;
   periodMinutes: number;
   color: string;
-}
-
-let onSatClick: ((entry: SatelliteEntry) => void) | null = null;
-let onSatMiss: (() => void) | null = null;
-
-export function setOnSatelliteClick(fn: (entry: SatelliteEntry) => void): void {
-  onSatClick = fn;
-}
-export function setOnSatelliteMiss(fn: () => void): void {
-  onSatMiss = fn;
 }
 
 // ── Keplerian math ──────────────────────────────────────────
@@ -110,13 +98,12 @@ let orbitPrimitives: Cesium.PrimitiveCollection;
 let dotCollection: Cesium.BillboardCollection;
 let dotData: Array<{ billboard: Cesium.Billboard; elements: SatelliteElements }> = [];
 let removePostRender: (() => void) | null = null;
-let removeClickHandler: (() => void) | null = null;
 const epoch = Date.now();
 
 // ── Feature ─────────────────────────────────────────────────
 
 export const satellites: Feature = {
-  init(viewer: Cesium.Viewer, _data: FeatureData): void {
+  init(viewer: Cesium.Viewer): void {
     orbitPrimitives = viewer.scene.primitives.add(new Cesium.PrimitiveCollection());
     dotCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection());
     dotData = [];
@@ -170,24 +157,18 @@ export const satellites: Feature = {
     viewer.scene.postRender.addEventListener(handler);
     removePostRender = () => viewer.scene.postRender.removeEventListener(handler);
 
-    // ── Click handler ──
-    const clickHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-    clickHandler.setInputAction((movement: { position: Cesium.Cartesian2 }) => {
-      const picked = viewer.scene.pick(movement.position);
-      const entry = dotData.find((d) => d.billboard === picked?.primitive);
-      if (entry) {
-        const el = entry.elements;
-        onSatClick?.({
-          name: el.name,
-          altitudeKm: Math.round(el.semiMajorAxisKm - MARS_RADIUS_KM),
-          periodMinutes: Math.round(el.periodSeconds / 60),
-          color: el.color,
-        });
-      } else {
-        onSatMiss?.();
-      }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-    removeClickHandler = () => clickHandler.destroy();
+  },
+
+  pick(picked: any): SatelliteEntry | undefined {
+    const entry = dotData.find((d) => d.billboard === picked?.primitive);
+    if (!entry) return undefined;
+    const el = entry.elements;
+    return {
+      name: el.name,
+      altitudeKm: Math.round(el.semiMajorAxisKm - MARS_RADIUS_KM),
+      periodMinutes: Math.round(el.periodSeconds / 60),
+      color: el.color,
+    };
   },
 
   apply(state: AppState) {
@@ -198,8 +179,6 @@ export const satellites: Feature = {
   destroy() {
     removePostRender?.();
     removePostRender = null;
-    removeClickHandler?.();
-    removeClickHandler = null;
     dotData = [];
   },
 };

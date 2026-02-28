@@ -24,6 +24,14 @@ export const VIKING_IMAGERY_URL = '/data/raw/viking/{z}/{x}/{reverseY}.png';
 export const ROVER_TRAVERSE_URL = '/data/processed/rovers/traverse.geojson';
 export const ROVER_IMAGES_URL = '/data/processed/rovers/images.geojson';
 
+// Camera altitude for fly-to based on feature diameter
+export function flyToAltitude(diameterKm: number): number {
+  if (diameterKm >= 500) return 1_500_000;
+  if (diameterKm >= 100) return 500_000;
+  if (diameterKm >= 10) return 200_000;
+  return 100_000;
+}
+
 // ── Satellites ──────────────────────────────────────────────
 
 // Radii for scaling orbital altitudes to the WGS84 globe

@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import type { Feature, FeatureData, RoverSearchResult } from './types';
+import type { Feature, RoverSearchResult } from './types';
 import type { AppState } from '../state';
 import { ROVER_TRAVERSE_URL, ROVER_IMAGES_URL } from '../constants';
 
@@ -48,26 +48,16 @@ let traversePrimitives: Cesium.PrimitiveCollection;
 let pinCollection: Cesium.BillboardCollection;
 let pinData: Array<{ pin: Cesium.Billboard } & RoverPinEntry> = [];
 let roverSites: Array<{ name: string; id: string; lon: number; lat: number }> = [];
-let removeClickHandler: (() => void) | null = null;
-let onPinClick: ((entry: RoverPinEntry) => void) | null = null;
-let onPinMiss: (() => void) | null = null;
-
-export function setOnRoverPinClick(fn: (entry: RoverPinEntry) => void): void {
-  onPinClick = fn;
-}
-export function setOnRoverMiss(fn: () => void): void {
-  onPinMiss = fn;
-}
 
 export const rovers: Feature = {
-  async init(viewer: Cesium.Viewer, _data: FeatureData): Promise<void> {
+  async init(viewer: Cesium.Viewer): Promise<void> {
     const [traverseGeo, imagesGeo] = await Promise.all([
       fetch(ROVER_TRAVERSE_URL).then((r) => r.json()),
       fetch(ROVER_IMAGES_URL).then((r) => r.json()),
     ]);
 
     traversePrimitives = viewer.scene.primitives.add(new Cesium.PrimitiveCollection());
-    pinCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection());
+    pinCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection({ scene: viewer.scene }));
     pinData = [];
 
     // Traverse polylines — one GroundPolylinePrimitive per rover
@@ -111,25 +101,18 @@ export const rovers: Feature = {
       const pin = pinCollection.add({
         position: Cesium.Cartesian3.fromDegrees(lon, lat),
         image: PIN_IMAGES.get(id) ?? makeDotCanvas(cesiumColor),
-        heightReference: Cesium.HeightReference.NONE,
+        heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
         verticalOrigin: Cesium.VerticalOrigin.CENTER,
       });
 
       pinData.push({ pin, rover, id, sol, color: cesiumColor.toCssColorString() });
     }
+  },
 
-    // Click handler — picks billboards, fires callbacks
-    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-    handler.setInputAction((movement: { position: Cesium.Cartesian2 }) => {
-      const picked = viewer.scene.pick(movement.position);
-      const entry = pinData.find((e) => e.pin === picked?.primitive);
-      if (entry) {
-        onPinClick?.({ rover: entry.rover, id: entry.id, sol: entry.sol, color: entry.color });
-      } else {
-        onPinMiss?.();
-      }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-    removeClickHandler = () => handler.destroy();
+  pick(picked: any): RoverPinEntry | undefined {
+    const entry = pinData.find((e) => e.pin === picked?.primitive);
+    if (!entry) return undefined;
+    return { rover: entry.rover, id: entry.id, sol: entry.sol, color: entry.color };
   },
 
   apply(state: AppState) {
@@ -138,8 +121,6 @@ export const rovers: Feature = {
   },
 
   destroy() {
-    removeClickHandler?.();
-    removeClickHandler = null;
     pinData = [];
     roverSites = [];
   },
