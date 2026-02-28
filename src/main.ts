@@ -6,11 +6,12 @@ import { contours } from './features/contours';
 import { labels, searchLabels } from './features/labels';
 import { rovers, searchRovers } from './features/rovers';
 import { satellites, searchSatellites, type SatelliteEntry } from './features/satellites';
+import { createGraticule } from './features/graticule';
 import type { UnifiedSearchResult } from './features/types';
 import { UI } from './ui';
 import { TERRAIN_DATA_URL, flyToAltitude } from './constants';
 import type { FeatureInfo } from './features/types';
-import type { RoverPinEntry } from './features/rovers';
+import type { RoverPickResult } from './features/rovers';
 
 async function main(): Promise<void> {
   const heightsBuf = await fetch(TERRAIN_DATA_URL).then((r) => r.arrayBuffer());
@@ -19,6 +20,7 @@ async function main(): Promise<void> {
 
   renderer.register('imagery', imagery);
   renderer.register('contours', contours);
+  renderer.register('graticule', createGraticule());
   renderer.register('labels', labels);
   renderer.register('rovers', rovers);
   renderer.register('satellites', satellites);
@@ -52,7 +54,7 @@ async function main(): Promise<void> {
         break;
       case 'rover':
         renderer.flyTo(result.lon, result.lat, 50_000);
-        ui.showRoverInfo({ rover: result.name, id: result.id, sol: null, color: result.color });
+        ui.showRoverInfo({ kind: 'pin', rover: result.name, id: result.id, sol: null, color: result.color });
         break;
       case 'satellite':
         renderer.flyTo(0, 0, Math.max(result.altitudeKm * 1000 * 10, 30_000_000));
@@ -75,7 +77,12 @@ async function main(): Promise<void> {
       ui.hideRoverInfo();
       ui.hideSatelliteInfo();
     } else if (featureId === 'rovers') {
-      ui.showRoverInfo(result as RoverPinEntry);
+      const r = result as RoverPickResult;
+      if (r.kind === 'photo') {
+        ui.showRoverPhotoInfo(r);
+      } else {
+        ui.showRoverInfo(r);
+      }
       ui.hideSatelliteInfo();
     } else if (featureId === 'satellites') {
       ui.showSatelliteInfo(result as SatelliteEntry);
@@ -84,6 +91,7 @@ async function main(): Promise<void> {
   renderer.onPickMiss(() => {
     ui.hideFeatureInfo();
     ui.hideRoverInfo();
+    ui.hideRoverPhotoInfo();
     ui.hideSatelliteInfo();
   });
 }

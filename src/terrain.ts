@@ -1,7 +1,7 @@
 import * as Cesium from 'cesium';
 import { HM_W, HM_H, TERRAIN_TILE_SIZE } from './constants';
 
-function sampleMOLA(heights: Float32Array, lon: number, lat: number): number {
+export function sampleMOLA(heights: Float32Array, lon: number, lat: number): number {
   const u = ((lon + 360) % 360) / 360;
   const v = (90 - lat) / 180;
   const col = Math.min(Math.floor(u * HM_W), HM_W - 1);

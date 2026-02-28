@@ -1,6 +1,7 @@
 import type { AppState } from './state';
 import type { FeatureInfo, UnifiedSearchResult } from './features/types';
-import { type RoverPinEntry, ROVER_META } from './features/rovers';
+import { type RoverPinEntry, type RoverPhotoEntry, ROVER_META } from './features/rovers';
+import { PLACE_META } from './features/place-meta';
 import type { SatelliteEntry } from './features/satellites';
 import { EXAGGERATION_SCALE } from './constants';
 
@@ -40,6 +41,7 @@ export class UI {
   private layerContours    = document.getElementById('layerContours') as HTMLInputElement;
   private layerLabels      = document.getElementById('layerLabels') as HTMLInputElement;
   private layerRovers      = document.getElementById('layerRovers') as HTMLInputElement;
+  private layerGraticule   = document.getElementById('layerGraticule') as HTMLInputElement;
   private layerSatellites  = document.getElementById('layerSatellites') as HTMLInputElement;
 
   // Keyboard nav state
@@ -48,6 +50,9 @@ export class UI {
 
   // Rover info panel
   private roverPanel = document.getElementById('roverPanel') as HTMLDivElement;
+
+  // Rover photo panel
+  private roverPhotoPanel = document.getElementById('roverPhotoPanel') as HTMLDivElement;
 
   // Satellite info panel
   private satellitePanel = document.getElementById('satellitePanel') as HTMLDivElement;
@@ -82,6 +87,7 @@ export class UI {
       this.hideResults();
       this.hideFeatureInfo();
       this.hideRoverInfo();
+      this.hideRoverPhotoInfo();
       this.hideSatelliteInfo();
     });
 
@@ -136,12 +142,14 @@ export class UI {
                         : r.kind === 'rover' ? 'Rover' : 'Satellite';
       item.appendChild(badge);
 
-      if (r.kind === 'rover' || r.kind === 'satellite') {
+      const thumbUrl =
+        r.kind === 'rover' ? (ROVER_META[r.id]?.imageUrl ?? '')
+        : r.kind === 'satellite' ? r.imageUrl
+        : (PLACE_META[r.name]?.imageUrl ?? '');
+      if (thumbUrl) {
         const thumb = document.createElement('img');
         thumb.className = 'search-thumb';
-        thumb.src = r.kind === 'rover'
-          ? (ROVER_META[r.id]?.imageUrl ?? '')
-          : r.imageUrl;
+        thumb.src = thumbUrl;
         thumb.alt = '';
         item.appendChild(thumb);
       }
@@ -182,16 +190,34 @@ export class UI {
   }
 
   showFeatureInfo(entry: FeatureInfo): void {
-    (document.getElementById('fpName') as HTMLElement).textContent = entry.name;
+    const meta = PLACE_META[entry.name];
+    const img = document.getElementById('fpImage') as HTMLImageElement;
+    if (meta?.imageUrl) {
+      img.src = meta.imageUrl;
+      img.alt = entry.name;
+      img.style.display = '';
+    } else {
+      img.style.display = 'none';
+    }
+    const nameEl = document.getElementById('fpName') as HTMLElement;
+    nameEl.textContent = '';
+    const badge = document.createElement('span');
+    badge.className = 'search-badge search-badge--location';
+    badge.textContent = 'Place';
+    nameEl.appendChild(badge);
+    nameEl.appendChild(document.createTextNode(entry.name));
     (document.getElementById('fpType') as HTMLElement).textContent = entry.featureType;
     (document.getElementById('fpDiameter') as HTMLElement).textContent =
       `${entry.diameterKm.toFixed(1)} km`;
     (document.getElementById('fpOrigin') as HTMLElement).textContent = entry.origin;
+    (document.getElementById('fpDesc') as HTMLElement).textContent =
+      meta?.description ?? '';
 
     this.searchInput.value = entry.name;
     this.searchClear.style.display = 'block';
     this.hideResults();
     this.hideRoverInfo();
+    this.hideRoverPhotoInfo();
     this.hideSatelliteInfo();
     this.featurePanel.style.display = 'block';
   }
@@ -211,7 +237,12 @@ export class UI {
       img.style.display = 'none';
     }
     const nameEl = document.getElementById('rpRover') as HTMLElement;
-    nameEl.textContent = entry.rover;
+    nameEl.textContent = '';
+    const badge = document.createElement('span');
+    badge.className = 'search-badge search-badge--rover';
+    badge.textContent = 'Rover';
+    nameEl.appendChild(badge);
+    nameEl.appendChild(document.createTextNode(entry.rover));
     const dot = document.createElement('span');
     dot.className = 'search-color-bar';
     dot.style.backgroundColor = entry.color;
@@ -223,6 +254,7 @@ export class UI {
     (document.getElementById('rpDesc') as HTMLElement).textContent =
       meta?.description ?? '';
     this.hideFeatureInfo();
+    this.hideRoverPhotoInfo();
     this.hideSatelliteInfo();
     this.roverPanel.style.display = 'block';
   }
@@ -236,7 +268,12 @@ export class UI {
     img.src = entry.imageUrl;
     img.alt = entry.name;
     const nameEl = document.getElementById('spName') as HTMLElement;
-    nameEl.textContent = entry.name;
+    nameEl.textContent = '';
+    const badge = document.createElement('span');
+    badge.className = 'search-badge search-badge--satellite';
+    badge.textContent = 'Satellite';
+    nameEl.appendChild(badge);
+    nameEl.appendChild(document.createTextNode(entry.name));
     const dot = document.createElement('span');
     dot.className = 'search-color-bar';
     dot.style.backgroundColor = entry.color;
@@ -249,11 +286,53 @@ export class UI {
     (document.getElementById('spDesc') as HTMLElement).textContent = entry.description;
     this.hideFeatureInfo();
     this.hideRoverInfo();
+    this.hideRoverPhotoInfo();
     this.satellitePanel.style.display = 'block';
   }
 
   hideSatelliteInfo(): void {
     this.satellitePanel.style.display = 'none';
+  }
+
+  showRoverPhotoInfo(entry: RoverPhotoEntry): void {
+    const img = document.getElementById('rphImage') as HTMLImageElement;
+    img.style.maxHeight = '';
+    img.style.objectFit = '';
+    img.onload = () => {
+      if (img.naturalWidth / img.naturalHeight > 2.5) {
+        img.style.maxHeight = 'none';
+        img.style.objectFit = 'contain';
+      }
+    };
+    img.src = entry.imageUrl;
+    img.alt = entry.caption;
+
+    const nameEl = document.getElementById('rphName') as HTMLElement;
+    nameEl.textContent = '';
+    const badge = document.createElement('span');
+    badge.className = 'search-badge search-badge--rover';
+    badge.textContent = 'Photo';
+    nameEl.appendChild(badge);
+    nameEl.appendChild(document.createTextNode(entry.rover));
+
+    (document.getElementById('rphSol') as HTMLElement).textContent = `Sol ${entry.sol}`;
+    (document.getElementById('rphCamera') as HTMLElement).textContent = entry.camera;
+    const lat = entry.lat;
+    const lon = entry.lon;
+    (document.getElementById('rphLat') as HTMLElement).textContent =
+      lat === 0 ? '0°' : lat > 0 ? `${lat.toFixed(4)}°N` : `${(-lat).toFixed(4)}°S`;
+    (document.getElementById('rphLon') as HTMLElement).textContent =
+      lon === 0 ? '0°' : lon === 180 ? '180°' : `${lon.toFixed(4)}°E`;
+    (document.getElementById('rphCaption') as HTMLElement).textContent = entry.caption;
+
+    this.hideFeatureInfo();
+    this.hideRoverInfo();
+    this.hideSatelliteInfo();
+    this.roverPhotoPanel.style.display = 'block';
+  }
+
+  hideRoverPhotoInfo(): void {
+    this.roverPhotoPanel.style.display = 'none';
   }
 
   // ── Layers panel ────────────────────────────────────────────
@@ -295,6 +374,11 @@ export class UI {
 
     this.layerRovers.addEventListener('change', () => {
       this.state.layers.rovers = this.layerRovers.checked;
+      this.callbacks.onStateChange(this.state);
+    });
+
+    this.layerGraticule.addEventListener('change', () => {
+      this.state.layers.graticule = this.layerGraticule.checked;
       this.callbacks.onStateChange(this.state);
     });
 

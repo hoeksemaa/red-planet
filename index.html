@@ -25,10 +25,12 @@
         </div>
         <div id="searchResults"></div>
         <div id="featurePanel">
+            <img id="fpImage" alt="" />
             <div id="fpName"></div>
             <div class="fp-row"><span class="fp-label">Type</span><span id="fpType"></span></div>
             <div class="fp-row"><span class="fp-label">Diameter</span><span id="fpDiameter"></span></div>
             <div class="fp-row"><span class="fp-label">Origin</span><span id="fpOrigin"></span></div>
+            <div id="fpDesc"></div>
         </div>
         <div id="roverPanel" style="display:none">
             <img id="rpImage" alt="" />
@@ -38,6 +40,15 @@
                 <a id="rpLink" href="" target="_blank" rel="noopener" class="rover-link">View photos →</a>
             </div>
             <div id="rpDesc"></div>
+        </div>
+        <div id="roverPhotoPanel" style="display:none">
+            <img id="rphImage" alt="" />
+            <div id="rphName"></div>
+            <div class="fp-row"><span class="fp-label">Sol</span><span id="rphSol"></span></div>
+            <div class="fp-row"><span class="fp-label">Camera</span><span id="rphCamera"></span></div>
+            <div class="fp-row"><span class="fp-label">Latitude</span><span id="rphLat"></span></div>
+            <div class="fp-row"><span class="fp-label">Longitude</span><span id="rphLon"></span></div>
+            <div id="rphCaption"></div>
         </div>
         <div id="satellitePanel" style="display:none">
             <img id="spImage" alt="" />
@@ -85,12 +96,16 @@
             <span>Topography lines</span>
         </label>
         <label class="layer-item">
+            <input type="checkbox" id="layerGraticule" />
+            <span>Lat/long grid</span>
+        </label>
+        <label class="layer-item">
             <input type="checkbox" id="layerLabels" checked />
             <span>Place names</span>
         </label>
         <label class="layer-item">
             <input type="checkbox" id="layerRovers" checked />
-            <span>Rover traverses</span>
+            <span>Rovers</span>
         </label>
         <label class="layer-item">
             <input type="checkbox" id="layerSatellites" checked />

@@ -4,11 +4,26 @@ import type { AppState } from '../state';
 import { ROVER_TRAVERSE_URL, ROVER_IMAGES_URL } from '../constants';
 
 export interface RoverPinEntry {
+  kind: 'pin';
   rover: string;
   id: string;
   sol: number | null;
   color: string;
 }
+
+export interface RoverPhotoEntry {
+  kind: 'photo';
+  rover: string;
+  id: string;
+  sol: number;
+  camera: string;
+  caption: string;
+  imageUrl: string;
+  lon: number;
+  lat: number;
+}
+
+export type RoverPickResult = RoverPinEntry | RoverPhotoEntry;
 
 const ROVER_COLORS: Record<string, Cesium.Color> = {
   perseverance: Cesium.Color.fromCssColorString('#FF6B35'),
@@ -43,6 +58,154 @@ function makeDotCanvas(color: Cesium.Color): HTMLCanvasElement {
 const PIN_IMAGES: Map<string, HTMLCanvasElement> = new Map(
   Object.entries(ROVER_COLORS).map(([id, color]) => [id, makeDotCanvas(color)])
 );
+
+// Camera icon — white circle with colored camera glyph, visually distinct from dot pins.
+function makeCameraCanvas(color: Cesium.Color): HTMLCanvasElement {
+  const s = 24;
+  const canvas = document.createElement('canvas');
+  canvas.width = s;
+  canvas.height = s;
+  const ctx = canvas.getContext('2d')!;
+  // white circle background
+  ctx.beginPath();
+  ctx.arc(s / 2, s / 2, s / 2 - 1, 0, Math.PI * 2);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  // camera body
+  const c = color.toCssColorString();
+  ctx.strokeStyle = c;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(5, 9, 14, 10, 2);
+  ctx.stroke();
+  // lens
+  ctx.beginPath();
+  ctx.arc(12, 14, 3, 0, Math.PI * 2);
+  ctx.stroke();
+  // viewfinder bump
+  ctx.beginPath();
+  ctx.roundRect(9, 6, 6, 4, 1);
+  ctx.stroke();
+  return canvas;
+}
+
+const CAMERA_IMAGES: Map<string, HTMLCanvasElement> = new Map(
+  Object.entries(ROVER_COLORS).map(([id, color]) => [id, makeCameraCanvas(color)])
+);
+
+// ── Curated rover photos (tracer bullet: one hardcoded entry) ────────
+const CURATED_PHOTOS: Omit<RoverPhotoEntry, 'kind'>[] = [
+  {
+    rover: 'Perseverance',
+    id: 'perseverance',
+    sol: 198,
+    camera: 'WATSON (SHERLOC)',
+    caption: 'Perseverance\'s first full selfie — taken by the WATSON camera on the SHERLOC instrument at the end of the robotic arm, this composite of 62 images shows the rover alongside the Ingenuity helicopter shortly before its historic first flight on Sol 58.',
+    imageUrl: '/images/rover-photos/perseverance-selfie-ingenuity.jpg',
+    lon: 77.45093957,
+    lat: 18.44486877,
+  },
+  {
+    rover: 'Perseverance',
+    id: 'perseverance',
+    sol: 1218,
+    camera: 'WATSON (SHERLOC)',
+    caption: 'Perseverance poses beside "Cheyava Falls" — an arrowhead-shaped rock at the northern edge of the ancient Neretva Vallis river channel — in this composite of 62 WATSON images taken on Sol 1218 (July 23, 2024). The dark drill hole is visible in the rock; analysis of the extracted core revealed leopard-spot mineral patterns strikingly similar to textures produced by microbial communities on Earth, published in Nature in 2025 as the most tantalizing potential biosignature ever found beyond our planet.',
+    imageUrl: '/images/rover-photos/perseverance-cheyava-falls.jpg',
+    lon: 77.30369792,
+    lat: 18.4959853,
+  },
+  {
+    rover: 'Perseverance',
+    id: 'perseverance',
+    sol: 684,
+    camera: 'WATSON (SHERLOC)',
+    caption: 'Perseverance surveys the "Three Forks" sample depot it built inside Jezero Crater, in this composite of 59 WATSON arm-camera images taken on Sol 684 (January 22, 2023). The titanium sample tube in the foreground contains the "Atsah" rock core; ten tubes were deposited here as a backup cache for the NASA-ESA Mars Sample Return mission, in case Perseverance cannot deliver its primary samples to a future lander. These 33 sealed tubes represent the most scientifically valuable cargo ever prepared for return to Earth.',
+    imageUrl: '/images/rover-photos/perseverance-three-forks.jpg',
+    lon: 77.40859222,
+    lat: 18.45311341,
+  },
+  {
+    rover: 'Perseverance',
+    id: 'perseverance',
+    sol: 470,
+    camera: 'Mastcam-Z',
+    caption: 'The most detailed landscape panorama ever returned from Mars — 1,118 Mastcam-Z frames stitched into a 2.5-billion-pixel mosaic taken across five sols in June 2022 (Sols 466–474). The ancient river delta fans out across the far wall of Jezero Crater, its layered sediments recording a period when water flowed steadily into a standing lake. Perseverance collected several of its most scientifically prized rock cores from these delta deposits.',
+    imageUrl: '/images/rover-photos/perseverance-jezero-delta.jpg',
+    lon: 77.40609995,
+    lat: 18.4588559,
+  },
+  {
+    rover: 'Spirit',
+    id: 'spirit',
+    sol: 621,
+    camera: 'Pancam',
+    caption: 'The "Everest" panorama — named for its 20/20-vision clarity — captured from the true summit of Husband Hill on Sols 620–622 (October 1–3, 2005). Assembled from 81 Pancam pointings in four wavelength filters, the 360° view sweeps across a plateau of wind-sculpted rock and drifting sand roughly 100 meters above the Gusev Crater plains. The crater rim lies ~80 km away on the horizon; dust devils are frozen mid-spin in the upper right.',
+    imageUrl: '/images/rover-photos/spirit-husband-hill.jpg',
+    lon: 175.48,
+    lat: -14.57,
+  },
+  {
+    rover: 'Opportunity',
+    id: 'opportunity',
+    sol: 290,
+    camera: 'Pancam',
+    caption: 'Opportunity\'s Pancam looks up at the layered inner wall of Endurance Crater from the base of "Burns Cliff" in this 46-image composite taken on Sols 287–294 (November 13–20, 2004). The cliff face — named after geologist Roger Burns, who predicted exactly these sulfate-rich sediments on Mars — exposes roughly 10 meters of stacked rock layers recording a sequence of ancient wet and dry episodes. The apparent outward curve of the walls is a wide-angle perspective distortion.',
+    imageUrl: '/images/rover-photos/opportunity-burns-cliff.jpg',
+    lon: 354.47,
+    lat: -1.95,
+  },
+  {
+    rover: 'Zhurong',
+    id: 'zhurong',
+    sol: 10,
+    camera: 'Remote Camera',
+    caption: 'Zhurong and its Tianwen-1 lander pose together on the plains of Utopia Planitia in this image released June 11, 2021. To take it, the rover deployed a small wireless camera — less than 1 kg, the lightest object ever placed on Mars — onto the surface roughly 10 meters away, then drove back beside the lander. The rover\'s tracks are visible at right. No other Mars mission has managed a true group portrait.',
+    imageUrl: '/images/rover-photos/zhurong-selfie.jpg',
+    lon: 109.925,
+    lat: 25.066,
+  },
+  {
+    rover: 'Curiosity',
+    id: 'curiosity',
+    sol: 1856,
+    camera: 'Mastcam',
+    caption: 'From the crest of Vera Rubin Ridge, Curiosity\'s Mastcam sweeps the full interior of Gale Crater in this 16-image mosaic taken on Sol 1856 (October 25, 2017). The ridge itself — an iron-oxide-bearing band that puzzled scientists from orbit for years — runs left to right; Mount Sharp dominates the centre; and the crater rim 85 kilometres away closes the horizon. Nearly six years of traverse are compressed into a single frame.',
+    imageUrl: '/images/rover-photos/curiosity-vera-rubin-ridge.jpg',
+    lon: 137.3740862,
+    lat: -4.72636276,
+  },
+  {
+    rover: 'Curiosity',
+    id: 'curiosity',
+    sol: 3070,
+    camera: 'MAHLI',
+    caption: 'Curiosity poses before Mont Mercou — a 6-meter sandstone outcrop on the slopes of Mount Sharp — in this composite of 60 MAHLI arm-camera images taken on Sol 3070 (March 26, 2021). A drill hole from the "Nontron" rock sample is visible in the foreground. Features in the region were named after the village of Nontron in southwestern France.',
+    imageUrl: '/images/rover-photos/curiosity-mont-mercou.jpg',
+    lon: 137.3708,
+    lat: -4.6692,
+  },
+  {
+    rover: 'Curiosity',
+    id: 'curiosity',
+    sol: 2553,
+    camera: 'MAHLI',
+    caption: 'Self-portrait at the "Glen Etive" drill site on lower Mount Sharp, composed of 57 MAHLI arm-camera images taken on Sol 2553 (October 11, 2019). Two drill holes — Glen Etive 1 and Glen Etive 2 — are visible just left of the rover; samples from these holes were used for Curiosity\'s first wet-chemistry experiment with the SAM instrument. Vera Rubin Ridge rises roughly 300 meters behind the rover, with the floor and northern rim of Gale Crater beyond.',
+    imageUrl: '/images/rover-photos/curiosity-glen-etive.jpg',
+    lon: 137.3835013,
+    lat: -4.73090654,
+  },
+  {
+    rover: 'Curiosity',
+    id: 'curiosity',
+    sol: 1421,
+    camera: 'Mastcam',
+    caption: '360° panorama stitched from over 130 Mastcam images taken on Sol 1421 (August 5, 2016) — Curiosity\'s fourth landing anniversary. The flat-topped mesas of Murray Buttes rise ~15 meters above the surrounding plains; they are eroded remnants of the Stimson sandstone formation, wind-deposited and more resistant to erosion than the ancient lakebed sediments of the Murray formation underfoot. The area is named after planetary scientist Bruce Murray, former director of JPL.',
+    imageUrl: '/images/rover-photos/curiosity-murray-buttes.jpg',
+    lon: 137.3544744,
+    lat: -4.68718483,
+  },
+];
 
 // ── Rover metadata (descriptions + hero images) ───────────────────────
 export const ROVER_META: Record<string, { description: string; imageUrl: string }> = {
@@ -94,6 +257,7 @@ export const ROVER_META: Record<string, { description: string; imageUrl: string 
 let traversePrimitives: Cesium.PrimitiveCollection;
 let pinCollection: Cesium.BillboardCollection;
 let pinData: Array<{ pin: Cesium.Billboard } & RoverPinEntry> = [];
+let photoData: Array<{ pin: Cesium.Billboard } & RoverPhotoEntry> = [];
 let roverSites: Array<{ name: string; id: string; lon: number; lat: number }> = [];
 
 export const rovers: Feature = {
@@ -150,16 +314,38 @@ export const rovers: Feature = {
         image: PIN_IMAGES.get(id) ?? makeDotCanvas(cesiumColor),
         heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
         verticalOrigin: Cesium.VerticalOrigin.CENTER,
+        disableDepthTestDistance: 6.4e6,
       });
 
-      pinData.push({ pin, rover, id, sol, color: cesiumColor.toCssColorString() });
+      pinData.push({ pin, kind: 'pin', rover, id, sol, color: cesiumColor.toCssColorString() });
+    }
+
+    // Photo icons — curated photos placed at known coordinates
+    photoData = [];
+    for (const photo of CURATED_PHOTOS) {
+      const pin = pinCollection.add({
+        position: Cesium.Cartesian3.fromDegrees(photo.lon, photo.lat),
+        image: CAMERA_IMAGES.get(photo.id) ?? makeCameraCanvas(Cesium.Color.WHITE),
+        heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        pixelOffset: new Cesium.Cartesian2(0, -8),
+
+        disableDepthTestDistance: 6.4e6,
+      });
+      photoData.push({ pin, kind: 'photo', ...photo });
     }
   },
 
-  pick(picked: any): RoverPinEntry | undefined {
+  pick(picked: any): RoverPickResult | undefined {
+    // Photo icons first (fewer, more specific)
+    const photo = photoData.find((e) => e.pin === picked?.primitive);
+    if (photo) {
+      const { pin: _, ...data } = photo;
+      return data;
+    }
     const entry = pinData.find((e) => e.pin === picked?.primitive);
     if (!entry) return undefined;
-    return { rover: entry.rover, id: entry.id, sol: entry.sol, color: entry.color };
+    return { kind: 'pin', rover: entry.rover, id: entry.id, sol: entry.sol, color: entry.color };
   },
 
   apply(state: AppState) {
@@ -169,6 +355,7 @@ export const rovers: Feature = {
 
   destroy() {
     pinData = [];
+    photoData = [];
     roverSites = [];
   },
 };

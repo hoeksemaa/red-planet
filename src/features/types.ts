@@ -6,6 +6,7 @@ export interface Feature {
   apply(state: AppState): void;
   destroy(): void;
   pick?(picked: any): unknown | undefined;
+  hover?(picked: any): boolean;
 }
 
 export interface ContourFeature {

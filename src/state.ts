@@ -6,6 +6,7 @@ export interface AppState {
   imagery: 'terraformed' | 'real';
   layers: {
     contours: boolean;
+    graticule: boolean;
     labels: boolean;
     rovers: boolean;
     satellites: boolean;
@@ -18,6 +19,7 @@ export const DEFAULT_STATE: AppState = {
   imagery: 'terraformed',
   layers: {
     contours: true,
+    graticule: false,
     labels: true,
     rovers: true,
     satellites: true,
