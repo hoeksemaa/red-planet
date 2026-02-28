@@ -60,6 +60,8 @@ export interface LocationSearchResult {
   lon: number;
   lat: number;
   diameterKm: number;
+  featureType: string;
+  origin: string;
 }
 
 export interface RoverSearchResult {

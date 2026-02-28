@@ -96,5 +96,5 @@ export function searchLabels(query: string): LocationSearchResult[] {
   return labelData
     .filter((d) => all || d.name.toLowerCase().includes(q))
     .slice(0, 10)
-    .map(({ name, lon, lat, diameterKm }) => ({ kind: 'location' as const, name, lon, lat, diameterKm }));
+    .map(({ name, lon, lat, diameterKm, featureType, origin }) => ({ kind: 'location' as const, name, lon, lat, diameterKm, featureType, origin }));
 }
