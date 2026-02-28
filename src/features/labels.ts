@@ -16,6 +16,7 @@ interface LabelEntry {
 let labelCollection: Cesium.LabelCollection;
 let labelData: LabelEntry[] = [];
 let hoveredLabel: Cesium.Label | null = null;
+let prefetchedData: NomenclatureGeoJSON | null = null;
 
 // Label visibility: fade in when camera is within `diameterKm * SCALE` meters.
 // Floor ensures tiny features still appear at close zoom.
@@ -41,8 +42,12 @@ function labelFade(diameterKm: number): Cesium.NearFarScalar {
 }
 
 export const labels: Feature = {
+  async prefetch() {
+    prefetchedData = await fetch(NOMENCLATURE_DATA_URL).then((r) => r.json());
+  },
+
   async init(viewer: Cesium.Viewer) {
-    const nomenclatureGeoJSON: NomenclatureGeoJSON = await fetch(NOMENCLATURE_DATA_URL).then((r) => r.json());
+    const nomenclatureGeoJSON = prefetchedData ?? await fetch(NOMENCLATURE_DATA_URL).then((r) => r.json());
     labelCollection = viewer.scene.primitives.add(new Cesium.LabelCollection({ scene: viewer.scene }));
     labelData = [];
 

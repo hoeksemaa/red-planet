@@ -16,6 +16,10 @@ export function register(id: string, feature: Feature): void {
   registry.register(id, feature);
 }
 
+export async function prefetchAll(): Promise<void> {
+  await registry.prefetchAll();
+}
+
 export async function init(heights: Float32Array, initialState: AppState): Promise<void> {
   const terrainProvider = createTerrainProvider(heights);
 

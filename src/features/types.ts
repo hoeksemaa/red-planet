@@ -2,6 +2,7 @@ import type * as Cesium from 'cesium';
 import type { AppState } from '../state';
 
 export interface Feature {
+  prefetch?(): Promise<void>;
   init(viewer: Cesium.Viewer): void | Promise<void>;
   apply(state: AppState): void;
   destroy(): void;

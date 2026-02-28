@@ -14,8 +14,6 @@ import type { FeatureInfo } from './features/types';
 import type { RoverPickResult } from './features/rovers';
 
 async function main(): Promise<void> {
-  const heightsBuf = await fetch(TERRAIN_DATA_URL).then((r) => r.arrayBuffer());
-  const heights = new Float32Array(heightsBuf);
   const state = { ...DEFAULT_STATE };
 
   renderer.register('imagery', imagery);
@@ -24,6 +22,12 @@ async function main(): Promise<void> {
   renderer.register('labels', labels);
   renderer.register('rovers', rovers);
   renderer.register('satellites', satellites);
+
+  const [heightsBuf] = await Promise.all([
+    fetch(TERRAIN_DATA_URL).then((r) => r.arrayBuffer()),
+    renderer.prefetchAll(),
+  ]);
+  const heights = new Float32Array(heightsBuf);
   await renderer.init(heights, state);
 
   function unifiedSearch(query: string): UnifiedSearchResult[] {

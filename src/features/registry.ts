@@ -9,6 +9,10 @@ export class LayerRegistry {
     this.features.set(id, feature);
   }
 
+  async prefetchAll(): Promise<void> {
+    await Promise.all([...this.features.values()].filter((f) => f.prefetch).map((f) => f.prefetch!()));
+  }
+
   async initAll(viewer: Cesium.Viewer): Promise<void> {
     await Promise.all([...this.features.values()].map((f) => f.init(viewer)));
   }
