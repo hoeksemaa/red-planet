@@ -357,7 +357,6 @@ export class UI {
 
     // Feature layer checkboxes
     this.layerExag.addEventListener('change', () => {
-      this.state.exaggerated = this.layerExag.checked;
       this.state.exaggeration = this.layerExag.checked ? EXAGGERATION_SCALE : 1;
       this.callbacks.onStateChange(this.state);
     });
@@ -397,5 +396,16 @@ export class UI {
         this.layersPanel.hidden = true;
       }
     });
+
+    // Sync DOM to initial state — DEFAULT_STATE is the single source of truth
+    this.layerExag.checked      = this.state.exaggeration !== 1;
+    this.layerContours.checked  = this.state.layers.contours;
+    this.layerLabels.checked    = this.state.layers.labels;
+    this.layerRovers.checked    = this.state.layers.rovers;
+    this.layerGraticule.checked = this.state.layers.graticule;
+    this.layerSatellites.checked = this.state.layers.satellites;
+    for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="imagery"]')) {
+      radio.checked = radio.value === this.state.imagery;
+    }
   }
 }

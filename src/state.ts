@@ -1,7 +1,5 @@
-import { EXAGGERATION_SCALE } from './constants';
 
 export interface AppState {
-  exaggerated: boolean;
   exaggeration: number;
   imagery: 'terraformed' | 'real';
   layers: {
@@ -14,11 +12,10 @@ export interface AppState {
 }
 
 export const DEFAULT_STATE: AppState = {
-  exaggerated: true,
-  exaggeration: EXAGGERATION_SCALE,
+  exaggeration: 100,
   imagery: 'terraformed',
   layers: {
-    contours: true,
+    contours: false,
     graticule: false,
     labels: true,
     rovers: true,

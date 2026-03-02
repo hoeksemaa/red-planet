@@ -15,7 +15,10 @@ function elevationToColor(elev: number): Cesium.Color {
 // Primitive positions are absolute world coords — verticalExaggeration does NOT scale them,
 // so we build both variants at init and swap visibility on toggle (instant).
 const collections = new Map<number, Cesium.PrimitiveCollection>();
-let prefetchedData: ContourGeoJSON | null = null;
+let viewerRef: Cesium.Viewer | null = null;
+let initialized = false;
+let loading = false;
+let pendingState: AppState | null = null;
 
 function buildCollection(
   geojson: ContourGeoJSON,
@@ -57,21 +60,32 @@ function buildCollection(
 }
 
 export const contours: Feature = {
-  async prefetch() {
-    prefetchedData = await fetch(CONTOURS_DATA_URL).then((r) => r.json());
-  },
-
-  async init(viewer: Cesium.Viewer) {
-    const geojson = prefetchedData ?? (await fetch(CONTOURS_DATA_URL).then((r) => r.json()));
-
-    for (const scale of [1, EXAGGERATION_SCALE]) {
-      const col = buildCollection(geojson, scale);
-      viewer.scene.primitives.add(col);
-      collections.set(scale, col);
-    }
+  init(viewer: Cesium.Viewer) {
+    viewerRef = viewer;
   },
 
   apply(state: AppState) {
+    pendingState = state;
+
+    if (!initialized) {
+      if (state.layers.contours && !loading && viewerRef) {
+        loading = true;
+        fetch(CONTOURS_DATA_URL)
+          .then((r) => r.json())
+          .then((geojson: ContourGeoJSON) => {
+            for (const scale of [1, EXAGGERATION_SCALE]) {
+              const col = buildCollection(geojson, scale);
+              viewerRef!.scene.primitives.add(col);
+              collections.set(scale, col);
+            }
+            initialized = true;
+            loading = false;
+            if (pendingState) contours.apply(pendingState);
+          });
+      }
+      return;
+    }
+
     const visible = state.layers.contours;
     for (const [scale, col] of collections) {
       col.show = visible && state.exaggeration === scale;
@@ -81,5 +95,7 @@ export const contours: Feature = {
   destroy() {
     for (const col of collections.values()) col.removeAll();
     collections.clear();
+    initialized = false;
+    loading = false;
   },
 };
