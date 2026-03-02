@@ -96,20 +96,22 @@ function makeDotCanvas(cssColor: string): HTMLCanvasElement {
 
 // ── Module state ────────────────────────────────────────────
 
-let orbitPrimitives: Cesium.PrimitiveCollection;
+let orbitPrimitive: Cesium.Primitive;
 let dotCollection: Cesium.BillboardCollection;
 let dotData: Array<{ billboard: Cesium.Billboard; elements: SatelliteElements }> = [];
 let removePostRender: (() => void) | null = null;
+let viewerRef: Cesium.Viewer | null = null;
 const epoch = Date.now();
 
 // ── Feature ─────────────────────────────────────────────────
 
 export const satellites: Feature = {
   init(viewer: Cesium.Viewer): void {
-    orbitPrimitives = viewer.scene.primitives.add(new Cesium.PrimitiveCollection());
+    viewerRef = viewer;
     dotCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection());
     dotData = [];
 
+    const orbitInstances: Cesium.GeometryInstance[] = [];
     for (const el of SATELLITES) {
       const color = Cesium.Color.fromCssColorString(el.color);
 
@@ -118,22 +120,12 @@ export const satellites: Feature = {
       for (let deg = 0; deg <= 360; deg++) {
         positions.push(orbitalCartesian(el, deg * DEG));
       }
-
-      orbitPrimitives.add(
-        new Cesium.Primitive({
-          geometryInstances: new Cesium.GeometryInstance({
-            geometry: new Cesium.PolylineGeometry({
-              positions,
-              width: 1.5,
-            }),
-            attributes: {
-              color: Cesium.ColorGeometryInstanceAttribute.fromColor(color.withAlpha(0.6)),
-            },
-          }),
-          appearance: new Cesium.PolylineColorAppearance(),
-          asynchronous: true,
-        }),
-      );
+      orbitInstances.push(new Cesium.GeometryInstance({
+        geometry: new Cesium.PolylineGeometry({ positions, width: 1.5 }),
+        attributes: {
+          color: Cesium.ColorGeometryInstanceAttribute.fromColor(color.withAlpha(0.6)),
+        },
+      }));
 
       // ── Animated dot ──
       const billboard = dotCollection.add({
@@ -144,6 +136,12 @@ export const satellites: Feature = {
       });
       dotData.push({ billboard, elements: el });
     }
+
+    orbitPrimitive = viewer.scene.primitives.add(new Cesium.Primitive({
+      geometryInstances: orbitInstances,
+      appearance: new Cesium.PolylineColorAppearance(),
+      asynchronous: true,
+    }));
 
     // ── PostRender: update dot positions each frame ──
     const handler = () => {
@@ -176,7 +174,7 @@ export const satellites: Feature = {
   },
 
   apply(state: AppState) {
-    if (orbitPrimitives) orbitPrimitives.show = state.layers.satellites;
+    if (orbitPrimitive) orbitPrimitive.show = state.layers.satellites;
     if (dotCollection) dotCollection.show = state.layers.satellites;
   },
 
@@ -184,6 +182,11 @@ export const satellites: Feature = {
     removePostRender?.();
     removePostRender = null;
     dotData = [];
+    if (viewerRef) {
+      viewerRef.scene.primitives.remove(orbitPrimitive);
+      viewerRef.scene.primitives.remove(dotCollection);
+      viewerRef = null;
+    }
   },
 };
 
