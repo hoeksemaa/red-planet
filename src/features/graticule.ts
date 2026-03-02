@@ -12,8 +12,7 @@ const STEP = 30;
 const SAMPLE_DEG = 1;
 const LINE_WIDTH = 1;
 
-function buildCollection(exaggeration: number): Cesium.PrimitiveCollection {
-  const collection = new Cesium.PrimitiveCollection();
+function buildPrimitive(exaggeration: number): Cesium.Primitive {
   const instances: Cesium.GeometryInstance[] = [];
 
   // Parallels — parallelHeights is laid out as [lat0_lon0, lat0_lon1, ..., lat1_lon0, ...]
@@ -41,20 +40,19 @@ function buildCollection(exaggeration: number): Cesium.PrimitiveCollection {
     }));
   }
 
-  collection.add(new Cesium.Primitive({
+  return new Cesium.Primitive({
     geometryInstances: instances,
     appearance: new Cesium.PolylineMaterialAppearance({
       material: Cesium.Material.fromType('PolylineDash', {
-        color: new Cesium.Color(0.5, 0.5, 0.5, 1.0), // 50% white
+        color: new Cesium.Color(0.5, 0.5, 0.5, 1.0),
         gapColor: Cesium.Color.TRANSPARENT,
         dashLength: 32.0,
         dashPattern: 65520, // 0xFFF0 — 4 dash-bits, 12 gap-bits = 25% dash / 75% gap
       }),
     }),
-    asynchronous: false,
-  }));
-
-  return collection;
+    asynchronous: true,
+    show: false,
+  });
 }
 
 function makeLabels(viewer: Cesium.Viewer): Cesium.LabelCollection {
@@ -102,40 +100,36 @@ function makeLabels(viewer: Cesium.Viewer): Cesium.LabelCollection {
 }
 
 export function createGraticule(): Feature {
-  const collections = new Map<number, Cesium.PrimitiveCollection>();
+  const primitives = new Map<number, Cesium.Primitive>();
   let labelCollection: Cesium.LabelCollection;
   let viewer: Cesium.Viewer;
-  let built = false;
-
-  function buildAll() {
-    for (const scale of [1, EXAGGERATION_SCALE]) {
-      const col = buildCollection(scale);
-      viewer.scene.primitives.add(col);
-      collections.set(scale, col);
-    }
-    labelCollection = makeLabels(viewer);
-    built = true;
-  }
 
   return {
     init(v: Cesium.Viewer) {
       viewer = v;
+      for (const scale of [1, EXAGGERATION_SCALE]) {
+        const primitive = buildPrimitive(scale);
+        viewer.scene.primitives.add(primitive);
+        primitives.set(scale, primitive);
+      }
+      labelCollection = makeLabels(viewer);
     },
 
     apply(state: AppState) {
+      if (primitives.size === 0) return;
       const visible = state.layers.graticule;
-      if (visible && !built) buildAll();
-      if (!built) return;
-      for (const [scale, col] of collections) {
-        col.show = visible && state.exaggeration === scale;
+      for (const [scale, primitive] of primitives) {
+        primitive.show = visible && state.exaggeration === scale;
       }
       labelCollection.show = visible;
     },
 
     destroy() {
-      for (const col of collections.values()) col.removeAll();
-      collections.clear();
-      if (labelCollection) labelCollection.removeAll();
+      for (const primitive of primitives.values()) {
+        viewer.scene.primitives.remove(primitive);
+      }
+      primitives.clear();
+      if (labelCollection) viewer.scene.primitives.remove(labelCollection);
     },
   };
 }

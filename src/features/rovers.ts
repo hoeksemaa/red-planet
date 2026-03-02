@@ -254,8 +254,9 @@ export const ROVER_META: Record<string, { description: string; imageUrl: string 
 };
 
 // Module-level state
-let traversePrimitives: Cesium.PrimitiveCollection;
+let traversePrimitive: Cesium.GroundPolylinePrimitive;
 let pinCollection: Cesium.BillboardCollection;
+let viewerRef: Cesium.Viewer | null = null;
 let pinData: Array<{ pin: Cesium.Billboard } & RoverPinEntry> = [];
 let photoData: Array<{ pin: Cesium.Billboard } & RoverPhotoEntry> = [];
 let roverSites: Array<{ name: string; id: string; lon: number; lat: number }> = [];
@@ -278,31 +279,30 @@ export const rovers: Feature = {
           fetch(ROVER_IMAGES_URL).then((r) => r.json()),
         ]);
 
-    traversePrimitives = viewer.scene.primitives.add(new Cesium.PrimitiveCollection());
+    viewerRef = viewer;
     pinCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection({ scene: viewer.scene }));
     pinData = [];
 
-    // Traverse polylines — one GroundPolylinePrimitive per rover
+    // Traverse polylines — all rovers batched into one GroundPolylinePrimitive
+    const traverseInstances: Cesium.GeometryInstance[] = [];
     for (const feature of traverseGeo.features) {
       const color = ROVER_COLORS[feature.properties.id] ?? Cesium.Color.WHITE;
       const positions = (feature.geometry.coordinates as [number, number][]).map(
         ([lon, lat]) => Cesium.Cartesian3.fromDegrees(lon, lat)
       );
       if (positions.length < 2) continue;
-
-      traversePrimitives.add(
-        new Cesium.GroundPolylinePrimitive({
-          geometryInstances: new Cesium.GeometryInstance({
-            geometry: new Cesium.GroundPolylineGeometry({ positions, width: 2.5 }),
-            attributes: {
-              color: Cesium.ColorGeometryInstanceAttribute.fromColor(color),
-            },
-          }),
-          appearance: new Cesium.PolylineColorAppearance(),
-          asynchronous: true,
-        })
-      );
+      traverseInstances.push(new Cesium.GeometryInstance({
+        geometry: new Cesium.GroundPolylineGeometry({ positions, width: 2.5 }),
+        attributes: {
+          color: Cesium.ColorGeometryInstanceAttribute.fromColor(color),
+        },
+      }));
     }
+    traversePrimitive = viewer.scene.primitives.add(new Cesium.GroundPolylinePrimitive({
+      geometryInstances: traverseInstances,
+      appearance: new Cesium.PolylineColorAppearance(),
+      asynchronous: true,
+    }));
 
     // Image waypoint pins — landing site dot only on first load; remaining deferred
     const seenRovers = new Set<string>();
@@ -380,7 +380,7 @@ export const rovers: Feature = {
   },
 
   apply(state: AppState) {
-    if (traversePrimitives) traversePrimitives.show = state.layers.rovers;
+    if (traversePrimitive) traversePrimitive.show = state.layers.rovers;
     if (pinCollection) pinCollection.show = state.layers.rovers;
   },
 
@@ -388,6 +388,11 @@ export const rovers: Feature = {
     pinData = [];
     photoData = [];
     roverSites = [];
+    if (viewerRef) {
+      viewerRef.scene.primitives.remove(traversePrimitive);
+      viewerRef.scene.primitives.remove(pinCollection);
+      viewerRef = null;
+    }
   },
 };
 

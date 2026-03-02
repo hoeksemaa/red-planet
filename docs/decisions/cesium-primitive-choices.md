@@ -175,3 +175,74 @@ At oblique viewing angles, an exaggerated contour line that passes near a billbo
 position can be physically above it in 3D space and will visually occlude it regardless of
 depth-test settings. This is not a rendering-order or depth-buffer artifact — the line
 literally floats above the icon in world space.
+
+---
+
+## Rule 8 — Batch all geometry instances into the fewest Primitives possible
+
+**Default: one `Primitive` per logical layer** (for geometry — polylines, polygons, etc.). Each `Primitive` submits at least one WebGL draw call **every frame**. A `PrimitiveCollection` with N primitives = N draw calls per frame, every frame, regardless of content complexity.
+
+Note: `BillboardCollection`, `LabelCollection`, and `PointPrimitiveCollection` are already internally batched — all entries in one collection = one draw call. Do not replace these with geometry `Primitive`s; they are already optimal.
+
+Flatten all `GeometryInstance` objects across all features into a single array and create
+one `Primitive` per logical layer:
+
+```ts
+const allInstances: Cesium.GeometryInstance[] = [];
+for (const feature of geojson.features) {
+  for (const coordArray of feature.geometry.coordinates) {
+    allInstances.push(new Cesium.GeometryInstance({ ... }));
+  }
+}
+const primitive = new Cesium.Primitive({ geometryInstances: allInstances, ... });
+```
+
+Per-instance color still works — `ColorGeometryInstanceAttribute` lives on each
+`GeometryInstance`, not on the `Primitive`. `PrimitiveCollection` is a JS-layer
+organizational tool only; it does not reduce draw calls.
+
+---
+
+## Rule 9 — Use `asynchronous: true` with `show: false` for prefetched geometry
+
+`asynchronous: false` compiles all geometry synchronously on the main thread the moment
+the `Primitive` is added to the scene — guaranteed frame hitch for large datasets.
+
+`asynchronous: true` (the Cesium default) spreads compilation across render frames with
+no visible hitch. Pair with `show: false` so partially-compiled geometry never flashes
+visible before it's ready:
+
+```ts
+const primitive = new Cesium.Primitive({
+  geometryInstances: allInstances,
+  appearance: new Cesium.PolylineColorAppearance({ translucent: false }),
+  asynchronous: true,
+  show: false,               // reveal only after initialized = true
+});
+```
+
+---
+
+## Rule 10 — Prefetch in `init()`, not on first user interaction
+
+Gating a `fetch()` behind a layer toggle adds perceived latency exactly when the user
+wants a response. Network fetches are async and non-blocking — start them in `init()`
+so data arrives during app startup while the user is orienting. Set `show: false` and
+apply the correct visibility in the `apply()` callback once data is ready.
+
+---
+
+## Pitfall — `removeAll()` does not remove the collection from the scene
+
+`PrimitiveCollection.removeAll()` destroys the collection's children but leaves the
+empty collection object in `scene.primitives`, leaking memory. To fully clean up:
+
+```ts
+// Wrong — leaves the collection in scene.primitives:
+collection.removeAll();
+
+// Correct — removes and destroys the collection and its children:
+viewer.scene.primitives.remove(collection);
+```
+
+Same applies to individual `Primitive` objects added directly to `scene.primitives`.
