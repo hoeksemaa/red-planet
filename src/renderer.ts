@@ -11,6 +11,8 @@ const registry = new LayerRegistry();
 
 let pickCallback: ((featureId: string, result: unknown) => void) | null = null;
 let pickMissCallback: (() => void) | null = null;
+let progressCallback: ((pct: number) => void) | null = null;
+let readyCallback: (() => void) | null = null;
 
 export function register(id: string, feature: Feature): void {
   registry.register(id, feature);
@@ -37,6 +39,14 @@ export async function init(heights: Float32Array, initialState: AppState): Promi
     selectionIndicator: false,
     fullscreenButton: false,
     creditContainer: document.createElement('div'),
+  });
+
+  let maxTiles = 0;
+  viewer.scene.globe.tileLoadProgressEvent.addEventListener((count: number) => {
+    if (count > maxTiles) maxTiles = count;
+    if (maxTiles === 0) return;
+    progressCallback?.(((maxTiles - count) / maxTiles) * 100);
+    if (count === 0) readyCallback?.();
   });
 
   // Mars scene config
@@ -118,4 +128,12 @@ export function onPick(fn: (featureId: string, result: unknown) => void): void {
 
 export function onPickMiss(fn: () => void): void {
   pickMissCallback = fn;
+}
+
+export function onProgress(fn: (pct: number) => void): void {
+  progressCallback = fn;
+}
+
+export function onReady(fn: () => void): void {
+  readyCallback = fn;
 }
