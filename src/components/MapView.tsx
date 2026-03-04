@@ -163,7 +163,7 @@ export function MapView({ onProgress, onReady }: Props) {
         </svg>
       </button>
 
-      <div id="layersPanel" className="rp-card">
+      <div id="layersPanel" className="rp-card" hidden>
         <div id="layersPanelHeader">
           <span>Layers</span>
           <button id="layersPanelClose" aria-label="Close">✕</button>
