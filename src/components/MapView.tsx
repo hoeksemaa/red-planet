@@ -165,10 +165,9 @@ export function MapView({ onProgress, onReady }: Props) {
 
       <div id="layersPanel" className="rp-card" hidden>
         <div id="layersPanelHeader">
-          <span>Layers</span>
+          <span className="layers-section-title" style={{flex:1}}>Map Type</span>
           <button id="layersPanelClose" aria-label="Close">✕</button>
         </div>
-        <div className="layers-section-title">Imagery</div>
         <label className="layer-item">
           <input type="radio" name="imagery" value="terraformed" />
           <span>Terraformed</span>
@@ -178,6 +177,7 @@ export function MapView({ onProgress, onReady }: Props) {
           <span>Real Mars</span>
         </label>
         <div className="layers-divider" />
+        <div className="layers-section-title">Map Details</div>
         <label className="layer-item">
           <input type="checkbox" id="layerExag" />
           <span>Exaggerated topography</span>

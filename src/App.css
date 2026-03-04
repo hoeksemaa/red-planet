@@ -337,11 +337,11 @@ body {
   white-space: pre-line;
 }
 
-/* ── Layers button (bottom-left) ───────────────────────────── */
+/* ── Layers button (top-right, below search bar) ───────────── */
 #layersBtn {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
+  top: 76px;
+  right: 16px;
   width: 44px;
   height: 44px;
   display: flex;
@@ -350,6 +350,7 @@ body {
   cursor: pointer;
   z-index: 10;
   padding: 0;
+  border-radius: 50%;
 }
 
 #layersBtn svg {
@@ -361,14 +362,14 @@ body {
   background: #f8f9fa;
 }
 
-/* ── Layers panel (bottom-left, above button) ──────────────── */
+/* ── Layers panel (top-right, below button) ────────────────── */
 #layersPanel {
   position: fixed;
-  bottom: 72px;
-  left: 20px;
+  top: 128px;
+  right: 16px;
   width: 220px;
   max-width: calc(100vw - 40px);
-  padding: 12px 0 8px;
+  padding: 4px 0 8px;
   z-index: 10;
 }
 
@@ -376,12 +377,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px 10px;
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--text-primary);
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 6px;
+  padding: 4px 8px 4px;
+  margin-bottom: 0;
 }
 
 #layersPanelClose {
@@ -455,20 +452,24 @@ body {
   }
 
   #layersBtn {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
-    left: 12px;
+    top: calc(env(safe-area-inset-top, 0px) + 66px);
+    right: 12px;
   }
 
   #layersPanel {
+    top: auto;
     bottom: 0;
     left: 0;
+    right: 0;
     width: 100vw;
     max-width: none;
-    border-radius: 0;
+    height: 50vh;
+    border-radius: 16px 16px 0 0;
     border-left: none;
     border-right: none;
     border-bottom: none;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+    overflow-y: auto;
   }
 
   #rp-title {
