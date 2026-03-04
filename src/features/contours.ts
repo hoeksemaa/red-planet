@@ -63,7 +63,8 @@ export const contours: Feature = {
         }
         initialized = true;
         if (pendingState) contours.apply(pendingState);
-      });
+      })
+      .catch((e) => console.error('[contours] Failed to load:', e));
   },
 
   apply(state: AppState) {

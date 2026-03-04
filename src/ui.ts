@@ -26,6 +26,7 @@ function roverGalleryUrl(id: string, sol: number | null): string {
 export class UI {
   private state: AppState;
   private callbacks: UICallbacks;
+  private documentListeners = new AbortController();
 
   // Search elements
   private searchInput   = document.getElementById('searchInput') as HTMLInputElement;
@@ -121,7 +122,7 @@ export class UI {
       if (!wrap.contains(e.target as Node)) {
         this.hideResults();
       }
-    });
+    }, { signal: this.documentListeners.signal });
   }
 
   private showResults(results: UnifiedSearchResult[]): void {
@@ -395,7 +396,7 @@ export class UI {
       ) {
         this.layersPanel.hidden = true;
       }
-    });
+    }, { signal: this.documentListeners.signal });
 
     // Sync DOM to initial state — DEFAULT_STATE is the single source of truth
     this.layerExag.checked      = this.state.exaggeration !== 1;
@@ -407,5 +408,9 @@ export class UI {
     for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="imagery"]')) {
       radio.checked = radio.value === this.state.imagery;
     }
+  }
+
+  destroy(): void {
+    this.documentListeners.abort();
   }
 }

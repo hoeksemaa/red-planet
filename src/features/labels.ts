@@ -43,11 +43,19 @@ function labelFade(diameterKm: number): Cesium.NearFarScalar {
 
 export const labels: Feature = {
   async prefetch() {
-    prefetchedData = await fetch(NOMENCLATURE_DATA_URL).then((r) => r.json());
+    try {
+      prefetchedData = await fetch(NOMENCLATURE_DATA_URL).then((r) => r.json());
+    } catch (e) {
+      console.error('[labels] prefetch failed:', e);
+    }
   },
 
   async init(viewer: Cesium.Viewer) {
-    const nomenclatureGeoJSON = prefetchedData ?? await fetch(NOMENCLATURE_DATA_URL).then((r) => r.json());
+    const nomenclatureGeoJSON = prefetchedData ?? await fetch(NOMENCLATURE_DATA_URL).then((r) => r.json()).catch((e) => {
+      console.error('[labels] init fetch failed:', e);
+      return null;
+    });
+    if (!nomenclatureGeoJSON) return;
     labelCollection = viewer.scene.primitives.add(new Cesium.LabelCollection({ scene: viewer.scene }));
     labelData = [];
 

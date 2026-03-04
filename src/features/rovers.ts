@@ -265,10 +265,14 @@ let prefetchedImages: any = null;
 
 export const rovers: Feature = {
   async prefetch() {
-    [prefetchedTraverse, prefetchedImages] = await Promise.all([
-      fetch(ROVER_TRAVERSE_URL).then((r) => r.json()),
-      fetch(ROVER_IMAGES_URL).then((r) => r.json()),
-    ]);
+    try {
+      [prefetchedTraverse, prefetchedImages] = await Promise.all([
+        fetch(ROVER_TRAVERSE_URL).then((r) => r.json()),
+        fetch(ROVER_IMAGES_URL).then((r) => r.json()),
+      ]);
+    } catch (e) {
+      console.error('[rovers] prefetch failed:', e);
+    }
   },
 
   async init(viewer: Cesium.Viewer): Promise<void> {
@@ -277,7 +281,11 @@ export const rovers: Feature = {
       : await Promise.all([
           fetch(ROVER_TRAVERSE_URL).then((r) => r.json()),
           fetch(ROVER_IMAGES_URL).then((r) => r.json()),
-        ]);
+        ]).catch((e) => {
+          console.error('[rovers] init fetch failed:', e);
+          return [null, null];
+        });
+    if (!traverseGeo || !imagesGeo) return;
 
     viewerRef = viewer;
     pinCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection({ scene: viewer.scene }));

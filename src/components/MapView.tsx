@@ -102,7 +102,7 @@ export function MapView({ onProgress, onReady }: Props) {
         ui.hideRoverPhotoInfo();
         ui.hideSatelliteInfo();
       });
-    })();
+    })().catch((e) => console.error('[MapView] Init failed:', e));
   }, []); // run once on mount
 
   return (
