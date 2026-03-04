@@ -61,7 +61,11 @@
       "Bash(python scripts/contours.py)",
       "Bash(lsof -i :5173)",
       "WebFetch(domain:www.hou.usra.edu)",
-      "WebFetch(domain:en.wikipedia.org)"
+      "WebFetch(domain:en.wikipedia.org)",
+      "Bash(gh api repos/hoeksemaa/red-planet/git/refs/heads --jq '.[].ref')",
+      "Bash(gh api repos/hoeksemaa/red-planet/branches --jq '.[].name')",
+      "Bash(gh api -X DELETE repos/hoeksemaa/red-planet/git/refs/heads/topography)",
+      "Bash(gh api -X DELETE repos/hoeksemaa/red-planet/git/refs/heads/ui-polish)"
     ],
     "additionalDirectories": [
       "/Users/john/Desktop",
