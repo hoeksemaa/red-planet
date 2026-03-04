@@ -17,7 +17,15 @@
   box-sizing: border-box;
 }
 
+html {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
+  height: 100%;
+  overflow: hidden;
   position: relative;
   font-family: var(--font);
   font-size: var(--font-size);
@@ -27,6 +35,7 @@ body {
 #cesiumContainer {
   width: 100vw;
   height: 100dvh;
+  touch-action: none;
 }
 
 /* ── Card / panel base ─────────────────────────────────────── */
@@ -39,7 +48,7 @@ body {
 
 /* ── Title ─────────────────────────────────────────────────── */
 #rp-title {
-  position: absolute;
+  position: fixed;
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
@@ -54,7 +63,7 @@ body {
 
 /* ── Search (top-left) ─────────────────────────────────────── */
 #searchWrap {
-  position: absolute;
+  position: fixed;
   top: 16px;
   left: 16px;
   width: 33vw;
@@ -330,7 +339,7 @@ body {
 
 /* ── Layers button (bottom-left) ───────────────────────────── */
 #layersBtn {
-  position: absolute;
+  position: fixed;
   bottom: 20px;
   left: 20px;
   width: 44px;
@@ -354,7 +363,7 @@ body {
 
 /* ── Layers panel (bottom-left, above button) ──────────────── */
 #layersPanel {
-  position: absolute;
+  position: fixed;
   bottom: 72px;
   left: 20px;
   width: 220px;
