@@ -1,3 +1,8 @@
+// ── UI ───────────────────────────────────────────────────────
+// Keep in sync with --panel-transition in App.css
+export const PANEL_TRANSITION_MS = 125;
+
+// ── Data ─────────────────────────────────────────────────────
 // MOLA heightmap dimensions (post-downsample to 16ppd)
 export const HM_W = 1440;
 export const HM_H = 720;

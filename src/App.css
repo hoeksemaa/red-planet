@@ -8,6 +8,9 @@
   --font-size:      14px;
   --text-primary:   #202124;
   --text-secondary: #5f6368;
+
+  /* ── UI animation (keep in sync with UI constants in constants.ts) ── */
+  --panel-transition: 0.125s ease-out;
 }
 
 /* ── Base ──────────────────────────────────────────────────── */
@@ -15,6 +18,15 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, [role="button"] {
+  outline: none;
+}
+
+button:active {
+  background-color: transparent;
 }
 
 html {
@@ -362,22 +374,34 @@ body {
   background: #f8f9fa;
 }
 
-/* ── Layers panel (top-right, below button) ────────────────── */
+/* ── Layers panel (bottom sheet) ──────────────────────────── */
 #layersPanel {
   position: fixed;
-  top: 128px;
-  right: 16px;
-  width: 220px;
-  max-width: calc(100vw - 40px);
+  bottom: 0;
+  left: 50%;
+  width: min(480px, 100%);
   padding: 4px 0 8px;
   z-index: 10;
+  border-radius: 0;
+  will-change: transform;
+  transform: translateX(-50%) translateY(calc(100% + 20px));
+  opacity: 0;
+  pointer-events: none;
+  transition: transform var(--panel-transition), opacity var(--panel-transition);
 }
+
+#layersPanel.is-open {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
 
 #layersPanelHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 8px 4px;
+  padding: 4px 6px 4px 0;
   margin-bottom: 0;
 }
 
@@ -405,30 +429,67 @@ body {
   letter-spacing: 0.06em;
 }
 
-.layer-item {
+.layer-btn-grid {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 14px;
-  cursor: pointer;
-  font-size: var(--font-size);
-  color: var(--text-primary);
+  justify-content: space-evenly;
+  padding: 6px 12px 10px;
 }
 
-.layer-item:hover {
+.layer-btn-grid--3col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+
+.layer-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  background: none;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--text-secondary);
+  transition: background 0.1s;
+}
+
+.layer-btn img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 10px;
+  outline: 3px solid transparent;
+  outline-offset: 3px;
+  transition: outline-color 0.15s;
+}
+
+.layer-btn:hover {
   background: #f8f9fa;
 }
 
-.layer-item input {
-  margin: 0;
-  cursor: pointer;
-  accent-color: #1a73e8;
+.layer-btn:active,
+.layer-btn:focus {
+  background: none;
+}
+
+.layer-btn--active img {
+  outline-color: #FF9500;
+}
+
+.layer-btn--active span {
+  color: #FF9500;
+  font-weight: 600;
 }
 
 .layers-divider {
   height: 1px;
   background: var(--border-color);
-  margin: 6px 0;
+  margin: 2px 0 6px;
 }
 
 /* ── Mobile ────────────────────────────────────────────────── */
@@ -457,17 +518,7 @@ body {
   }
 
   #layersPanel {
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100vw;
-    max-width: none;
-    height: 50vh;
-    border-radius: 16px 16px 0 0;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
+    width: 100%;
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
     overflow-y: auto;
   }
