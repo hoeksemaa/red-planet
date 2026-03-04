@@ -35,15 +35,17 @@ export class UI {
   private featurePanel  = document.getElementById('featurePanel') as HTMLDivElement;
 
   // Layers elements
-  private layersBtn        = document.getElementById('layersBtn') as HTMLButtonElement;
-  private layersPanel      = document.getElementById('layersPanel') as HTMLDivElement;
-  private layersPanelClose = document.getElementById('layersPanelClose') as HTMLButtonElement;
-  private layerExag        = document.getElementById('layerExag') as HTMLInputElement;
-  private layerContours    = document.getElementById('layerContours') as HTMLInputElement;
-  private layerLabels      = document.getElementById('layerLabels') as HTMLInputElement;
-  private layerRovers      = document.getElementById('layerRovers') as HTMLInputElement;
-  private layerGraticule   = document.getElementById('layerGraticule') as HTMLInputElement;
-  private layerSatellites  = document.getElementById('layerSatellites') as HTMLInputElement;
+  private layersBtn           = document.getElementById('layersBtn') as HTMLButtonElement;
+  private layersPanel         = document.getElementById('layersPanel') as HTMLDivElement;
+  private layersPanelClose    = document.getElementById('layersPanelClose') as HTMLButtonElement;
+  private layerBtnTerraformed = document.getElementById('layerBtnTerraformed') as HTMLButtonElement;
+  private layerBtnReal        = document.getElementById('layerBtnReal') as HTMLButtonElement;
+  private layerBtnExag        = document.getElementById('layerBtnExag') as HTMLButtonElement;
+  private layerBtnContours    = document.getElementById('layerBtnContours') as HTMLButtonElement;
+  private layerBtnLabels      = document.getElementById('layerBtnLabels') as HTMLButtonElement;
+  private layerBtnRovers      = document.getElementById('layerBtnRovers') as HTMLButtonElement;
+  private layerBtnGraticule   = document.getElementById('layerBtnGraticule') as HTMLButtonElement;
+  private layerBtnSatellites  = document.getElementById('layerBtnSatellites') as HTMLButtonElement;
 
   // Keyboard nav state
   private activeIndex = -1;
@@ -68,7 +70,21 @@ export class UI {
 
   // ── Search ──────────────────────────────────────────────────
 
+  private searchOverlay = document.getElementById('searchOverlay') as HTMLDivElement;
+
+  private showOverlay(): void {
+    this.searchOverlay.classList.add('active');
+  }
+
+  private hideOverlay(): void {
+    this.searchOverlay.classList.remove('active');
+  }
+
   private initSearch(): void {
+    this.searchInput.addEventListener('focus', () => {
+      this.showOverlay();
+    });
+
     this.searchInput.addEventListener('input', () => {
       const q = this.searchInput.value;
       this.searchClear.style.display = q ? 'block' : 'none';
@@ -86,6 +102,7 @@ export class UI {
       this.searchInput.value = '';
       this.searchClear.style.display = 'none';
       this.hideResults();
+      this.hideOverlay();
       this.hideFeatureInfo();
       this.hideRoverInfo();
       this.hideRoverPhotoInfo();
@@ -113,14 +130,17 @@ export class UI {
         this.callbacks.onSelect(r);
       } else if (e.key === 'Escape') {
         this.hideResults();
+        this.hideOverlay();
+        this.searchInput.blur();
       }
     });
 
-    // Collapse on outside click
+    // Collapse on outside click (overlay counts as outside)
     document.addEventListener('click', (e) => {
       const wrap = document.getElementById('searchWrap') as HTMLElement;
       if (!wrap.contains(e.target as Node)) {
         this.hideResults();
+        this.hideOverlay();
       }
     }, { signal: this.documentListeners.signal });
   }
@@ -340,74 +360,74 @@ export class UI {
 
   private initLayersPanel(): void {
     this.layersBtn.addEventListener('click', () => {
-      this.layersPanel.hidden = !this.layersPanel.hidden;
+      this.layersPanel.classList.toggle('is-open');
     });
 
     this.layersPanelClose.addEventListener('click', () => {
-      this.layersPanel.hidden = true;
+      this.layersPanel.classList.remove('is-open');
     });
 
-    // Imagery radio
-    const imageryRadios = document.querySelectorAll<HTMLInputElement>('input[name="imagery"]');
-    for (const radio of imageryRadios) {
-      radio.addEventListener('change', () => {
-        this.state.imagery = radio.value as 'terraformed' | 'real';
+    // Imagery buttons (mutually exclusive)
+    const setImagery = (value: 'terraformed' | 'real') => {
+      this.state.imagery = value;
+      this.layerBtnTerraformed.classList.toggle('layer-btn--active', value === 'terraformed');
+      this.layerBtnReal.classList.toggle('layer-btn--active', value === 'real');
+      this.callbacks.onStateChange(this.state);
+    };
+    this.layerBtnTerraformed.addEventListener('click', () => setImagery('terraformed'));
+    this.layerBtnReal.addEventListener('click', () => setImagery('real'));
+
+    // Feature layer buttons (toggleable)
+    const makeToggle = (
+      btn: HTMLButtonElement,
+      get: () => boolean,
+      set: (v: boolean) => void,
+    ) => {
+      btn.addEventListener('click', () => {
+        set(!get());
+        btn.classList.toggle('layer-btn--active', get());
         this.callbacks.onStateChange(this.state);
       });
-    }
-
-    // Feature layer checkboxes
-    this.layerExag.addEventListener('change', () => {
-      this.state.exaggeration = this.layerExag.checked ? EXAGGERATION_SCALE : 1;
-      this.callbacks.onStateChange(this.state);
-    });
-
-    this.layerContours.addEventListener('change', () => {
-      this.state.layers.contours = this.layerContours.checked;
-      this.callbacks.onStateChange(this.state);
-    });
-
-    this.layerLabels.addEventListener('change', () => {
-      this.state.layers.labels = this.layerLabels.checked;
-      this.callbacks.onStateChange(this.state);
-    });
-
-    this.layerRovers.addEventListener('change', () => {
-      this.state.layers.rovers = this.layerRovers.checked;
-      this.callbacks.onStateChange(this.state);
-    });
-
-    this.layerGraticule.addEventListener('change', () => {
-      this.state.layers.graticule = this.layerGraticule.checked;
-      this.callbacks.onStateChange(this.state);
-    });
-
-    this.layerSatellites.addEventListener('change', () => {
-      this.state.layers.satellites = this.layerSatellites.checked;
-      this.callbacks.onStateChange(this.state);
-    });
+    };
+    makeToggle(this.layerBtnExag,
+      () => this.state.exaggeration !== 1,
+      (v) => { this.state.exaggeration = v ? EXAGGERATION_SCALE : 1; });
+    makeToggle(this.layerBtnContours,
+      () => this.state.layers.contours,
+      (v) => { this.state.layers.contours = v; });
+    makeToggle(this.layerBtnLabels,
+      () => this.state.layers.labels,
+      (v) => { this.state.layers.labels = v; });
+    makeToggle(this.layerBtnRovers,
+      () => this.state.layers.rovers,
+      (v) => { this.state.layers.rovers = v; });
+    makeToggle(this.layerBtnGraticule,
+      () => this.state.layers.graticule,
+      (v) => { this.state.layers.graticule = v; });
+    makeToggle(this.layerBtnSatellites,
+      () => this.state.layers.satellites,
+      (v) => { this.state.layers.satellites = v; });
 
     // Close panel on outside click
     document.addEventListener('click', (e) => {
       if (
-        !this.layersPanel.hidden &&
+        this.layersPanel.classList.contains('is-open') &&
         !this.layersPanel.contains(e.target as Node) &&
         !this.layersBtn.contains(e.target as Node)
       ) {
-        this.layersPanel.hidden = true;
+        this.layersPanel.classList.remove('is-open');
       }
     }, { signal: this.documentListeners.signal });
 
     // Sync DOM to initial state — DEFAULT_STATE is the single source of truth
-    this.layerExag.checked      = this.state.exaggeration !== 1;
-    this.layerContours.checked  = this.state.layers.contours;
-    this.layerLabels.checked    = this.state.layers.labels;
-    this.layerRovers.checked    = this.state.layers.rovers;
-    this.layerGraticule.checked = this.state.layers.graticule;
-    this.layerSatellites.checked = this.state.layers.satellites;
-    for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="imagery"]')) {
-      radio.checked = radio.value === this.state.imagery;
-    }
+    this.layerBtnTerraformed.classList.toggle('layer-btn--active', this.state.imagery === 'terraformed');
+    this.layerBtnReal.classList.toggle('layer-btn--active', this.state.imagery === 'real');
+    this.layerBtnExag.classList.toggle('layer-btn--active', this.state.exaggeration !== 1);
+    this.layerBtnContours.classList.toggle('layer-btn--active', this.state.layers.contours);
+    this.layerBtnLabels.classList.toggle('layer-btn--active', this.state.layers.labels);
+    this.layerBtnRovers.classList.toggle('layer-btn--active', this.state.layers.rovers);
+    this.layerBtnGraticule.classList.toggle('layer-btn--active', this.state.layers.graticule);
+    this.layerBtnSatellites.classList.toggle('layer-btn--active', this.state.layers.satellites);
   }
 
   destroy(): void {

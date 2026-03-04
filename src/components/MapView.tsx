@@ -11,6 +11,14 @@ import { DEFAULT_STATE } from '../state';
 import { TERRAIN_DATA_URL, flyToAltitude } from '../constants';
 import type { UnifiedSearchResult, FeatureInfo } from '../features/types';
 import type { RoverPickResult } from '../features/rovers';
+import realMarsIcon    from '../assets/icons/real-mars.png';
+import terraformedIcon from '../assets/icons/terraformed.png';
+import exaggeratedIcon from '../assets/icons/exaggerated.png';
+import topographyIcon  from '../assets/icons/topography.png';
+import latLongIcon     from '../assets/icons/lat-long.png';
+import labelIcon       from '../assets/icons/label.png';
+import roverIcon       from '../assets/icons/rover.png';
+import satelliteIcon   from '../assets/icons/satellite.png';
 
 interface Props {
   onProgress: (pct: number) => void;
@@ -110,6 +118,7 @@ export function MapView({ onProgress, onReady }: Props) {
       <div id="cesiumContainer" />
       <div id="rp-title">GOOGLE MARS</div>
 
+      <div id="searchOverlay" />
       <div id="searchWrap" className="rp-card">
         <div id="searchInputRow">
           <svg id="searchIcon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -163,45 +172,49 @@ export function MapView({ onProgress, onReady }: Props) {
         </svg>
       </button>
 
-      <div id="layersPanel" className="rp-card" hidden>
+      <div id="layersPanel" className="rp-card">
         <div id="layersPanelHeader">
-          <span>Layers</span>
+          <span className="layers-section-title" style={{flex:1}}>Map Type</span>
           <button id="layersPanelClose" aria-label="Close">✕</button>
         </div>
-        <div className="layers-section-title">Imagery</div>
-        <label className="layer-item">
-          <input type="radio" name="imagery" value="terraformed" />
-          <span>Terraformed</span>
-        </label>
-        <label className="layer-item">
-          <input type="radio" name="imagery" value="real" />
-          <span>Real Mars</span>
-        </label>
+        <div className="layer-btn-grid">
+          <button className="layer-btn" id="layerBtnTerraformed">
+            <img src={terraformedIcon} alt="Terraformed" />
+            <span>Terraformed</span>
+          </button>
+          <button className="layer-btn" id="layerBtnReal">
+            <img src={realMarsIcon} alt="Current View" />
+            <span>Current View</span>
+          </button>
+        </div>
         <div className="layers-divider" />
-        <label className="layer-item">
-          <input type="checkbox" id="layerExag" />
-          <span>Exaggerated topography</span>
-        </label>
-        <label className="layer-item">
-          <input type="checkbox" id="layerContours" />
-          <span>Topography lines</span>
-        </label>
-        <label className="layer-item">
-          <input type="checkbox" id="layerGraticule" />
-          <span>Lat/long grid</span>
-        </label>
-        <label className="layer-item">
-          <input type="checkbox" id="layerLabels" />
-          <span>Place names</span>
-        </label>
-        <label className="layer-item">
-          <input type="checkbox" id="layerRovers" />
-          <span>Rovers</span>
-        </label>
-        <label className="layer-item">
-          <input type="checkbox" id="layerSatellites" />
-          <span>Satellites</span>
-        </label>
+        <div className="layers-section-title">Map Details</div>
+        <div className="layer-btn-grid layer-btn-grid--3col">
+          <button className="layer-btn" id="layerBtnExag">
+            <img src={exaggeratedIcon} alt="Exaggerated" />
+            <span>Exaggerated</span>
+          </button>
+          <button className="layer-btn" id="layerBtnContours">
+            <img src={topographyIcon} alt="Contours" />
+            <span>Contours</span>
+          </button>
+          <button className="layer-btn" id="layerBtnGraticule">
+            <img src={latLongIcon} alt="Lat/Long" />
+            <span>Lat/Long</span>
+          </button>
+          <button className="layer-btn" id="layerBtnLabels">
+            <img src={labelIcon} alt="Labels" />
+            <span>Labels</span>
+          </button>
+          <button className="layer-btn" id="layerBtnRovers">
+            <img src={roverIcon} alt="Rovers" />
+            <span>Rovers</span>
+          </button>
+          <button className="layer-btn" id="layerBtnSatellites">
+            <img src={satelliteIcon} alt="Satellites" />
+            <span>Satellites</span>
+          </button>
+        </div>
       </div>
     </>
   );
