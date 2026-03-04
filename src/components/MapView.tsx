@@ -118,6 +118,7 @@ export function MapView({ onProgress, onReady }: Props) {
       <div id="cesiumContainer" />
       <div id="rp-title">GOOGLE MARS</div>
 
+      <div id="searchOverlay" />
       <div id="searchWrap" className="rp-card">
         <div id="searchInputRow">
           <svg id="searchIcon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

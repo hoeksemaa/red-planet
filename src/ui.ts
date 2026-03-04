@@ -70,7 +70,21 @@ export class UI {
 
   // ── Search ──────────────────────────────────────────────────
 
+  private searchOverlay = document.getElementById('searchOverlay') as HTMLDivElement;
+
+  private showOverlay(): void {
+    this.searchOverlay.classList.add('active');
+  }
+
+  private hideOverlay(): void {
+    this.searchOverlay.classList.remove('active');
+  }
+
   private initSearch(): void {
+    this.searchInput.addEventListener('focus', () => {
+      this.showOverlay();
+    });
+
     this.searchInput.addEventListener('input', () => {
       const q = this.searchInput.value;
       this.searchClear.style.display = q ? 'block' : 'none';
@@ -88,6 +102,7 @@ export class UI {
       this.searchInput.value = '';
       this.searchClear.style.display = 'none';
       this.hideResults();
+      this.hideOverlay();
       this.hideFeatureInfo();
       this.hideRoverInfo();
       this.hideRoverPhotoInfo();
@@ -115,14 +130,17 @@ export class UI {
         this.callbacks.onSelect(r);
       } else if (e.key === 'Escape') {
         this.hideResults();
+        this.hideOverlay();
+        this.searchInput.blur();
       }
     });
 
-    // Collapse on outside click
+    // Collapse on outside click (overlay counts as outside)
     document.addEventListener('click', (e) => {
       const wrap = document.getElementById('searchWrap') as HTMLElement;
       if (!wrap.contains(e.target as Node)) {
         this.hideResults();
+        this.hideOverlay();
       }
     }, { signal: this.documentListeners.signal });
   }
