@@ -57,7 +57,7 @@ function buildPrimitive(exaggeration: number): Cesium.Primitive {
 
 function makeLabels(viewer: Cesium.Viewer): Cesium.LabelCollection {
   const lc = viewer.scene.primitives.add(
-    new Cesium.LabelCollection({ scene: viewer.scene }),
+    new Cesium.LabelCollection({ scene: viewer.scene, show: false }),
   );
 
   const common = {

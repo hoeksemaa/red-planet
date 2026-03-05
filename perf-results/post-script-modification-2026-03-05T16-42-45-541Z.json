@@ -1,0 +1,59 @@
+{
+  "url": "http://localhost:4173",
+  "runs": 3,
+  "name": "post-script-modification",
+  "metric": "ttCriticalReady",
+  "timestamp": "2026-03-05T16:42:45.543Z",
+  "results": [
+    {
+      "profile": "Unthrottled",
+      "times": [
+        null,
+        null,
+        null
+      ],
+      "avg": null,
+      "resources": null
+    },
+    {
+      "profile": "Fast WiFi",
+      "times": [
+        null,
+        null,
+        null
+      ],
+      "avg": null,
+      "resources": null
+    },
+    {
+      "profile": "4G LTE",
+      "times": [
+        null,
+        null,
+        null
+      ],
+      "avg": null,
+      "resources": null
+    },
+    {
+      "profile": "Fast 3G",
+      "times": [
+        null,
+        null,
+        null
+      ],
+      "avg": null,
+      "resources": null
+    },
+    {
+      "profile": "Slow 3G",
+      "times": [
+        null,
+        null,
+        null
+      ],
+      "avg": null,
+      "resources": null
+    }
+  ]
+}

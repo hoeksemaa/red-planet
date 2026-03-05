@@ -8,22 +8,38 @@ Named imports don't help — Rollup tree-shaking is bypassed entirely.
 
 ---
 
+## Completion log
+<!-- UPDATE THIS LIST every time a ticket is closed — add to bottom in order completed -->
+
+1. PERF-2 — Verify modulepreload (polyfill present, trivial)
+2. PERF-7 — Brotli on JSON (already on via Vercel default)
+3. PERF-5 — Labels off critical path (fire-and-forget fetch in `init`)
+4. PERF-8 — Async Cesium script (`defer` via inline Vite plugin)
+5. PERF-6 — Preload hints (Cesium.js only; terrain preload dropped)
+6. PERF-4 — Decouple terrain from init (EllipsoidTerrainProvider on boot; `.f32` swaps in via `setTerrain()`; default exaggeration set to 1x to avoid snap on swap)
+7. PERF-1 — Baseline measurements captured; `ttGlobeReady` metric added and confirmed working in PERF-4 run
+8. PERF-12 — Loading screen removed; `LoadingView`, `LoadStatus`, `onProgress`/`onReady` callbacks, and associated CSS deleted; `App.tsx` simplified to single `<MapView />`
+9. PERF-3 — Superseded by PERF-8 + PERF-12; static loading screen never needed
+10. PERF-10 — Dropped; service worker adds overhead on first visit, harming the metric we're optimizing for
+
+---
+
 ## Tasks
 
 | # | Task | What it does | Effort |
 |---|---|---|---|
-| PERF-1 | Measure baseline | Run `scripts/bench-load.cjs`, record numbers. Rerun after each ticket. | 1h |
+| ~~PERF-1~~ | ~~Measure baseline~~ | ~~Run `scripts/bench-load.cjs`, record numbers. Rerun after each ticket.~~ ✓ Baseline captured; re-run after each ticket through PERF-4. `ttGlobeReady` added to script for PERF-4 run. | ~~1h~~ |
 | ~~PERF-2~~ | ~~Verify modulepreload~~ | ~~`dist/index.html` already has it — close ticket.~~ ✓ Polyfill present; no app modules preloaded (trivial). | ~~5m~~ |
-| PERF-3 | Static loading screen | Screenshot of loaded globe served as background while Cesium boots. Perceived load only. | 2h |
-| PERF-4 | Decouple terrain from init | Start Cesium with `EllipsoidTerrainProvider`, swap when `.f32` arrives. Removes 4 MB from critical path. At 24k km the difference is invisible. | 1d |
+| ~~PERF-3~~ | ~~Static loading screen~~ | ~~Screenshot of loaded globe served as background while Cesium boots. Perceived load only.~~ ✓ Superseded — PERF-8 + PERF-12 made this unnecessary. | ~~2h~~ |
+| ~~PERF-4~~ | ~~Decouple terrain from init~~ | ~~Start Cesium with `EllipsoidTerrainProvider`, swap when `.f32` arrives. Removes 4 MB from critical path. At 24k km the difference is invisible.~~ ✓ `init()` starts on flat ellipsoid; `setTerrain()` swaps in real MOLA terrain when download completes. `readyCalled` guard prevents loading overlay re-triggering on swap. Default exaggeration set to 1x. | ~~1d~~ |
 | ~~PERF-5~~ | ~~Labels off critical path~~ | ~~Remove from `prefetchAll()` Promise.all. Load after init.~~ ✓ `prefetch` removed; `init` fires-and-forgets the fetch. 92 KB off critical path. | ~~2h~~ |
-| PERF-6 | Preload hints | `<link rel="preload">` for Cesium.js + terrain .f32. Browser fetches both while HTML parses. | 30m |
+| ~~PERF-6~~ | ~~Preload hints~~ | ~~`<link rel="preload">` for Cesium.js + terrain .f32.~~ ✓ Cesium.js preload only — terrain preload dropped (crossorigin mismatch → cache miss; bandwidth contention on slow connections outweighs benefit). | ~~30m~~ |
 | ~~PERF-7~~ | ~~Brotli on JSON~~ | ~~Verify Vercel is sending `content-encoding: br`.~~ ✓ Already on. `features.geojson` 92 KB on wire; rover files similarly compressed. Vercel default. | ~~30m~~ |
-| PERF-8 | Async Cesium script | Add `defer` to the injected Cesium script tag (or dynamic import). Removes the render-blocking bottleneck — highest-leverage single change. | 1–3d |
+| ~~PERF-8~~ | ~~Async Cesium script~~ | ~~Add `defer` to the injected Cesium script tag.~~ ✓ Inline `cesium-defer` Vite plugin in `vite.config.js` patches the tag post-build. `<script defer src="/cesium/Cesium.js">` confirmed in dist. | ~~1–3d~~ |
 | PERF-9 | Quantized-mesh terrain | Replace 4 MB `.f32` with tiled `.terrain` files. At 24k km only ~100 KB needed. Pipeline: pydelatin + quantized-mesh-encoder. Supersedes PERF-4. | 3–5d |
-| PERF-10 | Service worker cache | `vite-plugin-pwa`. Cesium + data cached after first visit. Repeat visits ~100ms. | 1d |
+| ~~PERF-10~~ | ~~Service worker cache~~ | ~~`vite-plugin-pwa`. Cesium + data cached after first visit. Repeat visits ~100ms.~~ ✗ Dropped — SW registration adds overhead on first visit, harming the primary metric. | ~~1d~~ |
 | PERF-11 | Initial-view bundle | Precompute zoom 0–2 terrain + major labels for starting camera. Single CDN-cached artifact. Requires PERF-9. | 2d |
-| PERF-12 | Kill loading screen | Once PERF-8 lands and DCL is fast, the loading overlay is moot — remove `LoadingView`, `LoadStatus` state, `onProgress`/`onReady` callbacks, and the CSS. Simplifies App.tsx to a single `<MapView />`. Requires PERF-8. | 1h |
+| ~~PERF-12~~ | ~~Kill loading screen~~ | ~~Once PERF-8 lands and DCL is fast, the loading overlay is moot — remove `LoadingView`, `LoadStatus` state, `onProgress`/`onReady` callbacks, and the CSS. Simplifies App.tsx to a single `<MapView />`. Requires PERF-8.~~ ✓ Done. | ~~1h~~ |
 
 ---
 

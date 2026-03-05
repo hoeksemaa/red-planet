@@ -7,26 +7,29 @@ import { LayerRegistry } from './features/registry';
 import { INITIAL_CAMERA_HEIGHT } from './constants';
 
 let viewer: Cesium.Viewer;
+let lastState: AppState;
 const registry = new LayerRegistry();
 
 let pickCallback: ((featureId: string, result: unknown) => void) | null = null;
 let pickMissCallback: (() => void) | null = null;
-let progressCallback: ((pct: number) => void) | null = null;
-let readyCallback: (() => void) | null = null;
 
-export function register(id: string, feature: Feature): void {
-  registry.register(id, feature);
+export function register(id: string, feature: Feature, opts?: { phase?: 'critical' | 'deferred' }): void {
+  registry.register(id, feature, opts);
 }
 
-export async function prefetchAll(): Promise<void> {
-  await registry.prefetchAll();
+// perf: called after terrain .f32 downloads in the background (PERF-4)
+export function setTerrain(heights: Float32Array): void {
+  viewer.terrainProvider = createTerrainProvider(heights);
 }
 
-export async function init(heights: Float32Array, initialState: AppState): Promise<void> {
-  const terrainProvider = createTerrainProvider(heights);
+export async function init(initialState: AppState): Promise<void> {
+  // perf: kick off deferred prefetches immediately — runs in parallel with viewer creation
+  registry.prefetchDeferred();
 
+  // perf: start with flat ellipsoid so the globe appears immediately;
+  // real MOLA terrain swaps in via setTerrain() once the .f32 finishes downloading (PERF-4)
   viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider,
+    terrainProvider: new Cesium.EllipsoidTerrainProvider(),
     baseLayer: false,
     baseLayerPicker: false,
     geocoder: false,
@@ -41,12 +44,19 @@ export async function init(heights: Float32Array, initialState: AppState): Promi
     creditContainer: document.createElement('div'),
   });
 
-  let maxTiles = 0;
-  viewer.scene.globe.tileLoadProgressEvent.addEventListener((count: number) => {
-    if (count > maxTiles) maxTiles = count;
-    if (maxTiles === 0) return;
-    progressCallback?.(((maxTiles - count) / maxTiles) * 100);
-    if (count === 0) readyCallback?.();
+  // One-shot: set __firstTileLoad the first frame after tiles finish loading.
+  // Polls globe.tilesLoaded via postRender — more reliable than tileLoadProgressEvent
+  // in headless/SwiftShader where the progress event may never reach 0.
+  // tilesEverBusy guards against firing before any tiles are actually requested.
+  let tilesEverBusy = false;
+  const removePostRenderListener = viewer.scene.postRender.addEventListener(() => {
+    if (!viewer.scene.globe.tilesLoaded) {
+      tilesEverBusy = true;
+    } else if (tilesEverBusy) {
+      (window as any).__firstTileLoad = performance.now();
+      removePostRenderListener();
+
+    }
   });
 
   // Mars scene config
@@ -74,7 +84,8 @@ export async function init(heights: Float32Array, initialState: AppState): Promi
     destination: Cesium.Cartesian3.fromDegrees(133, -10, INITIAL_CAMERA_HEIGHT),
   });
 
-  await registry.initAll(viewer);
+  await registry.initCritical(viewer);
+  (window as any).__criticalReady = performance.now();
 
   // Single pick dispatcher — iterates features, first to claim wins
   const clickHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
@@ -104,9 +115,15 @@ export async function init(heights: Float32Array, initialState: AppState): Promi
   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
   apply(initialState);
+
+  // perf: deferred features init in background after critical path completes
+  registry.initDeferred(viewer)
+    .then(() => apply(lastState))
+    .catch(e => console.error('[renderer] Deferred init failed:', e));
 }
 
 export function apply(state: AppState): void {
+  lastState = state;
   viewer.scene.verticalExaggeration = state.exaggeration;
   registry.applyAll(state);
 }
@@ -130,10 +147,3 @@ export function onPickMiss(fn: () => void): void {
   pickMissCallback = fn;
 }
 
-export function onProgress(fn: (pct: number) => void): void {
-  progressCallback = fn;
-}
-
-export function onReady(fn: () => void): void {
-  readyCallback = fn;
-}
