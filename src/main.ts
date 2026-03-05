@@ -34,7 +34,7 @@ renderer.register('imagery',    imagery,          { phase: 'critical' });
 renderer.register('graticule',  createGraticule(), { phase: 'deferred' });
 renderer.register('contours',   contours,          { phase: 'deferred' });
 renderer.register('labels',     labels,            { phase: 'critical' });
-renderer.register('rovers',     rovers,            { phase: 'critical' });
+renderer.register('rovers',     rovers,            { phase: 'deferred' });
 renderer.register('satellites', satellites,        { phase: 'deferred' });
 
 (async () => {
