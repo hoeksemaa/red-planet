@@ -1,6 +1,7 @@
 import type * as Cesium from 'cesium';
 import type { Feature } from './types';
 import type { AppState } from '../state';
+import { mark } from '../perf';
 
 type Phase = 'critical' | 'deferred';
 
@@ -26,17 +27,23 @@ export class LayerRegistry {
 
   async initCritical(viewer: Cesium.Viewer): Promise<void> {
     await Promise.all(
-      [...this.features.values()]
-        .filter(e => e.phase === 'critical')
-        .map(e => e.feature.init(viewer))
+      [...this.features.entries()]
+        .filter(([, e]) => e.phase === 'critical')
+        .map(([id, e]) => {
+          mark(`${id}-init-start`);
+          return Promise.resolve(e.feature.init(viewer)).then(() => mark(`${id}-init-done`));
+        })
     );
   }
 
   async initDeferred(viewer: Cesium.Viewer): Promise<void> {
     await Promise.all(
-      [...this.features.values()]
-        .filter(e => e.phase === 'deferred')
-        .map(e => e.feature.init(viewer))
+      [...this.features.entries()]
+        .filter(([, e]) => e.phase === 'deferred')
+        .map(([id, e]) => {
+          mark(`${id}-init-start`);
+          return Promise.resolve(e.feature.init(viewer)).then(() => mark(`${id}-init-done`));
+        })
     );
   }
 

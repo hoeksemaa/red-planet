@@ -9,19 +9,10 @@ export default defineConfig({
             name: 'cesium-defer',
             enforce: 'post',
             transformIndexHtml(html) {
-                return {
-                    html: html.replace(
-                        '<script src="/cesium/Cesium.js">',
-                        '<script defer src="/cesium/Cesium.js">'
-                    ),
-                    tags: [
-                        {
-                            tag: 'link',
-                            attrs: { rel: 'preload', as: 'script', href: '/cesium/Cesium.js' },
-                            injectTo: 'head-prepend',
-                        },
-                    ],
-                };
+                return html.replace(
+                    '<script src="/cesium/Cesium.js">',
+                    '<script defer src="/cesium/Cesium.js">'
+                );
             },
         },
     ],

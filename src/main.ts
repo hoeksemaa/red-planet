@@ -1,3 +1,5 @@
+import { mark } from './perf';
+mark('script-start');
 import './App.css';
 import { inject } from '@vercel/analytics';
 import * as renderer from './renderer';

@@ -5,6 +5,7 @@ import type { Feature } from './features/types';
 import { createTerrainProvider } from './terrain';
 import { LayerRegistry } from './features/registry';
 import { INITIAL_CAMERA_HEIGHT } from './constants';
+import { mark, report } from './perf';
 
 let viewer: Cesium.Viewer;
 let lastState: AppState;
@@ -28,6 +29,7 @@ export async function init(initialState: AppState): Promise<void> {
 
   // perf: start with flat ellipsoid so the globe appears immediately;
   // real MOLA terrain swaps in via setTerrain() once the .f32 finishes downloading (PERF-4)
+  mark('viewer-init-start');
   viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider: new Cesium.EllipsoidTerrainProvider(),
     baseLayer: false,
@@ -43,6 +45,7 @@ export async function init(initialState: AppState): Promise<void> {
     fullscreenButton: false,
     creditContainer: document.createElement('div'),
   });
+  mark('viewer-created');
 
   // One-shot: set __firstTileLoad the first frame after tiles finish loading.
   // Polls globe.tilesLoaded via postRender — more reliable than tileLoadProgressEvent
@@ -54,8 +57,9 @@ export async function init(initialState: AppState): Promise<void> {
       tilesEverBusy = true;
     } else if (tilesEverBusy) {
       (window as any).__firstTileLoad = performance.now();
+      mark('first-tile-load');
+      report();
       removePostRenderListener();
-
     }
   });
 
@@ -85,6 +89,7 @@ export async function init(initialState: AppState): Promise<void> {
   });
 
   await registry.initCritical(viewer);
+  mark('critical-init-done');
   (window as any).__criticalReady = performance.now();
 
   // Single pick dispatcher — iterates features, first to claim wins
