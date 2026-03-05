@@ -108,7 +108,7 @@ const epoch = Date.now();
 export const satellites: Feature = {
   init(viewer: Cesium.Viewer): void {
     viewerRef = viewer;
-    dotCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection());
+    dotCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection({ show: false }));
     dotData = [];
 
     const orbitInstances: Cesium.GeometryInstance[] = [];
@@ -141,6 +141,7 @@ export const satellites: Feature = {
       geometryInstances: orbitInstances,
       appearance: new Cesium.PolylineColorAppearance(),
       asynchronous: true,
+      show: false,
     }));
 
     // ── PostRender: update dot positions each frame ──
