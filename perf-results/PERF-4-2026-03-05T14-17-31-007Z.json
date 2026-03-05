@@ -1,0 +1,216 @@
+{
+  "url": "http://localhost:4173",
+  "runs": 3,
+  "name": "PERF-4",
+  "metrics": [
+    "domContentLoadedEventEnd",
+    "ttGlobeReady"
+  ],
+  "timestamp": "2026-03-05T14:17:31.008Z",
+  "results": [
+    {
+      "profile": "Unthrottled",
+      "times": [
+        342,
+        320,
+        322
+      ],
+      "avg": 328,
+      "globeTimes": [
+        null,
+        null,
+        null
+      ],
+      "avgGlobe": null,
+      "resources": [
+        {
+          "name": "Cesium.js",
+          "start": 4,
+          "dur": 107,
+          "bytes": 1702335
+        },
+        {
+          "name": "widgets.css",
+          "start": 4,
+          "dur": 3,
+          "bytes": 6312
+        },
+        {
+          "name": "main-CEvLTQWa.js",
+          "start": 4,
+          "dur": 12,
+          "bytes": 132521
+        },
+        {
+          "name": "main-BL14HP53.css",
+          "start": 4,
+          "dur": 2,
+          "bytes": 7547
+        },
+        {
+          "name": "modulepreload-polyfill-B5Qt9EMX.js",
+          "start": 4,
+          "dur": 3,
+          "bytes": 1011
+        }
+      ]
+    },
+    {
+      "profile": "Fast WiFi",
+      "times": [
+        690,
+        698,
+        691
+      ],
+      "avg": 693,
+      "globeTimes": [
+        null,
+        null,
+        null
+      ],
+      "avgGlobe": null,
+      "resources": [
+        {
+          "name": "widgets.css",
+          "start": 8,
+          "dur": 13,
+          "bytes": 6312
+        },
+        {
+          "name": "Cesium.js",
+          "start": 8,
+          "dur": 501,
+          "bytes": 1702335
+        },
+        {
+          "name": "modulepreload-polyfill-B5Qt9EMX.js",
+          "start": 8,
+          "dur": 6,
+          "bytes": 1011
+        },
+        {
+          "name": "main-CEvLTQWa.js",
+          "start": 8,
+          "dur": 82,
+          "bytes": 132521
+        },
+        {
+          "name": "main-BL14HP53.css",
+          "start": 8,
+          "dur": 15,
+          "bytes": 7547
+        }
+      ]
+    },
+    {
+      "profile": "4G LTE",
+      "times": [
+        3979,
+        3986,
+        3984
+      ],
+      "avg": 3983,
+      "globeTimes": [
+        null,
+        null,
+        null
+      ],
+      "avgGlobe": null,
+      "resources": [
+        {
+          "name": "Cesium.js",
+          "start": 26,
+          "dur": 3752,
+          "bytes": 1702335
+        },
+        {
+          "name": "widgets.css",
+          "start": 26,
+          "dur": 79,
+          "bytes": 6312
+        },
+        {
+          "name": "modulepreload-polyfill-B5Qt9EMX.js",
+          "start": 26,
+          "dur": 25,
+          "bytes": 1011
+        },
+        {
+          "name": "main-BL14HP53.css",
+          "start": 26,
+          "dur": 88,
+          "bytes": 7547
+        },
+        {
+          "name": "main-CEvLTQWa.js",
+          "start": 26,
+          "dur": 592,
+          "bytes": 132521
+        }
+      ]
+    },
+    {
+      "profile": "Fast 3G",
+      "times": [
+        10185,
+        10195,
+        10184
+      ],
+      "avg": 10188,
+      "globeTimes": [
+        null,
+        null,
+        null
+      ],
+      "avgGlobe": null,
+      "resources": [
+        {
+          "name": "Cesium.js",
+          "start": 50,
+          "dur": 9935,
+          "bytes": 1702335
+        },
+        {
+          "name": "widgets.css",
+          "start": 51,
+          "dur": 189,
+          "bytes": 6312
+        },
+        {
+          "name": "main-CEvLTQWa.js",
+          "start": 51,
+          "dur": 1572,
+          "bytes": 132521
+        },
+        {
+          "name": "modulepreload-polyfill-B5Qt9EMX.js",
+          "start": 51,
+          "dur": 62,
+          "bytes": 1011
+        },
+        {
+          "name": "main-BL14HP53.css",
+          "start": 51,
+          "dur": 222,
+          "bytes": 7547
+        }
+      ]
+    },
+    {
+      "profile": "Slow 3G",
+      "times": [
+        null,
+        null,
+        null
+      ],
+      "avg": null,
+      "globeTimes": [
+        null,
+        null,
+        null
+      ],
+      "avgGlobe": null,
+      "resources": null
+    }
+  ]
+}

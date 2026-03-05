@@ -95,7 +95,22 @@ async function runOnce(browser, profile) {
       timeout: 90_000,
     });
 
-    return await page.evaluate(() => window.__bench);
+    const bench = await page.evaluate(() => window.__bench);
+
+    // Globe-ready: set by renderer.ts (perf measurement) when Cesium's
+    // tileLoadProgressEvent hits 0 — i.e. the actual globe is visible.
+    // Requires SwiftShader WebGL to process tiles; may time out on slow profiles.
+    let ttGlobeReady = null;
+    try {
+      await page.waitForFunction(() => window.__globeReady !== undefined, {
+        timeout: 120_000,
+      });
+      ttGlobeReady = await page.evaluate(() => Math.round(window.__globeReady));
+    } catch (_) {
+      // timeout — connection too slow for tiles to finish within limit
+    }
+
+    return { ...bench, ttGlobeReady };
   } finally {
     await ctx.close();
   }
@@ -115,7 +130,7 @@ function fmt(ms) {
 async function main() {
   console.log(`\nBenchmarking: ${URL}${NAME ? `  [${NAME}]` : ''}`);
   console.log(`${RUNS} run(s) per profile — fresh cache each run`);
-  console.log(`Metric: domContentLoadedEventEnd (time to finish all render-blocking scripts)\n`);
+  console.log(`Metrics: domContentLoadedEventEnd + ttGlobeReady (time until Cesium tiles finish)\n`);
 
   // SwiftShader flags avoid console noise from Cesium trying to init WebGL in the
   // background — they're not required for our DOMContentLoaded measurement.
@@ -134,39 +149,48 @@ async function main() {
 
   for (const profile of PROFILES) {
     process.stdout.write(`  ${profile.name.padEnd(13)}`);
-    const times = [];
-    let lastBench = null;
+    const times      = [];
+    const globeTimes = [];
+    let lastBench    = null;
 
     for (let i = 0; i < RUNS; i++) {
       try {
         const bench = await runOnce(browser, profile);
         times.push(bench.ttDCL);
+        globeTimes.push(bench.ttGlobeReady);
         lastBench = bench;
-        process.stdout.write(`  ${fmt(bench.ttDCL)}`);
+        const globeStr = bench.ttGlobeReady != null ? `/${fmt(bench.ttGlobeReady)}` : '/--';
+        process.stdout.write(`  ${fmt(bench.ttDCL)}${globeStr}`);
       } catch (e) {
         times.push(null);
+        globeTimes.push(null);
         process.stdout.write(`  FAIL`);
       }
     }
 
-    const valid = times.filter(t => t !== null);
-    const mean  = valid.length ? avg(valid) : null;
-    console.log(mean != null ? `   → ${fmt(mean)} avg` : '');
-    results.push({ profile: profile.name, times, avg: mean, lastBench });
+    const valid      = times.filter(t => t !== null);
+    const validGlobe = globeTimes.filter(t => t !== null);
+    const mean       = valid.length      ? avg(valid)      : null;
+    const meanGlobe  = validGlobe.length ? avg(validGlobe) : null;
+    const avgStr     = mean      != null ? `${fmt(mean)} DCL`       : 'FAIL';
+    const avgGlobe   = meanGlobe != null ? `  ${fmt(meanGlobe)} globe` : '';
+    console.log(`   → ${avgStr}${avgGlobe}`);
+    results.push({ profile: profile.name, times, avg: mean, globeTimes, avgGlobe: meanGlobe, lastBench });
   }
 
   await browser.close();
 
   // ── Summary ──────────────────────────────────────────────────────────────
-  console.log('\n' + '─'.repeat(60));
-  console.log('Profile         DOMContentLoaded');
-  console.log('─'.repeat(60));
+  console.log('\n' + '─'.repeat(72));
+  console.log('Profile         DCL          GlobeReady   (bar = globe, 1 block/s)');
+  console.log('─'.repeat(72));
   for (const r of results) {
-    const avgStr = r.avg != null ? fmt(r.avg) : 'FAIL';
-    const chart  = r.avg != null ? bar(r.avg) : '';
-    console.log(`${r.profile.padEnd(16)}${avgStr.padEnd(10)}${chart}`);
+    const dclStr   = r.avg      != null ? fmt(r.avg)      : 'FAIL';
+    const globeStr = r.avgGlobe != null ? fmt(r.avgGlobe) : '--';
+    const chart    = r.avgGlobe != null ? bar(r.avgGlobe) : '';
+    console.log(`${r.profile.padEnd(16)}${dclStr.padEnd(13)}${globeStr.padEnd(13)}${chart}`);
   }
-  console.log('─'.repeat(60));
+  console.log('─'.repeat(72));
 
   // ── Resource breakdown (last Unthrottled run) ─────────────────────────
   const unthrottled = results[0];
@@ -189,13 +213,15 @@ async function main() {
     url:       URL,
     runs:      RUNS,
     name:      NAME,
-    metric:    'domContentLoadedEventEnd',
+    metrics:   ['domContentLoadedEventEnd', 'ttGlobeReady'],
     timestamp: new Date().toISOString(),
     results:   results.map(r => ({
-      profile:   r.profile,
-      times:     r.times,
-      avg:       r.avg,
-      resources: r.lastBench?.resources ?? null,
+      profile:    r.profile,
+      times:      r.times,
+      avg:        r.avg,
+      globeTimes: r.globeTimes,
+      avgGlobe:   r.avgGlobe,
+      resources:  r.lastBench?.resources ?? null,
     })),
   };
   fs.writeFileSync(filename, JSON.stringify(output, null, 2));

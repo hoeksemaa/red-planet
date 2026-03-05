@@ -13,6 +13,9 @@ let pickCallback: ((featureId: string, result: unknown) => void) | null = null;
 let pickMissCallback: (() => void) | null = null;
 let progressCallback: ((pct: number) => void) | null = null;
 let readyCallback: (() => void) | null = null;
+// perf: guard so readyCallback only fires once — terrain swap-in (PERF-4) re-triggers
+// tileLoadProgressEvent, which would otherwise re-show the loading overlay
+let readyCalled = false;
 
 export function register(id: string, feature: Feature): void {
   registry.register(id, feature);
@@ -22,11 +25,16 @@ export async function prefetchAll(): Promise<void> {
   await registry.prefetchAll();
 }
 
-export async function init(heights: Float32Array, initialState: AppState): Promise<void> {
-  const terrainProvider = createTerrainProvider(heights);
+// perf: called after terrain .f32 downloads in the background (PERF-4)
+export function setTerrain(heights: Float32Array): void {
+  viewer.terrainProvider = createTerrainProvider(heights);
+}
 
+export async function init(initialState: AppState): Promise<void> {
+  // perf: start with flat ellipsoid so the globe appears immediately;
+  // real MOLA terrain swaps in via setTerrain() once the .f32 finishes downloading (PERF-4)
   viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider,
+    terrainProvider: new Cesium.EllipsoidTerrainProvider(),
     baseLayer: false,
     baseLayerPicker: false,
     geocoder: false,
@@ -46,7 +54,12 @@ export async function init(heights: Float32Array, initialState: AppState): Promi
     if (count > maxTiles) maxTiles = count;
     if (maxTiles === 0) return;
     progressCallback?.(((maxTiles - count) / maxTiles) * 100);
-    if (count === 0) readyCallback?.();
+    if (count === 0 && !readyCalled) {
+      readyCalled = true;
+      // perf measurement — bench-load.cjs polls for this
+      (window as any).__globeReady = performance.now();
+      readyCallback?.();
+    }
   });
 
   // Mars scene config

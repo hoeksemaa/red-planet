@@ -45,12 +45,15 @@ export function MapView({ onProgress, onReady }: Props) {
     renderer.onReady(onReady);
 
     (async () => {
-      const [heightsBuf] = await Promise.all([
-        fetch(TERRAIN_DATA_URL).then((r) => r.arrayBuffer()),
-        renderer.prefetchAll(),
-      ]);
-      const heights = new Float32Array(heightsBuf);
-      await renderer.init(heights, state);
+      // perf: terrain downloads in background and swaps in silently (PERF-4)
+      // globe appears immediately on flat ellipsoid, real MOLA terrain arrives ~seconds later
+      fetch(TERRAIN_DATA_URL)
+        .then((r) => r.arrayBuffer())
+        .then((buf) => renderer.setTerrain(new Float32Array(buf)))
+        .catch((e) => console.error('[MapView] Terrain load failed:', e));
+
+      renderer.prefetchAll(); // fire-and-forget (off critical path since PERF-5)
+      await renderer.init(state);
 
       function unifiedSearch(query: string): UnifiedSearchResult[] {
         const q = query.trim().toLowerCase();
