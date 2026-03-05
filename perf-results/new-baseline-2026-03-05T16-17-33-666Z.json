@@ -1,0 +1,405 @@
+{
+  "url": "http://localhost:4173",
+  "runs": 3,
+  "name": "new baseline",
+  "metric": "domContentLoadedEventEnd",
+  "timestamp": "2026-03-05T16:17:33.668Z",
+  "results": [
+    {
+      "profile": "Unthrottled",
+      "times": [
+        1284,
+        330,
+        338
+      ],
+      "avg": 650.6666666666666,
+      "resources": [
+        {
+          "name": "Cesium.js",
+          "start": 4,
+          "dur": 118,
+          "bytes": 1702335
+        },
+        {
+          "name": "widgets.css",
+          "start": 4,
+          "dur": 3,
+          "bytes": 6312
+        },
+        {
+          "name": "main-T0Qp9-jy.css",
+          "start": 4,
+          "dur": 3,
+          "bytes": 7424
+        },
+        {
+          "name": "modulepreload-polyfill-B5Qt9EMX.js",
+          "start": 4,
+          "dur": 4,
+          "bytes": 1011
+        },
+        {
+          "name": "main-DPJJjRR9.js",
+          "start": 4,
+          "dur": 10,
+          "bytes": 71286
+        },
+        {
+          "name": "terraformed.png",
+          "start": 4,
+          "dur": 4,
+          "bytes": 98881
+        },
+        {
+          "name": "real-mars.png",
+          "start": 4,
+          "dur": 6,
+          "bytes": 61110
+        },
+        {
+          "name": "topography.png",
+          "start": 4,
+          "dur": 6,
+          "bytes": 126891
+        },
+        {
+          "name": "exaggerated.png",
+          "start": 4,
+          "dur": 6,
+          "bytes": 92682
+        },
+        {
+          "name": "lat-long.png",
+          "start": 4,
+          "dur": 6,
+          "bytes": 67778
+        },
+        {
+          "name": "label.png",
+          "start": 4,
+          "dur": 8,
+          "bytes": 48734
+        },
+        {
+          "name": "rover.png",
+          "start": 4,
+          "dur": 8,
+          "bytes": 50179
+        },
+        {
+          "name": "satellite.png",
+          "start": 4,
+          "dur": 8,
+          "bytes": 46575
+        },
+        {
+          "name": "script.js",
+          "start": 301,
+          "dur": 90,
+          "bytes": 300
+        },
+        {
+          "name": "approximateTerrainHeights.json",
+          "start": 331,
+          "dur": 15,
+          "bytes": 98333
+        },
+        {
+          "name": "ion-credit.png",
+          "start": 390,
+          "dur": 2,
+          "bytes": 6328
+        }
+      ]
+    },
+    {
+      "profile": "Fast WiFi",
+      "times": [
+        871,
+        865,
+        871
+      ],
+      "avg": 869,
+      "resources": [
+        {
+          "name": "widgets.css",
+          "start": 8,
+          "dur": 16,
+          "bytes": 6312
+        },
+        {
+          "name": "Cesium.js",
+          "start": 8,
+          "dur": 644,
+          "bytes": 1702335
+        },
+        {
+          "name": "modulepreload-polyfill-B5Qt9EMX.js",
+          "start": 8,
+          "dur": 8,
+          "bytes": 1011
+        },
+        {
+          "name": "main-DPJJjRR9.js",
+          "start": 8,
+          "dur": 116,
+          "bytes": 71286
+        },
+        {
+          "name": "main-T0Qp9-jy.css",
+          "start": 9,
+          "dur": 16,
+          "bytes": 7424
+        },
+        {
+          "name": "terraformed.png",
+          "start": 9,
+          "dur": 159,
+          "bytes": 98881
+        },
+        {
+          "name": "real-mars.png",
+          "start": 9,
+          "dur": 109,
+          "bytes": 61110
+        },
+        {
+          "name": "exaggerated.png",
+          "start": 9,
+          "dur": 166,
+          "bytes": 92682
+        },
+        {
+          "name": "topography.png",
+          "start": 9,
+          "dur": 217,
+          "bytes": 126891
+        },
+        {
+          "name": "label.png",
+          "start": 9,
+          "dur": 198,
+          "bytes": 48734
+        },
+        {
+          "name": "lat-long.png",
+          "start": 9,
+          "dur": 217,
+          "bytes": 67778
+        },
+        {
+          "name": "rover.png",
+          "start": 9,
+          "dur": 231,
+          "bytes": 50179
+        },
+        {
+          "name": "satellite.png",
+          "start": 9,
+          "dur": 227,
+          "bytes": 46575
+        },
+        {
+          "name": "script.js",
+          "start": 834,
+          "dur": 106,
+          "bytes": 300
+        }
+      ]
+    },
+    {
+      "profile": "4G LTE",
+      "times": [
+        5078,
+        5075,
+        5083
+      ],
+      "avg": 5078.666666666667,
+      "resources": [
+        {
+          "name": "Cesium.js",
+          "start": 28,
+          "dur": 4803,
+          "bytes": 1702335
+        },
+        {
+          "name": "modulepreload-polyfill-B5Qt9EMX.js",
+          "start": 28,
+          "dur": 32,
+          "bytes": 1011
+        },
+        {
+          "name": "widgets.css",
+          "start": 28,
+          "dur": 95,
+          "bytes": 6312
+        },
+        {
+          "name": "main-T0Qp9-jy.css",
+          "start": 28,
+          "dur": 102,
+          "bytes": 7424
+        },
+        {
+          "name": "main-DPJJjRR9.js",
+          "start": 28,
+          "dur": 875,
+          "bytes": 71286
+        },
+        {
+          "name": "real-mars.png",
+          "start": 28,
+          "dur": 779,
+          "bytes": 61110
+        },
+        {
+          "name": "terraformed.png",
+          "start": 28,
+          "dur": 1188,
+          "bytes": 98881
+        },
+        {
+          "name": "exaggerated.png",
+          "start": 28,
+          "dur": 1214,
+          "bytes": 92682
+        },
+        {
+          "name": "lat-long.png",
+          "start": 28,
+          "dur": 1599,
+          "bytes": 67778
+        },
+        {
+          "name": "topography.png",
+          "start": 28,
+          "dur": 1611,
+          "bytes": 126891
+        },
+        {
+          "name": "label.png",
+          "start": 28,
+          "dur": 1694,
+          "bytes": 48734
+        },
+        {
+          "name": "rover.png",
+          "start": 28,
+          "dur": 1499,
+          "bytes": 50179
+        },
+        {
+          "name": "satellite.png",
+          "start": 28,
+          "dur": 1700,
+          "bytes": 46575
+        },
+        {
+          "name": "script.js",
+          "start": 5045,
+          "dur": 94,
+          "bytes": 300
+        }
+      ]
+    },
+    {
+      "profile": "Fast 3G",
+      "times": [
+        13093,
+        13085,
+        13087
+      ],
+      "avg": 13088.333333333334,
+      "resources": [
+        {
+          "name": "widgets.css",
+          "start": 61,
+          "dur": 245,
+          "bytes": 6312
+        },
+        {
+          "name": "main-DPJJjRR9.js",
+          "start": 61,
+          "dur": 2324,
+          "bytes": 71286
+        },
+        {
+          "name": "Cesium.js",
+          "start": 61,
+          "dur": 12790,
+          "bytes": 1702335
+        },
+        {
+          "name": "modulepreload-polyfill-B5Qt9EMX.js",
+          "start": 61,
+          "dur": 52,
+          "bytes": 1011
+        },
+        {
+          "name": "main-T0Qp9-jy.css",
+          "start": 61,
+          "dur": 252,
+          "bytes": 7424
+        },
+        {
+          "name": "terraformed.png",
+          "start": 61,
+          "dur": 3165,
+          "bytes": 98881
+        },
+        {
+          "name": "real-mars.png",
+          "start": 61,
+          "dur": 2036,
+          "bytes": 61110
+        },
+        {
+          "name": "exaggerated.png",
+          "start": 61,
+          "dur": 3229,
+          "bytes": 92682
+        },
+        {
+          "name": "satellite.png",
+          "start": 61,
+          "dur": 3588,
+          "bytes": 46575
+        },
+        {
+          "name": "topography.png",
+          "start": 61,
+          "dur": 4212,
+          "bytes": 126891
+        },
+        {
+          "name": "lat-long.png",
+          "start": 61,
+          "dur": 4365,
+          "bytes": 67778
+        },
+        {
+          "name": "label.png",
+          "start": 61,
+          "dur": 4484,
+          "bytes": 48734
+        },
+        {
+          "name": "rover.png",
+          "start": 61,
+          "dur": 4525,
+          "bytes": 50179
+        }
+      ]
+    },
+    {
+      "profile": "Slow 3G",
+      "times": [
+        null,
+        null,
+        null
+      ],
+      "avg": null,
+      "resources": null
+    }
+  ]
+}
