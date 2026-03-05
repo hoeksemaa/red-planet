@@ -27,15 +27,12 @@ inject();
 
 const state = { ...DEFAULT_STATE };
 
-// ── Load manifest ────────────────────────────────────────────────────────────
-// critical: blocks first interactive frame — keep ruthlessly minimal
-// deferred: loads in background immediately after critical; move freely between phases
-renderer.register('imagery',    imagery,          { phase: 'critical' });
-renderer.register('graticule',  createGraticule(), { phase: 'deferred' });
-renderer.register('contours',   contours,          { phase: 'deferred' });
-renderer.register('labels',     labels,            { phase: 'critical' });
-renderer.register('rovers',     rovers,            { phase: 'deferred' });
-renderer.register('satellites', satellites,        { phase: 'deferred' });
+renderer.register('imagery',    imagery);
+renderer.register('graticule',  createGraticule());
+renderer.register('contours',   contours);
+renderer.register('labels',     labels);
+renderer.register('rovers',     rovers);
+renderer.register('satellites', satellites);
 
 (async () => {
   // perf: terrain downloads in background and swaps in silently (PERF-4)
