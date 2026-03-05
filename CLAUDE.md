@@ -1,4 +1,4 @@
-# Google Mars
+# Explore Mars
 
 Interactive 3D Mars globe built from MOLA elevation data. See PRD.md for full spec.
 

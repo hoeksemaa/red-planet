@@ -1,4 +1,4 @@
-# Google Mars — Data Pipeline Playbook
+# Explore Mars — Data Pipeline Playbook
 
 ## Philosophy
 

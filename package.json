@@ -1,7 +1,7 @@
 {
-  "name": "google-mars",
+  "name": "explore-mars",
   "version": "1.0.0",
-  "description": "google mars",
+  "description": "explore mars",
   "main": "index.js",
   "scripts": {
     "dev": "vite",

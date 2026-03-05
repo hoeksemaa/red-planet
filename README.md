@@ -1,4 +1,4 @@
-google mars
+explore mars
 
 ## Setup
 

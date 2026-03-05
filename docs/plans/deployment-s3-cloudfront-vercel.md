@@ -1,4 +1,4 @@
-# Deployment Plan: Google Mars → S3 + CloudFront + Vercel
+# Deployment Plan: Explore Mars → S3 + CloudFront + Vercel
 
 ## Context
 

@@ -1,4 +1,4 @@
-# Google Mars — Polish Sprint
+# Explore Mars — Polish Sprint
 
 ---
 

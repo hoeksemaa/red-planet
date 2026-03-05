@@ -1,4 +1,4 @@
-# Google Mars — PRD
+# Explore Mars — PRD
 
 ## One-liner
 
