@@ -2,6 +2,7 @@ import * as Cesium from 'cesium';
 import type { Feature, RoverSearchResult } from './types';
 import type { AppState } from '../state';
 import { ROVER_TRAVERSE_URL, ROVER_IMAGES_URL } from '../constants';
+import { mark } from '../perf';
 
 export interface RoverPinEntry {
   kind: 'pin';
@@ -260,94 +261,53 @@ let viewerRef: Cesium.Viewer | null = null;
 let pinData: Array<{ pin: Cesium.Billboard } & RoverPinEntry> = [];
 let photoData: Array<{ pin: Cesium.Billboard } & RoverPhotoEntry> = [];
 let roverSites: Array<{ name: string; id: string; lon: number; lat: number }> = [];
-let prefetchedTraverse: any = null;
-let prefetchedImages: any = null;
 
 export const rovers: Feature = {
-  async prefetch() {
-    try {
-      [prefetchedTraverse, prefetchedImages] = await Promise.all([
-        fetch(ROVER_TRAVERSE_URL).then((r) => r.json()),
-        fetch(ROVER_IMAGES_URL).then((r) => r.json()),
-      ]);
-    } catch (e) {
-      console.error('[rovers] prefetch failed:', e);
-    }
-  },
-
-  async init(viewer: Cesium.Viewer): Promise<void> {
-    const [traverseGeo, imagesGeo] = prefetchedTraverse
-      ? [prefetchedTraverse, prefetchedImages]
-      : await Promise.all([
-          fetch(ROVER_TRAVERSE_URL).then((r) => r.json()),
-          fetch(ROVER_IMAGES_URL).then((r) => r.json()),
-        ]).catch((e) => {
-          console.error('[rovers] init fetch failed:', e);
-          return [null, null];
-        });
-    if (!traverseGeo || !imagesGeo) return;
-
+  init(viewer: Cesium.Viewer): void {
     viewerRef = viewer;
-    pinCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection({ scene: viewer.scene }));
-    pinData = [];
 
-    // Traverse polylines — all rovers batched into one GroundPolylinePrimitive
-    const traverseInstances: Cesium.GeometryInstance[] = [];
-    for (const feature of traverseGeo.features) {
-      const color = ROVER_COLORS[feature.properties.id] ?? Cesium.Color.WHITE;
-      const positions = (feature.geometry.coordinates as [number, number][]).map(
-        ([lon, lat]) => Cesium.Cartesian3.fromDegrees(lon, lat)
-      );
-      if (positions.length < 2) continue;
-      traverseInstances.push(new Cesium.GeometryInstance({
-        geometry: new Cesium.GroundPolylineGeometry({ positions, width: 2.5 }),
-        attributes: {
-          color: Cesium.ColorGeometryInstanceAttribute.fromColor(color),
-        },
-      }));
-    }
-    traversePrimitive = viewer.scene.primitives.add(new Cesium.GroundPolylinePrimitive({
-      geometryInstances: traverseInstances,
-      appearance: new Cesium.PolylineColorAppearance(),
-      asynchronous: true,
-    }));
+    // Fire fetch without blocking — rovers appear when data lands
+    Promise.all([
+      fetch(ROVER_TRAVERSE_URL).then((r) => r.json()),
+      fetch(ROVER_IMAGES_URL).then((r) => r.json()),
+    ]).then(([traverseGeo, imagesGeo]) => {
+      pinCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection({ scene: viewer.scene }));
+      pinData = [];
 
-    // Image waypoint pins — landing site dot only on first load; remaining deferred
-    const seenRovers = new Set<string>();
-    const deferredFeatures: typeof imagesGeo.features = [];
-    roverSites = [];
-    for (const feature of imagesGeo.features) {
-      const { rover, id, sol, color } = feature.properties as {
-        rover: string; id: string; sol: number | null; color: string;
-      };
-      const [lon, lat] = feature.geometry.coordinates as [number, number];
-      const cesiumColor = ROVER_COLORS[id] ?? Cesium.Color.fromCssColorString(color);
-
-      if (!seenRovers.has(id)) {
-        // First feature per rover ≈ landing site — add immediately
-        seenRovers.add(id);
-        roverSites.push({ name: rover, id, lon, lat });
-        const pin = pinCollection.add({
-          position: Cesium.Cartesian3.fromDegrees(lon, lat),
-          image: PIN_IMAGES.get(id) ?? makeDotCanvas(cesiumColor),
-          heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
-          verticalOrigin: Cesium.VerticalOrigin.CENTER,
-          disableDepthTestDistance: 6.4e6,
-        });
-        pinData.push({ pin, kind: 'pin', rover, id, sol, color: cesiumColor.toCssColorString() });
-      } else {
-        deferredFeatures.push(feature);
+      // Traverse polylines — all rovers batched into one GroundPolylinePrimitive
+      const traverseInstances: Cesium.GeometryInstance[] = [];
+      for (const feature of traverseGeo.features) {
+        const color = ROVER_COLORS[feature.properties.id] ?? Cesium.Color.WHITE;
+        const positions = (feature.geometry.coordinates as [number, number][]).map(
+          ([lon, lat]) => Cesium.Cartesian3.fromDegrees(lon, lat)
+        );
+        if (positions.length < 2) continue;
+        traverseInstances.push(new Cesium.GeometryInstance({
+          geometry: new Cesium.GroundPolylineGeometry({ positions, width: 2.5 }),
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(color),
+          },
+        }));
       }
-    }
+      traversePrimitive = viewer.scene.primitives.add(new Cesium.GroundPolylinePrimitive({
+        geometryInstances: traverseInstances,
+        appearance: new Cesium.PolylineColorAppearance(),
+        asynchronous: true,
+      }));
 
-    // Remaining drive-sol dots — added after critical path clears
-    setTimeout(() => {
-      for (const feature of deferredFeatures) {
+      // Image waypoint pins — all at once (500 pts is fine in one tick)
+      roverSites = [];
+      const seenRovers = new Set<string>();
+      for (const feature of imagesGeo.features) {
         const { rover, id, sol, color } = feature.properties as {
           rover: string; id: string; sol: number | null; color: string;
         };
         const [lon, lat] = feature.geometry.coordinates as [number, number];
         const cesiumColor = ROVER_COLORS[id] ?? Cesium.Color.fromCssColorString(color);
+        if (!seenRovers.has(id)) {
+          seenRovers.add(id);
+          roverSites.push({ name: rover, id, lon, lat });
+        }
         const pin = pinCollection.add({
           position: Cesium.Cartesian3.fromDegrees(lon, lat),
           image: PIN_IMAGES.get(id) ?? makeDotCanvas(cesiumColor),
@@ -357,22 +317,23 @@ export const rovers: Feature = {
         });
         pinData.push({ pin, kind: 'pin', rover, id, sol, color: cesiumColor.toCssColorString() });
       }
-    }, 0);
 
-    // Photo icons — curated photos placed at known coordinates
-    photoData = [];
-    for (const photo of CURATED_PHOTOS) {
-      const pin = pinCollection.add({
-        position: Cesium.Cartesian3.fromDegrees(photo.lon, photo.lat),
-        image: CAMERA_IMAGES.get(photo.id) ?? makeCameraCanvas(Cesium.Color.WHITE),
-        heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        pixelOffset: new Cesium.Cartesian2(0, -8),
+      // Photo icons — curated photos placed at known coordinates
+      photoData = [];
+      for (const photo of CURATED_PHOTOS) {
+        const pin = pinCollection.add({
+          position: Cesium.Cartesian3.fromDegrees(photo.lon, photo.lat),
+          image: CAMERA_IMAGES.get(photo.id) ?? makeCameraCanvas(Cesium.Color.WHITE),
+          heightReference: Cesium.HeightReference.CLAMP_TO_TERRAIN,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -8),
+          disableDepthTestDistance: 6.4e6,
+        });
+        photoData.push({ pin, kind: 'photo', ...photo });
+      }
 
-        disableDepthTestDistance: 6.4e6,
-      });
-      photoData.push({ pin, kind: 'photo', ...photo });
-    }
+      mark('rovers-ready');
+    }).catch((e) => console.error('[rovers] fetch failed:', e));
   },
 
   pick(picked: any): RoverPickResult | undefined {

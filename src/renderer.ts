@@ -14,8 +14,8 @@ const registry = new LayerRegistry();
 let pickCallback: ((featureId: string, result: unknown) => void) | null = null;
 let pickMissCallback: (() => void) | null = null;
 
-export function register(id: string, feature: Feature, opts?: { phase?: 'critical' | 'deferred' }): void {
-  registry.register(id, feature, opts);
+export function register(id: string, feature: Feature): void {
+  registry.register(id, feature);
 }
 
 // perf: called after terrain .f32 downloads in the background (PERF-4)
@@ -24,9 +24,6 @@ export function setTerrain(heights: Float32Array): void {
 }
 
 export async function init(initialState: AppState): Promise<void> {
-  // perf: kick off deferred prefetches immediately — runs in parallel with viewer creation
-  registry.prefetchDeferred();
-
   // perf: start with flat ellipsoid so the globe appears immediately;
   // real MOLA terrain swaps in via setTerrain() once the .f32 finishes downloading (PERF-4)
   mark('viewer-init-start');
@@ -88,10 +85,6 @@ export async function init(initialState: AppState): Promise<void> {
     destination: Cesium.Cartesian3.fromDegrees(133, -10, INITIAL_CAMERA_HEIGHT),
   });
 
-  await registry.initCritical(viewer);
-  mark('critical-init-done');
-  (window as any).__criticalReady = performance.now();
-
   // Single pick dispatcher — iterates features, first to claim wins
   const clickHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
   clickHandler.setInputAction((movement: { position: Cesium.Cartesian2 }) => {
@@ -121,10 +114,9 @@ export async function init(initialState: AppState): Promise<void> {
 
   apply(initialState);
 
-  // perf: deferred features init in background after critical path completes
-  registry.initDeferred(viewer)
+  registry.initAll(viewer)
     .then(() => apply(lastState))
-    .catch(e => console.error('[renderer] Deferred init failed:', e));
+    .catch((e: unknown) => console.error('[renderer] Init failed:', e));
 }
 
 export function apply(state: AppState): void {
