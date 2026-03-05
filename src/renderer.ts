@@ -11,11 +11,6 @@ const registry = new LayerRegistry();
 
 let pickCallback: ((featureId: string, result: unknown) => void) | null = null;
 let pickMissCallback: (() => void) | null = null;
-let progressCallback: ((pct: number) => void) | null = null;
-let readyCallback: (() => void) | null = null;
-// perf: guard so readyCallback only fires once — terrain swap-in (PERF-4) re-triggers
-// tileLoadProgressEvent, which would otherwise re-show the loading overlay
-let readyCalled = false;
 
 export function register(id: string, feature: Feature): void {
   registry.register(id, feature);
@@ -49,17 +44,8 @@ export async function init(initialState: AppState): Promise<void> {
     creditContainer: document.createElement('div'),
   });
 
-  let maxTiles = 0;
   viewer.scene.globe.tileLoadProgressEvent.addEventListener((count: number) => {
-    if (count > maxTiles) maxTiles = count;
-    if (maxTiles === 0) return;
-    progressCallback?.(((maxTiles - count) / maxTiles) * 100);
-    if (count === 0 && !readyCalled) {
-      readyCalled = true;
-      // perf measurement — bench-load.cjs polls for this
-      (window as any).__globeReady = performance.now();
-      readyCallback?.();
-    }
+    if (count === 0) (window as any).__globeReady = performance.now();
   });
 
   // Mars scene config
@@ -143,10 +129,3 @@ export function onPickMiss(fn: () => void): void {
   pickMissCallback = fn;
 }
 
-export function onProgress(fn: (pct: number) => void): void {
-  progressCallback = fn;
-}
-
-export function onReady(fn: () => void): void {
-  readyCallback = fn;
-}

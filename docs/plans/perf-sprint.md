@@ -17,6 +17,7 @@ Named imports don't help — Rollup tree-shaking is bypassed entirely.
 4. PERF-8 — Async Cesium script (`defer` via inline Vite plugin)
 5. PERF-6 — Preload hints (Cesium.js only; terrain preload dropped)
 6. PERF-4 — Decouple terrain from init (EllipsoidTerrainProvider on boot; `.f32` swaps in via `setTerrain()`; default exaggeration set to 1x to avoid snap on swap)
+7. PERF-1 — Baseline measurements captured; `ttGlobeReady` metric added and confirmed working in PERF-4 run
 
 ---
 
@@ -24,7 +25,7 @@ Named imports don't help — Rollup tree-shaking is bypassed entirely.
 
 | # | Task | What it does | Effort |
 |---|---|---|---|
-| PERF-1 | Measure baseline | Run `scripts/bench-load.cjs`, record numbers. Rerun after each ticket. | 1h |
+| ~~PERF-1~~ | ~~Measure baseline~~ | ~~Run `scripts/bench-load.cjs`, record numbers. Rerun after each ticket.~~ ✓ Baseline captured; re-run after each ticket through PERF-4. `ttGlobeReady` added to script for PERF-4 run. | ~~1h~~ |
 | ~~PERF-2~~ | ~~Verify modulepreload~~ | ~~`dist/index.html` already has it — close ticket.~~ ✓ Polyfill present; no app modules preloaded (trivial). | ~~5m~~ |
 | PERF-3 | Static loading screen | Screenshot of loaded globe served as background while Cesium boots. Perceived load only. | 2h |
 | ~~PERF-4~~ | ~~Decouple terrain from init~~ | ~~Start Cesium with `EllipsoidTerrainProvider`, swap when `.f32` arrives. Removes 4 MB from critical path. At 24k km the difference is invisible.~~ ✓ `init()` starts on flat ellipsoid; `setTerrain()` swaps in real MOLA terrain when download completes. `readyCalled` guard prevents loading overlay re-triggering on swap. Default exaggeration set to 1x. | ~~1d~~ |
