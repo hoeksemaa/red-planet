@@ -1,0 +1,183 @@
+{
+  "url": "http://localhost:4173",
+  "runs": 3,
+  "name": "PERF-7",
+  "metric": "domContentLoadedEventEnd",
+  "timestamp": "2026-03-05T01:35:41.795Z",
+  "results": [
+    {
+      "profile": "Unthrottled",
+      "times": [
+        299,
+        379,
+        285
+      ],
+      "avg": 321,
+      "resources": [
+        {
+          "name": "widgets.css",
+          "start": 3,
+          "dur": 2,
+          "bytes": 6312
+        },
+        {
+          "name": "Cesium.js",
+          "start": 3,
+          "dur": 105,
+          "bytes": 1702335
+        },
+        {
+          "name": "main-B56l2ybl.js",
+          "start": 3,
+          "dur": 12,
+          "bytes": 132555
+        },
+        {
+          "name": "modulepreload-polyfill-B5Qt9EMX.js",
+          "start": 3,
+          "dur": 2,
+          "bytes": 1011
+        },
+        {
+          "name": "main-BL14HP53.css",
+          "start": 3,
+          "dur": 2,
+          "bytes": 7547
+        }
+      ]
+    },
+    {
+      "profile": "Fast WiFi",
+      "times": [
+        693,
+        695,
+        694
+      ],
+      "avg": 694,
+      "resources": [
+        {
+          "name": "widgets.css",
+          "start": 10,
+          "dur": 13,
+          "bytes": 6312
+        },
+        {
+          "name": "modulepreload-polyfill-B5Qt9EMX.js",
+          "start": 10,
+          "dur": 7,
+          "bytes": 1011
+        },
+        {
+          "name": "main-B56l2ybl.js",
+          "start": 10,
+          "dur": 82,
+          "bytes": 132555
+        },
+        {
+          "name": "Cesium.js",
+          "start": 10,
+          "dur": 501,
+          "bytes": 1702335
+        },
+        {
+          "name": "main-BL14HP53.css",
+          "start": 10,
+          "dur": 15,
+          "bytes": 7547
+        }
+      ]
+    },
+    {
+      "profile": "4G LTE",
+      "times": [
+        4007,
+        4015,
+        3993
+      ],
+      "avg": 4005,
+      "resources": [
+        {
+          "name": "widgets.css",
+          "start": 26,
+          "dur": 76,
+          "bytes": 6312
+        },
+        {
+          "name": "Cesium.js",
+          "start": 26,
+          "dur": 3760,
+          "bytes": 1702335
+        },
+        {
+          "name": "modulepreload-polyfill-B5Qt9EMX.js",
+          "start": 26,
+          "dur": 28,
+          "bytes": 1011
+        },
+        {
+          "name": "main-B56l2ybl.js",
+          "start": 26,
+          "dur": 592,
+          "bytes": 132555
+        },
+        {
+          "name": "main-BL14HP53.css",
+          "start": 26,
+          "dur": 88,
+          "bytes": 7547
+        }
+      ]
+    },
+    {
+      "profile": "Fast 3G",
+      "times": [
+        10185,
+        10189,
+        10190
+      ],
+      "avg": 10188,
+      "resources": [
+        {
+          "name": "widgets.css",
+          "start": 51,
+          "dur": 183,
+          "bytes": 6312
+        },
+        {
+          "name": "Cesium.js",
+          "start": 51,
+          "dur": 9942,
+          "bytes": 1702335
+        },
+        {
+          "name": "modulepreload-polyfill-B5Qt9EMX.js",
+          "start": 51,
+          "dur": 45,
+          "bytes": 1011
+        },
+        {
+          "name": "main-BL14HP53.css",
+          "start": 51,
+          "dur": 213,
+          "bytes": 7547
+        },
+        {
+          "name": "main-B56l2ybl.js",
+          "start": 51,
+          "dur": 1558,
+          "bytes": 132555
+        }
+      ]
+    },
+    {
+      "profile": "Slow 3G",
+      "times": [
+        null,
+        null,
+        null
+      ],
+      "avg": null,
+      "resources": null
+    }
+  ]
+}

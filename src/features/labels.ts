@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import type { Feature, FeatureInfo, NomenclatureGeoJSON, LocationSearchResult } from './types';
+import type { Feature, FeatureInfo, LocationSearchResult } from './types';
 import type { AppState } from '../state';
 import { NOMENCLATURE_DATA_URL } from '../constants';
 
@@ -16,7 +16,6 @@ interface LabelEntry {
 let labelCollection: Cesium.LabelCollection;
 let labelData: LabelEntry[] = [];
 let hoveredLabel: Cesium.Label | null = null;
-let prefetchedData: NomenclatureGeoJSON | null = null;
 
 // Label visibility: fade in when camera is within `diameterKm * SCALE` meters.
 // Floor ensures tiny features still appear at close zoom.
@@ -42,20 +41,9 @@ function labelFade(diameterKm: number): Cesium.NearFarScalar {
 }
 
 export const labels: Feature = {
-  async prefetch() {
-    try {
-      prefetchedData = await fetch(NOMENCLATURE_DATA_URL).then((r) => r.json());
-    } catch (e) {
-      console.error('[labels] prefetch failed:', e);
-    }
-  },
-
-  async init(viewer: Cesium.Viewer) {
-    const nomenclatureGeoJSON = prefetchedData ?? await fetch(NOMENCLATURE_DATA_URL).then((r) => r.json()).catch((e) => {
-      console.error('[labels] init fetch failed:', e);
-      return null;
-    });
-    if (!nomenclatureGeoJSON) return;
+  init(viewer: Cesium.Viewer) {
+    // Fire-and-forget: labels load after init, so they're off the critical path.
+    fetch(NOMENCLATURE_DATA_URL).then((r) => r.json()).then((nomenclatureGeoJSON) => {
     labelCollection = viewer.scene.primitives.add(new Cesium.LabelCollection({ scene: viewer.scene }));
     labelData = [];
 
@@ -81,6 +69,7 @@ export const labels: Feature = {
       labelData.push({ label, lon, lat, name, diameterKm: diameter_km,
                        featureType: feature_type, origin });
     }
+    }).catch((e) => console.error('[labels] load failed:', e));
   },
 
   hover(picked: any): boolean {
