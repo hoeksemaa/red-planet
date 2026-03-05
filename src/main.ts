@@ -23,24 +23,17 @@ import satelliteIcon   from './assets/icons/satellite.png';
 
 inject();
 
-// Set icon src — Vite resolves and hashes these at build time
-(document.querySelector('#layerBtnTerraformed img') as HTMLImageElement).src = terraformedIcon;
-(document.querySelector('#layerBtnReal img')        as HTMLImageElement).src = realMarsIcon;
-(document.querySelector('#layerBtnExag img')        as HTMLImageElement).src = exaggeratedIcon;
-(document.querySelector('#layerBtnContours img')    as HTMLImageElement).src = topographyIcon;
-(document.querySelector('#layerBtnGraticule img')   as HTMLImageElement).src = latLongIcon;
-(document.querySelector('#layerBtnLabels img')      as HTMLImageElement).src = labelIcon;
-(document.querySelector('#layerBtnRovers img')      as HTMLImageElement).src = roverIcon;
-(document.querySelector('#layerBtnSatellites img')  as HTMLImageElement).src = satelliteIcon;
-
 const state = { ...DEFAULT_STATE };
 
-renderer.register('imagery', imagery);
-renderer.register('contours', contours);
-renderer.register('graticule', createGraticule());
-renderer.register('labels', labels);
-renderer.register('rovers', rovers);
-renderer.register('satellites', satellites);
+// ── Load manifest ────────────────────────────────────────────────────────────
+// critical: blocks first interactive frame — keep ruthlessly minimal
+// deferred: loads in background immediately after critical; move freely between phases
+renderer.register('imagery',    imagery,          { phase: 'critical' });
+renderer.register('graticule',  createGraticule(), { phase: 'deferred' });
+renderer.register('contours',   contours,          { phase: 'deferred' });
+renderer.register('labels',     labels,            { phase: 'deferred' });
+renderer.register('rovers',     rovers,            { phase: 'deferred' });
+renderer.register('satellites', satellites,        { phase: 'deferred' });
 
 (async () => {
   // perf: terrain downloads in background and swaps in silently (PERF-4)
@@ -50,8 +43,17 @@ renderer.register('satellites', satellites);
     .then((buf) => renderer.setTerrain(new Float32Array(buf)))
     .catch((e) => console.error('[App] Terrain load failed:', e));
 
-  renderer.prefetchAll(); // fire-and-forget (off critical path since PERF-5)
   await renderer.init(state);
+
+  // Deferred: layer panel icons are not on the critical first-load path
+  (document.querySelector('#layerBtnTerraformed img') as HTMLImageElement).src = terraformedIcon;
+  (document.querySelector('#layerBtnReal img')        as HTMLImageElement).src = realMarsIcon;
+  (document.querySelector('#layerBtnExag img')        as HTMLImageElement).src = exaggeratedIcon;
+  (document.querySelector('#layerBtnContours img')    as HTMLImageElement).src = topographyIcon;
+  (document.querySelector('#layerBtnGraticule img')   as HTMLImageElement).src = latLongIcon;
+  (document.querySelector('#layerBtnLabels img')      as HTMLImageElement).src = labelIcon;
+  (document.querySelector('#layerBtnRovers img')      as HTMLImageElement).src = roverIcon;
+  (document.querySelector('#layerBtnSatellites img')  as HTMLImageElement).src = satelliteIcon;
 
   function unifiedSearch(query: string): UnifiedSearchResult[] {
     const q = query.trim().toLowerCase();

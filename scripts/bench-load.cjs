@@ -1,124 +1,93 @@
 #!/usr/bin/env node
 /**
- * Load time benchmark across simulated network conditions.
+ * Load time benchmark.
  *
  * Usage:
- *   node scripts/bench-load.cjs [url] [runs] [name]
- *   node scripts/bench-load.cjs http://localhost:4173 3 "baseline"
- *   node scripts/bench-load.cjs http://localhost:4173 3 "after-defer"
+ *   node scripts/bench-load.cjs [url] [runs]
+ *   node scripts/bench-load.cjs http://localhost:5173 5
  *
- * First time setup:
- *   npm install -D playwright
- *   npx playwright install chromium
- *
- * What it measures:
- *   domContentLoadedEventEnd — the moment the browser finishes downloading and
- *   executing all render-blocking scripts (i.e. Cesium.js). Nothing visible can
- *   render before this fires, so it's the dominant bottleneck on cold load.
- *
- *   Per-run resource timing is saved to JSON for deeper analysis.
- *
- * Results saved to: perf-results-<name>-<timestamp>.json
+ * Metrics (per run):
+ *   ttDCL            domContentLoadedEventEnd — Cesium.js is defer so it has already
+ *                    parsed and executed by this point; DCL reflects only the tiny
+ *                    app bundle parse time.
+ *   ttCriticalReady  window.__criticalReady, set in renderer.ts after initCritical().
+ *                    Cesium Viewer is constructed and imagery provider registered.
+ *   ttFirstTileLoad  window.__firstTileLoad, set on first tileLoadProgressEvent→0.
+ *                    First moment the user actually sees Mars tiles rendered.
+ *   cesiumInitGap    ttCriticalReady - ttDCL: Viewer ctor + imagery provider add.
+ *   tileLoadGap      ttFirstTileLoad - ttCriticalReady: network fetch + first render.
+ *   totalGap         ttFirstTileLoad - ttDCL: full user-perceived load time.
  */
 
 const { chromium } = require('playwright');
-const fs = require('fs');
 
 const URL  = process.argv[2] ?? 'http://localhost:5173';
 const RUNS = parseInt(process.argv[3] ?? '3', 10);
-const NAME = process.argv[4] ?? null;
 
-// Network profiles — downloadThroughput / uploadThroughput in bytes/sec, latency in ms.
-// -1 means unlimited (no throttle).
 const PROFILES = [
-  { name: 'Unthrottled', download:            -1, upload:            -1, latency:   0 },
-  { name: 'Fast WiFi',   download: 30_000_000 / 8, upload: 15_000_000 / 8, latency:   5 },
-  { name: '4G LTE',      download:  4_000_000 / 8, upload:  3_000_000 / 8, latency:  20 },
-  { name: 'Fast 3G',     download:  1_500_000 / 8, upload:    750_000 / 8, latency:  40 },
-  { name: 'Slow 3G',     download:    500_000 / 8, upload:    500_000 / 8, latency: 400 },
+  { name: 'Unthrottled', download:            -1, upload:            -1, latency:  0 },
+  { name: 'Fast WiFi',   download: 30_000_000/8,  upload: 15_000_000/8,  latency:  5 },
+  { name: '4G LTE',      download:  4_000_000/8,  upload:  3_000_000/8,  latency: 20 },
+  { name: 'Fast 3G',     download:  1_500_000/8,  upload:    750_000/8,  latency: 40 },
 ];
 
-// Injected before any app code runs.
-// Waits for DOMContentLoaded (fires after all render-blocking scripts finish),
-// then captures Navigation Timing + Resource Timing. No WebGL required.
-const TIMING_SCRIPT = `
-  (function () {
-    document.addEventListener('DOMContentLoaded', function () {
-      // One tick so domContentLoadedEventEnd is finalised.
-      setTimeout(function () {
-        var nav = performance.getEntriesByType('navigation')[0];
-        var res = performance.getEntriesByType('resource');
-        window.__bench = {
-          ttDCL: Math.round(nav.domContentLoadedEventEnd),
-          ttInteractive: Math.round(nav.domInteractive),
-          resources: res.map(function (r) {
-            return {
-              name:  r.name.split('/').pop().split('?')[0].substring(0, 50),
-              start: Math.round(r.startTime),
-              dur:   Math.round(r.duration),
-              bytes: r.transferSize || 0,
-            };
-          }),
-        };
-      }, 0);
-    });
-  })();
-`;
+function fmt(ms) { return ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${ms}ms`; }
+function avg(arr) { return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length); }
 
 async function runOnce(browser, profile) {
-  // Fresh context per run = empty HTTP cache, no cookies, no service worker.
-  const ctx  = await browser.newContext();
+  const ctx = await browser.newContext();
   const page = await ctx.newPage();
   const cdp  = await ctx.newCDPSession(page);
 
-  // Surface JS errors so FAILs are diagnosable.
-  page.on('pageerror', err => process.stderr.write(`[page error] ${err.message}\n`));
+  // Surface errors so FAILs are diagnosable.
+  page.on('pageerror', err => console.error(`    [page error] ${err.message}`));
+  page.on('response',  res => {
+    if (res.status() >= 400 && !res.url().includes('/_vercel/'))
+      console.error(`    [${res.status()}] ${res.url()}`);
+  });
 
   try {
     await cdp.send('Network.enable');
     await cdp.send('Network.clearBrowserCache');
-    await cdp.send('Network.emulateNetworkConditions', {
-      offline:             false,
-      downloadThroughput:  profile.download,
-      uploadThroughput:    profile.upload,
-      latency:             profile.latency,
+    if (profile.download !== -1) {
+      await cdp.send('Network.emulateNetworkConditions', {
+        offline: false,
+        downloadThroughput: profile.download,
+        uploadThroughput:   profile.upload,
+        latency:            profile.latency,
+      });
+    }
+
+    await page.goto(URL, { waitUntil: 'commit', timeout: 30_000 });
+    // null = no arg passed to page function; options go in the third slot
+    await page.waitForFunction(() => window.__firstTileLoad !== undefined, null, { timeout: 30_000 });
+
+    return await page.evaluate(() => {
+      const nav       = performance.getEntriesByType('navigation')[0];
+      const dcl       = Math.round(nav.domContentLoadedEventEnd);
+      const crit      = Math.round(window.__criticalReady);
+      const firstTile = Math.round(window.__firstTileLoad);
+      return {
+        ttDCL:          dcl,
+        ttCriticalReady: crit,
+        ttFirstTileLoad: firstTile,
+        cesiumInitGap:  crit - dcl,
+        tileLoadGap:    firstTile - crit,
+        totalGap:       firstTile - dcl,
+      };
     });
-
-    await page.addInitScript(TIMING_SCRIPT);
-
-    // 'commit' resolves as soon as navigation commits (response headers received).
-    // The page continues loading in the background while we poll for __bench.
-    await page.goto(URL, { waitUntil: 'commit', timeout: 90_000 });
-
-    // 90s ceiling — even Slow 3G + 6.1 MB Cesium.js should land well within that.
-    await page.waitForFunction(() => window.__bench !== undefined, {
-      timeout: 90_000,
-    });
-
-    return await page.evaluate(() => window.__bench);
   } finally {
     await ctx.close();
   }
 }
 
-function avg(arr) { return arr.reduce((a, b) => a + b, 0) / arr.length; }
-
-// 1 block per second, max 30 blocks.
-function bar(ms) {
-  return '█'.repeat(Math.min(30, Math.max(1, Math.round(ms / 1000))));
-}
-
-function fmt(ms) {
-  return ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${ms}ms`;
-}
-
 async function main() {
-  console.log(`\nBenchmarking: ${URL}${NAME ? `  [${NAME}]` : ''}`);
-  console.log(`${RUNS} run(s) per profile — fresh cache each run`);
-  console.log(`Metric: domContentLoadedEventEnd (time to finish all render-blocking scripts)\n`);
+  console.log(`\nBenchmarking ${URL}  (${RUNS} runs/profile, fresh cache each run)\n`);
+  console.log(`  ttDCL           — app bundle parsed; Cesium.js defer'd (already parsed by this point)`);
+  console.log(`  ttCriticalReady — Viewer ctor + imagery provider registered`);
+  console.log(`  ttFirstTileLoad — first tile burst complete; user sees Mars`);
+  console.log(`  total           — ttFirstTileLoad - ttDCL (full user-perceived load)\n`);
 
-  // SwiftShader flags avoid console noise from Cesium trying to init WebGL in the
-  // background — they're not required for our DOMContentLoaded measurement.
   const browser = await chromium.launch({
     args: [
       '--headless=old',
@@ -130,76 +99,66 @@ async function main() {
     ],
   });
 
-  const results = [];
+  const summary = [];
 
   for (const profile of PROFILES) {
-    process.stdout.write(`  ${profile.name.padEnd(13)}`);
-    const times = [];
-    let lastBench = null;
+    console.log(`── ${profile.name} ${'─'.repeat(50 - profile.name.length)}`);
+    const dcl = [], crit = [], firstTile = [], cesiumInit = [], tileLoad = [], total = [];
 
     for (let i = 0; i < RUNS; i++) {
       try {
-        const bench = await runOnce(browser, profile);
-        times.push(bench.ttDCL);
-        lastBench = bench;
-        process.stdout.write(`  ${fmt(bench.ttDCL)}`);
+        const r = await runOnce(browser, profile);
+        dcl.push(r.ttDCL);
+        crit.push(r.ttCriticalReady);
+        firstTile.push(r.ttFirstTileLoad);
+        cesiumInit.push(r.cesiumInitGap);
+        tileLoad.push(r.tileLoadGap);
+        total.push(r.totalGap);
+        console.log(
+          `   run ${i + 1}  ttDCL=${fmt(r.ttDCL).padEnd(9)} ttCriticalReady=${fmt(r.ttCriticalReady).padEnd(9)}` +
+          ` ttFirstTileLoad=${fmt(r.ttFirstTileLoad).padEnd(9)} total=${fmt(r.totalGap)}`
+        );
       } catch (e) {
-        times.push(null);
-        process.stdout.write(`  FAIL`);
+        console.log(`   run ${i + 1}  FAIL — ${e.message.split('\n')[0]}`);
       }
     }
 
-    const valid = times.filter(t => t !== null);
-    const mean  = valid.length ? avg(valid) : null;
-    console.log(mean != null ? `   → ${fmt(mean)} avg` : '');
-    results.push({ profile: profile.name, times, avg: mean, lastBench });
+    if (firstTile.length) {
+      const row = {
+        profile:         profile.name,
+        ttDCL:           avg(dcl),
+        ttCriticalReady: avg(crit),
+        ttFirstTileLoad: avg(firstTile),
+        cesiumInitGap:   avg(cesiumInit),
+        tileLoadGap:     avg(tileLoad),
+        totalGap:        avg(total),
+      };
+      console.log(
+        `   avg   ttDCL=${fmt(row.ttDCL).padEnd(9)} ttCriticalReady=${fmt(row.ttCriticalReady).padEnd(9)}` +
+        ` ttFirstTileLoad=${fmt(row.ttFirstTileLoad).padEnd(9)} total=${fmt(row.totalGap)}`
+      );
+      summary.push(row);
+    }
+    console.log();
   }
 
   await browser.close();
 
-  // ── Summary ──────────────────────────────────────────────────────────────
-  console.log('\n' + '─'.repeat(60));
-  console.log('Profile         DOMContentLoaded');
-  console.log('─'.repeat(60));
-  for (const r of results) {
-    const avgStr = r.avg != null ? fmt(r.avg) : 'FAIL';
-    const chart  = r.avg != null ? bar(r.avg) : '';
-    console.log(`${r.profile.padEnd(16)}${avgStr.padEnd(10)}${chart}`);
+  console.log(`${'─'.repeat(85)}`);
+  console.log(`Profile          ttDCL      ttCriticalReady  ttFirstTileLoad  cesiumInit  tileLoad  total`);
+  console.log(`${'─'.repeat(85)}`);
+  for (const r of summary) {
+    console.log(
+      `${r.profile.padEnd(17)}` +
+      `${fmt(r.ttDCL).padEnd(11)}` +
+      `${fmt(r.ttCriticalReady).padEnd(17)}` +
+      `${fmt(r.ttFirstTileLoad).padEnd(17)}` +
+      `${fmt(r.cesiumInitGap).padEnd(12)}` +
+      `${fmt(r.tileLoadGap).padEnd(10)}` +
+      `${fmt(r.totalGap)}`
+    );
   }
-  console.log('─'.repeat(60));
-
-  // ── Resource breakdown (last Unthrottled run) ─────────────────────────
-  const unthrottled = results[0];
-  if (unthrottled?.lastBench?.resources?.length) {
-    console.log('\nResource timing (Unthrottled, last run — slowest 10):');
-    const top10 = [...unthrottled.lastBench.resources]
-      .sort((a, b) => b.dur - a.dur)
-      .slice(0, 10);
-    for (const r of top10) {
-      const kb = r.bytes ? ` (${Math.round(r.bytes / 1024)}KB)` : '';
-      console.log(`  ${r.name.padEnd(45)} +${String(r.start).padStart(5)}ms  ${String(r.dur).padStart(5)}ms${kb}`);
-    }
-  }
-
-  // ── Save results ─────────────────────────────────────────────────────────
-  const slug = NAME ? `${NAME.replace(/\s+/g, '-')}-` : '';
-  const filename = `perf-results/${slug}${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-  fs.mkdirSync('perf-results', { recursive: true });
-  const output = {
-    url:       URL,
-    runs:      RUNS,
-    name:      NAME,
-    metric:    'domContentLoadedEventEnd',
-    timestamp: new Date().toISOString(),
-    results:   results.map(r => ({
-      profile:   r.profile,
-      times:     r.times,
-      avg:       r.avg,
-      resources: r.lastBench?.resources ?? null,
-    })),
-  };
-  fs.writeFileSync(filename, JSON.stringify(output, null, 2));
-  console.log(`\nSaved → ${filename}`);
+  console.log(`${'─'.repeat(85)}\n`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

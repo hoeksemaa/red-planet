@@ -19,6 +19,6 @@ export const DEFAULT_STATE: AppState = {
     graticule: false,
     labels: true,
     rovers: true,
-    satellites: true,
+    satellites: false,
   },
 };
