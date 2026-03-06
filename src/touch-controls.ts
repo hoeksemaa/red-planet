@@ -58,13 +58,13 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
 
   function applyRotate(target: Cesium.Cartesian3 | null, dAngle: number) {
     const pivot = target ?? camera.positionWC;
-    const range = Cesium.Cartesian3.distance(camera.position, pivot);
+    const range = Cesium.Cartesian3.distance(camera.positionWC, pivot);
     camera.lookAt(pivot, new Cesium.HeadingPitchRange(camera.heading + dAngle, camera.pitch, range));
   }
 
   function applyTilt(dMidY: number, target: Cesium.Cartesian3 | null) {
     const pivot = target ?? camera.positionWC;
-    const range = Cesium.Cartesian3.distance(camera.position, pivot);
+    const range = Cesium.Cartesian3.distance(camera.positionWC, pivot);
     // fingers up (dMidY < 0) → tilt toward horizon (pitch increases toward 0)
     const newPitch = Cesium.Math.clamp(
       camera.pitch - dMidY * TILT_SENSITIVITY,

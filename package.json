@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "bench": "node scripts/bench.js"
+    "bench": "node scripts/bench.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "repository": {
     "type": "git",
@@ -32,6 +34,7 @@
     "playwright": "^1.58.2",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "vite-plugin-cesium": "^1.2.23"
+    "vite-plugin-cesium": "^1.2.23",
+    "vitest": "^4.0.18"
   }
 }
