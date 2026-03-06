@@ -31,7 +31,7 @@ const LOG_MAX = Math.log(6000);  // ≈ max diameter in km
 function labelFont(diameterKm: number): string {
   const t = Math.log(Math.max(diameterKm, 1)) / LOG_MAX;  // 0..1
   const size = Math.round(MIN_FONT + (MAX_FONT - MIN_FONT) * Math.min(t, 1));
-  return `${size}px sans-serif`;
+  return `600 ${size}px 'Geist Mono', monospace`;
 }
 
 function labelFade(diameterKm: number): Cesium.NearFarScalar {
@@ -58,7 +58,7 @@ export const labels: Feature = {
         font: labelFont(diameter_km),
         fillColor: Cesium.Color.WHITE,
         outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
+        outlineWidth: 1,
         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
         pixelOffset: new Cesium.Cartesian2(0, -8),
         horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
