@@ -112,6 +112,10 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     const cy    = (midY - rect.top)  * (canvas.height / rect.height);
     const target = camera.pickEllipsoid(new Cesium.Cartesian2(cx, cy)) ?? null;
 
+    // disable SSC immediately so Cesium doesn't process these touch events
+    // during recognition — prevents camera snap when we take over at lock-in
+    ssc.enableInputs = false;
+
     state = {
       phase: 'recognizing',
       prev:  [t1, t2],
@@ -149,8 +153,9 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
 
         state = { phase: 'locked', gesture, prev: [t1, t2], target, lastVelocity: 0 };
 
-        if (gesture === 'rotate' || gesture === 'tilt') {
-          ssc.enableInputs = false;
+        if (gesture === 'zoom') {
+          // hand zoom back to Cesium — re-enable SSC which we killed on touchstart
+          ssc.enableInputs = true;
         }
       } else {
         state.prev = [t1, t2];
