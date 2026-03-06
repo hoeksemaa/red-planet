@@ -16,6 +16,9 @@ const MAX_PITCH          = Cesium.Math.toRadians(-15); // near horizon
 const INERTIA_DECAY      = 0;                         // disabled — set to ~0.72 to re-enable
 const INERTIA_EPSILON    = 0.0001;                    // rad — stop threshold
 const ANGLE_JUMP_LIMIT   = 0.3;                       // rad — discard atan2 sign-flip noise
+const MARS_RADIUS_M      = 3_390_000;
+const MIN_RANGE_M        = 100;                        // < 100 m = inside terrain, reject
+const MAX_RANGE_M        = MARS_RADIUS_M * 20;         // ~67 Mm — well above any useful orbit
 
 // --- state machine types ---
 
@@ -69,22 +72,44 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
   }
 
+  // Validates pivot and range, then calls camera.lookAt and restores IDENTITY.
+  // All camera motion flows through here so the "sane range" invariant is enforced
+  // in one place rather than trusted implicitly at each call site.
+  // Returns false (and logs a warning) if the move would be unsafe, e.g. pivot is
+  // NaN/Infinity or range would place the camera outside the valid Mars orbit band.
+  // Note: caller must set the ENU frame via lookAtTransform before calling, so that
+  // camera.heading/pitch are geographic when read into the HeadingPitchRange.
+  function safeLookAt(
+    pivot: Cesium.Cartesian3,
+    heading: number,
+    pitch: number,
+    label: string,
+  ): boolean {
+    const pivotOk = isFinite(pivot.x) && isFinite(pivot.y) && isFinite(pivot.z);
+    if (!pivotOk) {
+      console.warn(`[touch-controls] ${label}: rejected — invalid pivot`);
+      exitLookAt();
+      return false;
+    }
+    const range = Cesium.Cartesian3.distance(camera.positionWC, pivot);
+    if (!isFinite(range) || range < MIN_RANGE_M || range > MAX_RANGE_M) {
+      console.warn(`[touch-controls] ${label}: rejected — range=${range.toFixed(0)}m`);
+      exitLookAt();
+      return false;
+    }
+    camera.lookAt(pivot, new Cesium.HeadingPitchRange(heading, pitch, range));
+    // Restore IDENTITY so SSC.update() never sees a local-frame camera.position
+    // (it runs every render frame regardless of enableInputs).
+    exitLookAt();
+    return true;
+  }
+
   function applyRotate(target: Cesium.Cartesian3 | null, dAngle: number) {
     const pivot = target ?? camera.positionWC;
-    const range = Cesium.Cartesian3.distance(camera.positionWC, pivot);
-    // Switch to ENU frame at pivot before reading heading/pitch.  When the camera
-    // is in the IDENTITY (ECEF) frame — as it is after exitLookAt — camera.heading
-    // is computed from raw ECEF axes (not geographic North/East), so passing it
-    // directly to HeadingPitchRange produces a snap.  lookAtTransform without an
-    // offset converts the camera's orientation to the new frame without moving it.
+    // Switch to ENU frame at pivot before reading heading/pitch so camera.heading
+    // is geographic (not raw ECEF-axis) before passing to HeadingPitchRange.
     camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(pivot));
-    camera.lookAt(pivot, new Cesium.HeadingPitchRange(camera.heading - dAngle, camera.pitch, range));
-    // Bug fix (3): camera.lookAt leaves the camera in a local lookAt frame.
-    // SSC.update() runs every render frame regardless of enableInputs and reads
-    // camera.position as ECEF — in a local frame that vector is near-origin
-    // (inside the ellipsoid), so cartesianToCartographic returns undefined → crash.
-    // Restore IDENTITY immediately; the next applyRotate call re-establishes ENU.
-    exitLookAt();
+    safeLookAt(pivot, camera.heading - dAngle, camera.pitch, 'rotate');
   }
 
   function applyTilt(pivot: Cesium.Cartesian3 | null, pitch: number) {
@@ -92,12 +117,9 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     // of heading).  The pivot stays fixed in the view as the camera arcs toward the horizon.
     // Fallback to positionWC if the pivot was off-globe at lock-in time.
     const p = pivot ?? camera.positionWC;
-    const range = Cesium.Cartesian3.distance(camera.positionWC, p);
     // ENU at pivot so camera.heading is geographic before passing to HeadingPitchRange.
     camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(p));
-    camera.lookAt(p, new Cesium.HeadingPitchRange(camera.heading, pitch, range));
-    // Restore IDENTITY so SSC.update() never sees a local-frame camera.position.
-    exitLookAt();
+    safeLookAt(p, camera.heading, pitch, 'tilt');
   }
 
   // Compute the HPR pitch of the camera's current POSITION relative to a nadir pivot.
