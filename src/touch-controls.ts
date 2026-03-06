@@ -2,7 +2,14 @@ import * as Cesium from 'cesium';
 
 // --- constants ---
 
-const CLASSIFY_THRESHOLD = 15;                        // px accumulated before gesture locks
+// Per-axis classification thresholds — each gesture competes on its own scale.
+// Raise THRESHOLD.angle to bias away from rotate; raise all three to require more
+// deliberate movement before locking in (at the cost of slightly later lock-in).
+const THRESHOLD = {
+  angle: 0.10,  // radians (~5.7°) — raised; finger wobble during tilt is typically <1°
+  midY:  18,    // px of accumulated vertical midpoint movement
+  dist:  18,    // px of accumulated finger-distance change
+};
 const TILT_SENSITIVITY   = 0.003;                     // rad/px
 const MIN_PITCH          = -Math.PI / 2;              // straight down
 const MAX_PITCH          = Cesium.Math.toRadians(-15); // near horizon
@@ -154,16 +161,23 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     const dDist  = Math.abs(cur.dist - prev.dist);
 
     if (state.phase === 'recognizing') {
-      state.acc.angle += Math.abs(dAngle) * (180 / Math.PI) * 10; // scale radians → comparable px units
+      state.acc.angle += Math.abs(dAngle); // raw radians — THRESHOLD.angle is in radians, no scaling needed
       state.acc.midY  += Math.abs(dMidY);
       state.acc.dist  += dDist;
 
-      const max = Math.max(state.acc.angle, state.acc.midY, state.acc.dist);
-      if (max >= CLASSIFY_THRESHOLD) {
+      // Each axis scores independently against its own threshold (dimensionless ratio).
+      // The gesture with the highest ratio wins once any ratio reaches 1.0.
+      const scores = {
+        rotate: state.acc.angle / THRESHOLD.angle,
+        tilt:   state.acc.midY  / THRESHOLD.midY,
+        zoom:   state.acc.dist  / THRESHOLD.dist,
+      };
+      const max = Math.max(scores.rotate, scores.tilt, scores.zoom);
+      if (max >= 1.0) {
         const gesture: 'rotate' | 'tilt' | 'zoom' =
-          state.acc.angle >= state.acc.midY && state.acc.angle >= state.acc.dist ? 'rotate' :
-          state.acc.midY  >  state.acc.dist * 2                                  ? 'tilt'   :
-                                                                                   'zoom';
+          scores.rotate === max ? 'rotate' :
+          scores.tilt   === max ? 'tilt'   :
+                                  'zoom';
         // For rotate: pivot at screen center — the camera is already looking there,
         // so the first lookAt call won't snap the view to an unexpected point.
         // For tilt: no pivot needed (setView changes orientation only).
