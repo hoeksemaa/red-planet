@@ -218,22 +218,32 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
           scores.rotate === max ? 'rotate' :
           scores.tilt   === max ? 'tilt'   :
                                   'zoom';
+        // Compute shared inputs used by both rotate and tilt pivot selection.
+        const screenCenter = new Cesium.Cartesian2(canvas.width / 2, canvas.height / 2);
+        const nadir  = viewer.scene.globe.ellipsoid.scaleToGeodeticSurface(camera.positionWC) ?? null;
+        const picked = camera.pickEllipsoid(screenCenter) ?? null;
+
         // Rotate: orbit around the screen-center surface point (you spin what you're looking at).
-        // Tilt: orbit around the nadir — the ellipsoid point directly below the camera.
-        //   Using screen-center for tilt is unstable: when already tilted toward the horizon,
-        //   pickEllipsoid(center) returns a point near the horizon (thousands of km away).
-        //   lookAt(far_pivot, range) then arcs the camera around that distant point, placing
-        //   it far outside the scene → LOD tile array overflow → RangeError: Invalid array length.
-        //   The nadir is always directly below the camera, so range stays well-behaved.
+        // Tilt: prefer the look-at point (screen center) as pivot so that starting a second tilt
+        //   after a first preserves look-direction continuity.  With nadir as the pivot the camera
+        //   is directly above it (HPR pitch ≈ -π/2), so the first applyTilt snaps the look
+        //   direction to straight-down even though the camera position doesn't change.  Using the
+        //   look-at point (which is the previous tilt's pivot after a tilt gesture) avoids the
+        //   snap because readTiltPitch/applyTilt agree on the same pivot throughout.
+        //   Fall back to nadir when the camera is near-horizon: if the screen-center pick is
+        //   more than 3× the camera altitude away, the pivot is close to the horizon and
+        //   arcing around it would place the camera far outside the scene → LOD overflow.
         // Zoom: Cesium's SSC manages its own pivot internally.
-        const pivot = gesture === 'rotate'
-          ? camera.pickEllipsoid(new Cesium.Cartesian2(canvas.width / 2, canvas.height / 2)) ?? null
-          : gesture === 'tilt'
-          ? viewer.scene.globe.ellipsoid.scaleToGeodeticSurface(camera.positionWC) ?? null
-          : null;
+        const cameraAlt = nadir ? Cesium.Cartesian3.distance(camera.positionWC, nadir) : Infinity;
+        const tiltPivot = picked && Cesium.Cartesian3.distance(camera.positionWC, picked) <= 3 * cameraAlt
+          ? picked
+          : nadir;
+        const pivot = gesture === 'rotate' ? picked
+                    : gesture === 'tilt'   ? tiltPivot
+                    :                        null;
 
         // Seed tiltPitch for tilt gestures only — rotate stores it but never uses it.
-        // Pass the nadir pivot so readTiltPitch computes HPR position pitch, not viewing pitch.
+        // Pass the tilt pivot so readTiltPitch computes HPR position pitch, not viewing pitch.
         // Clamp in case the camera is somehow outside our pitch bounds at lock-in time.
         // Only call readTiltPitch for tilt (not zoom) — it calls lookAtTransform(ENU) and
         // re-enabling SSC immediately after would crash (camera.position not valid ECEF).
