@@ -6,7 +6,7 @@ const CLASSIFY_THRESHOLD = 15;                        // px accumulated before g
 const TILT_SENSITIVITY   = 0.003;                     // rad/px
 const MIN_PITCH          = -Math.PI / 2;              // straight down
 const MAX_PITCH          = Cesium.Math.toRadians(-15); // near horizon
-const INERTIA_DECAY      = 0.72;                      // decay per frame at 60fps; 0.85 was too floaty
+const INERTIA_DECAY      = 0;                         // disabled — set to ~0.72 to re-enable
 const INERTIA_EPSILON    = 0.0001;                    // rad — stop threshold
 const ANGLE_JUMP_LIMIT   = 0.3;                       // rad — discard atan2 sign-flip noise
 
@@ -48,6 +48,7 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     if (inertiaRaf !== null) {
       cancelAnimationFrame(inertiaRaf);
       inertiaRaf = null;
+      exitLookAt(); // camera.position is in lookAt local frame until we release it
     }
   }
 
@@ -147,7 +148,7 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
       if (max >= CLASSIFY_THRESHOLD) {
         const gesture: 'rotate' | 'tilt' | 'zoom' =
           state.acc.angle >= state.acc.midY && state.acc.angle >= state.acc.dist ? 'rotate' :
-          state.acc.midY  >= state.acc.dist                                      ? 'tilt'   :
+          state.acc.midY  >  state.acc.dist * 2                                  ? 'tilt'   :
                                                                                    'zoom';
         const target: Cesium.Cartesian3 | null = (state as any)._target ?? null;
 
