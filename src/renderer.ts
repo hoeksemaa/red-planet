@@ -79,6 +79,7 @@ export async function init(initialState: AppState): Promise<void> {
   ssc.enableTilt = false;
   ssc.enableLook = false;
   ssc.enableTranslate = false;
+  viewer.camera.constrainedAxis = undefined; // remove polar gimbal lock
 
   // Initial camera position
   viewer.camera.setView({
