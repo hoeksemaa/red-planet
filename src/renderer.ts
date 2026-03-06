@@ -79,6 +79,7 @@ export async function init(initialState: AppState): Promise<void> {
   ssc.maximumZoomDistance = 680_000_000;  // ~8× Hope apoapsis on WGS84 globe
   ssc.inertiaSpin = 0.85;                 // 50% more drag than default 0.9
   ssc.maximumMovementRatio = 0.05;        // cap max rotation speed (default 0.1)
+  ssc.zoomFactor = 10.0;                  // 2× default (5.0) for faster pinch zoom
   ssc.enableTilt = false;
   ssc.enableLook = false;
   ssc.enableTranslate = false;
