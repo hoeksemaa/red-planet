@@ -22,7 +22,8 @@ type GestureState =
       prev: [Touch, Touch];
       target: Cesium.Cartesian3 | null;  // ellipsoid pivot for orbit-rotate (null = off-globe)
       lastVelocity: number;              // rolling average of recentDeltas; used to seed inertia
-      recentDeltas: number[]; };         // last 3 per-frame deltas for smoothed velocity
+      recentDeltas: number[];            // last 3 per-frame deltas for smoothed velocity
+      tiltPitch: number; };              // explicit HPR pitch — never read camera.pitch during tilt
 
 // --- geometry helper ---
 
@@ -68,21 +69,25 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     camera.lookAt(pivot, new Cesium.HeadingPitchRange(camera.heading - dAngle, camera.pitch, range));
   }
 
-  function applyTilt(dMidY: number, target: Cesium.Cartesian3 | null) {
+  function applyTilt(pitch: number, target: Cesium.Cartesian3 | null) {
     const pivot = target ?? camera.positionWC;
     const range = Cesium.Cartesian3.distance(camera.positionWC, pivot);
+    // lookAtTransform without offset re-expresses camera orientation in ENU frame so
+    // camera.heading is geographic before we pass it to HeadingPitchRange.
     camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(pivot));
-    // fingers up (dMidY < 0) → tilt toward horizon (pitch increases toward 0)
-    const newPitch = Cesium.Math.clamp(
-      camera.pitch - dMidY * TILT_SENSITIVITY,
-      MIN_PITCH,
-      MAX_PITCH,
-    );
-    camera.lookAt(pivot, new Cesium.HeadingPitchRange(camera.heading, newPitch, range));
+    camera.lookAt(pivot, new Cesium.HeadingPitchRange(camera.heading, pitch, range));
   }
 
-  function startInertia(gesture: 'rotate' | 'tilt', velocity: number, target: Cesium.Cartesian3 | null) {
+  // Read the current tilt pitch in HPR terms (elevation of camera above pivot's horizon).
+  // Must be called after lookAtTransform(ENU at pivot) so camera.pitch is geographic.
+  function readTiltPitch(pivot: Cesium.Cartesian3): number {
+    camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(pivot));
+    return camera.pitch;
+  }
+
+  function startInertia(gesture: 'rotate' | 'tilt', velocity: number, target: Cesium.Cartesian3 | null, tiltPitch: number) {
     let v = velocity;
+    let pitch = tiltPitch;
     function tick() {
       v *= INERTIA_DECAY;
       if (Math.abs(v) < INERTIA_EPSILON) {
@@ -93,7 +98,8 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
       if (gesture === 'rotate') {
         applyRotate(target, v);
       } else {
-        applyTilt(v, target);
+        pitch = Cesium.Math.clamp(pitch - v * TILT_SENSITIVITY, MIN_PITCH, MAX_PITCH);
+        applyTilt(pitch, target);
       }
       inertiaRaf = requestAnimationFrame(tick);
     }
@@ -159,7 +165,12 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
                                                                                    'zoom';
         const target: Cesium.Cartesian3 | null = (state as any)._target ?? null;
 
-        state = { phase: 'locked', gesture, prev: [t1, t2], target, lastVelocity: 0, recentDeltas: [] };
+        // Seed tiltPitch from current camera state in the ENU frame so the first
+        // applyTilt call doesn't snap the camera to a different position.
+        const pivot = target ?? camera.positionWC;
+        const tiltPitch = readTiltPitch(pivot);
+
+        state = { phase: 'locked', gesture, prev: [t1, t2], target, lastVelocity: 0, recentDeltas: [], tiltPitch };
 
         if (gesture === 'zoom') {
           // hand zoom back to Cesium — re-enable SSC which we killed on touchstart
@@ -182,7 +193,13 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
         state.recentDeltas.push(dMidY);
         if (state.recentDeltas.length > 3) state.recentDeltas.shift();
         state.lastVelocity = state.recentDeltas.reduce((s, v) => s + v, 0) / state.recentDeltas.length;
-        applyTilt(dMidY, state.target);
+        // fingers up (dMidY < 0) → tilt toward horizon (pitch increases toward 0)
+        state.tiltPitch = Cesium.Math.clamp(
+          state.tiltPitch - dMidY * TILT_SENSITIVITY,
+          MIN_PITCH,
+          MAX_PITCH,
+        );
+        applyTilt(state.tiltPitch, state.target);
       }
       // zoom: do nothing — Cesium handles it
       state.prev = [t1, t2];
@@ -193,8 +210,8 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     ssc.enableInputs = true;
 
     if (state.phase === 'locked' && state.gesture !== 'zoom' && Math.abs(state.lastVelocity) > INERTIA_EPSILON) {
-      const { gesture, target, lastVelocity } = state;
-      startInertia(gesture, lastVelocity, target);
+      const { gesture, target, lastVelocity, tiltPitch } = state;
+      startInertia(gesture, lastVelocity, target, tiltPitch);
     } else {
       exitLookAt();
     }
