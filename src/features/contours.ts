@@ -6,8 +6,8 @@ import { EXAGGERATION_SCALE, CONTOURS_DATA_URL } from '../constants';
 function elevationToColor(elev: number): Cesium.Color {
   const raw = Math.max(0, Math.min(1, (elev + 8000) / 29000));
   const t = Math.pow(raw, 0.6);
-  const hue = 0.75 * Math.pow(1 - t, 1.5);
-  const lightness = 0.4 + 0.15 * t;
+  const hue = 0.83 * (1 - t);
+  const lightness = 0.22 + 0.33 * Math.pow(t, 1.8);
   return Cesium.Color.fromHsl(hue, 1.0, lightness);
 }
 
