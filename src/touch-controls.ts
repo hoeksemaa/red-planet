@@ -100,12 +100,24 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     exitLookAt();
   }
 
-  // Read current pitch in geographic (ENU) terms for seeding tiltPitch at lock-in.
-  function readTiltPitch(): number {
-    camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(camera.positionWC));
-    const pitch = camera.pitch;
-    // Bug fix (4): lookAtTransform is a side-effect — restore IDENTITY so this
-    // read-only helper doesn't leave the camera in a non-IDENTITY frame.
+  // Compute the HPR pitch of the camera's current POSITION relative to a nadir pivot.
+  // This is NOT camera.pitch (viewing direction) — those are two different things.
+  //
+  // applyTilt uses camera.lookAt(nadir, HeadingPitchRange(heading, pitch, range)), where
+  // HPR.pitch describes WHERE the camera sits relative to the nadir, not where it's looking.
+  // Seeding tiltPitch with camera.pitch instead would snap the camera on the first applyTilt:
+  // camera above nadir = HPR.pitch -π/2, but camera looking 30° down = camera.pitch -30°,
+  // so passing -30° as HPR.pitch teleports the camera from directly-above to a tilted orbit.
+  //
+  // Formula: in ENU at nadir, camera is at local offset (x, y, z). Cesium's pitch convention
+  // is 0 = horizontal, -π/2 = above (positive z), so pitch = atan2(-z, horizontal).
+  function readTiltPitch(nadir: Cesium.Cartesian3): number {
+    camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(nadir));
+    const pos = camera.position; // local ENU offset from nadir
+    const horizontal = Math.hypot(pos.x, pos.y);
+    const pitch = Math.atan2(-pos.z, horizontal);
+    // lookAtTransform is a side-effect — restore IDENTITY so this helper doesn't
+    // leave the camera in a non-IDENTITY frame (bug fix 4).
     exitLookAt();
     return pitch;
   }
@@ -198,15 +210,13 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
           ? viewer.scene.globe.ellipsoid.scaleToGeodeticSurface(camera.positionWC) ?? null
           : null;
 
-        // readTiltPitch() calls lookAtTransform(ENU), which moves the camera out of the
-        // IDENTITY frame. Only do this for tilt/rotate — if we called it for zoom and
-        // then immediately re-enabled SSC, Cesium's SSC tick would read camera.position
-        // in local ENU space, pass it to cartesianToCartographic, get undefined (the point
-        // is near-origin, inside the ellipsoid), and crash on .height.
-        // Clamp at seed time so the initial pitch is always within bounds, regardless
-        // of what Cesium's SSC may have set before this gesture started.
-        const tiltPitch = gesture !== 'zoom'
-          ? Cesium.Math.clamp(readTiltPitch(), MIN_PITCH, MAX_PITCH)
+        // Seed tiltPitch for tilt gestures only — rotate stores it but never uses it.
+        // Pass the nadir pivot so readTiltPitch computes HPR position pitch, not viewing pitch.
+        // Clamp in case the camera is somehow outside our pitch bounds at lock-in time.
+        // Only call readTiltPitch for tilt (not zoom) — it calls lookAtTransform(ENU) and
+        // re-enabling SSC immediately after would crash (camera.position not valid ECEF).
+        const tiltPitch = gesture === 'tilt' && pivot !== null
+          ? Cesium.Math.clamp(readTiltPitch(pivot), MIN_PITCH, MAX_PITCH)
           : MIN_PITCH;
 
         state = { phase: 'locked', gesture, prev: [t1, t2], target: pivot, lastVelocity: 0, recentDeltas: [], tiltPitch };
