@@ -18,6 +18,15 @@ const primitives = new Map<number, Cesium.Primitive>();
 let viewerRef: Cesium.Viewer | null = null;
 let initialized = false;
 let pendingState: AppState | null = null;
+let cachedGeojson: ContourGeoJSON | null = null;
+let geojsonPromise: Promise<ContourGeoJSON> | null = null;
+
+// Call this early (before init) to start the download immediately.
+export function prefetch(): void {
+  if (!geojsonPromise) {
+    geojsonPromise = fetch(CONTOURS_DATA_URL).then((r) => r.json());
+  }
+}
 
 function buildPrimitive(geojson: ContourGeoJSON, exaggeration: number): Cesium.Primitive {
   const allInstances: Cesium.GeometryInstance[] = [];
@@ -53,14 +62,16 @@ function buildPrimitive(geojson: ContourGeoJSON, exaggeration: number): Cesium.P
 export const contours: Feature = {
   init(viewer: Cesium.Viewer) {
     viewerRef = viewer;
-    fetch(CONTOURS_DATA_URL)
-      .then((r) => r.json())
+    prefetch();
+    geojsonPromise!
       .then((geojson: ContourGeoJSON) => {
-        for (const scale of [1, EXAGGERATION_SCALE]) {
-          const primitive = buildPrimitive(geojson, scale);
-          viewer.scene.primitives.add(primitive);
-          primitives.set(scale, primitive);
-        }
+        cachedGeojson = geojson;
+        // Only build the primitive for the currently-active exaggeration.
+        // The other is built lazily in apply() if the user ever switches.
+        const activeScale = pendingState?.exaggeration ?? EXAGGERATION_SCALE;
+        const primitive = buildPrimitive(geojson, activeScale);
+        viewer.scene.primitives.add(primitive);
+        primitives.set(activeScale, primitive);
         initialized = true;
         if (pendingState) contours.apply(pendingState);
       })
@@ -71,9 +82,16 @@ export const contours: Feature = {
     pendingState = state;
     if (!initialized) return;
 
+    // Build the primitive for this exaggeration level on demand if missing.
+    if (viewerRef && cachedGeojson && !primitives.has(state.exaggeration)) {
+      const primitive = buildPrimitive(cachedGeojson, state.exaggeration);
+      viewerRef.scene.primitives.add(primitive);
+      primitives.set(state.exaggeration, primitive);
+    }
+
     const visible = state.layers.contours;
     for (const [scale, primitive] of primitives) {
-      primitive.show = visible && state.exaggeration === scale;
+      primitive.show = visible && scale === state.exaggeration;
     }
   },
 

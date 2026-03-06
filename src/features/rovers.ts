@@ -258,6 +258,7 @@ export const ROVER_META: Record<string, { description: string; imageUrl: string 
 let traversePrimitive: Cesium.GroundPolylinePrimitive;
 let pinCollection: Cesium.BillboardCollection;
 let viewerRef: Cesium.Viewer | null = null;
+let cachedState: AppState | null = null;
 let pinData: Array<{ pin: Cesium.Billboard } & RoverPinEntry> = [];
 let photoData: Array<{ pin: Cesium.Billboard } & RoverPhotoEntry> = [];
 let roverSites: Array<{ name: string; id: string; lon: number; lat: number }> = [];
@@ -272,6 +273,7 @@ export const rovers: Feature = {
       fetch(ROVER_IMAGES_URL).then((r) => r.json()),
     ]).then(([traverseGeo, imagesGeo]) => {
       pinCollection = viewer.scene.primitives.add(new Cesium.BillboardCollection({ scene: viewer.scene }));
+      if (cachedState) pinCollection.show = cachedState.layers.rovers;
       pinData = [];
 
       // Traverse polylines — all rovers batched into one GroundPolylinePrimitive
@@ -290,6 +292,7 @@ export const rovers: Feature = {
         }));
       }
       traversePrimitive = viewer.scene.primitives.add(new Cesium.GroundPolylinePrimitive({
+        show: cachedState ? cachedState.layers.rovers : true,
         geometryInstances: traverseInstances,
         appearance: new Cesium.PolylineColorAppearance(),
         asynchronous: true,
@@ -349,6 +352,7 @@ export const rovers: Feature = {
   },
 
   apply(state: AppState) {
+    cachedState = state;
     if (traversePrimitive) traversePrimitive.show = state.layers.rovers;
     if (pinCollection) pinCollection.show = state.layers.rovers;
   },

@@ -5,7 +5,7 @@ import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 import * as renderer from './renderer';
 import { imagery } from './features/imagery';
-import { contours } from './features/contours';
+import { contours, prefetch as prefetchContours } from './features/contours';
 import { labels, searchLabels } from './features/labels';
 import { rovers, searchRovers } from './features/rovers';
 import { satellites, searchSatellites, type SatelliteEntry } from './features/satellites';
@@ -26,6 +26,9 @@ import satelliteIcon   from './assets/icons/satellite.png';
 
 inject();
 injectSpeedInsights();
+
+// Kick off contours download immediately — before viewer init — so it's ready sooner.
+prefetchContours();
 
 const state = { ...DEFAULT_STATE };
 

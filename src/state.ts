@@ -15,7 +15,7 @@ export const DEFAULT_STATE: AppState = {
   exaggeration: 100,
   imagery: 'terraformed',
   layers: {
-    contours: false,
+    contours: true,
     graticule: false,
     labels: false,
     rovers: false,

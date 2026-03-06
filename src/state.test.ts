@@ -20,12 +20,12 @@ describe('DEFAULT_STATE', () => {
       expect(DEFAULT_STATE.layers.labels).toBe(true);
     });
 
-    it('rovers are on by default', () => {
-      expect(DEFAULT_STATE.layers.rovers).toBe(true);
+    it('rovers are off by default', () => {
+      expect(DEFAULT_STATE.layers.rovers).toBe(false);
     });
 
-    it('contours are off by default (expensive, opt-in)', () => {
-      expect(DEFAULT_STATE.layers.contours).toBe(false);
+    it('contours are on by default', () => {
+      expect(DEFAULT_STATE.layers.contours).toBe(true);
     });
 
     it('graticule is off by default', () => {
