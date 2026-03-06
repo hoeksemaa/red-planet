@@ -6,6 +6,7 @@ import { createTerrainProvider } from './terrain';
 import { LayerRegistry } from './features/registry';
 import { INITIAL_CAMERA_HEIGHT } from './constants';
 import { mark, report } from './perf';
+import { initTouchControls } from './touch-controls';
 
 let viewer: Cesium.Viewer;
 let lastState: AppState;
@@ -76,10 +77,13 @@ export async function init(initialState: AppState): Promise<void> {
   const ssc = viewer.scene.screenSpaceCameraController;
   ssc.minimumZoomDistance = 25_000;       // ~25 km — rover traverse scale
   ssc.maximumZoomDistance = 680_000_000;  // ~8× Hope apoapsis on WGS84 globe
+  ssc.inertiaSpin = 0.85;                 // 50% more drag than default 0.9
+  ssc.maximumMovementRatio = 0.05;        // cap max rotation speed (default 0.1)
   ssc.enableTilt = false;
   ssc.enableLook = false;
   ssc.enableTranslate = false;
   viewer.camera.constrainedAxis = undefined; // remove polar gimbal lock
+  initTouchControls(viewer);
 
   // Initial camera position
   viewer.camera.setView({
