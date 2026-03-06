@@ -23,6 +23,7 @@
   "homepage": "https://github.com/hoeksemaa/google-mars#readme",
   "dependencies": {
     "@vercel/analytics": "^1.6.1",
+    "@vercel/speed-insights": "^1.3.1",
     "cesium": "^1.138.0",
     "qrcode": "^1.5.4"
   },
