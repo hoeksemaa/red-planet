@@ -136,7 +136,7 @@ export function getViewer(): Cesium.Viewer {
 
 export function flyTo(lon: number, lat: number, altitude: number): void {
   viewer.camera.flyTo({
-    destination: Cesium.Cartesian3.fromDegrees(lon, lat, altitude),
+    destination: Cesium.Cartesian3.fromDegrees(lon, lat, altitude * 2),
     duration: 1.5,
   });
 }

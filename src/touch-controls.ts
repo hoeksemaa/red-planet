@@ -69,19 +69,18 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     camera.lookAt(pivot, new Cesium.HeadingPitchRange(camera.heading - dAngle, camera.pitch, range));
   }
 
-  function applyTilt(pitch: number, target: Cesium.Cartesian3 | null) {
-    const pivot = target ?? camera.positionWC;
-    const range = Cesium.Cartesian3.distance(camera.positionWC, pivot);
-    // lookAtTransform without offset re-expresses camera orientation in ENU frame so
-    // camera.heading is geographic before we pass it to HeadingPitchRange.
-    camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(pivot));
-    camera.lookAt(pivot, new Cesium.HeadingPitchRange(camera.heading, pitch, range));
+  function applyTilt(pitch: number) {
+    // Use setView (orientation-only) rather than lookAt so the camera position stays
+    // fixed and is never forced to look at a pivot — that's what caused the snap.
+    // lookAtTransform(ENU at positionWC) is needed first so camera.heading is geographic;
+    // in the IDENTITY frame heading is ECEF-based, not north-referenced.
+    camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(camera.positionWC));
+    camera.setView({ orientation: { heading: camera.heading, pitch, roll: 0 } });
   }
 
-  // Read the current tilt pitch in HPR terms (elevation of camera above pivot's horizon).
-  // Must be called after lookAtTransform(ENU at pivot) so camera.pitch is geographic.
-  function readTiltPitch(pivot: Cesium.Cartesian3): number {
-    camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(pivot));
+  // Read current pitch in geographic (ENU) terms for seeding tiltPitch at lock-in.
+  function readTiltPitch(): number {
+    camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(camera.positionWC));
     return camera.pitch;
   }
 
@@ -99,7 +98,7 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
         applyRotate(target, v);
       } else {
         pitch = Cesium.Math.clamp(pitch - v * TILT_SENSITIVITY, MIN_PITCH, MAX_PITCH);
-        applyTilt(pitch, target);
+        applyTilt(pitch);
       }
       inertiaRaf = requestAnimationFrame(tick);
     }
@@ -118,14 +117,6 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
 
     const t1 = e.touches[0], t2 = e.touches[1];
 
-    // raycast midpoint to ellipsoid for orbit pivot
-    const midX = (t1.clientX + t2.clientX) / 2;
-    const midY = (t1.clientY + t2.clientY) / 2;
-    const rect  = canvas.getBoundingClientRect();
-    const cx    = (midX - rect.left) * (canvas.width  / rect.width);
-    const cy    = (midY - rect.top)  * (canvas.height / rect.height);
-    const target = camera.pickEllipsoid(new Cesium.Cartesian2(cx, cy)) ?? null;
-
     // disable SSC immediately so Cesium doesn't process these touch events
     // during recognition — prevents camera snap when we take over at lock-in
     ssc.enableInputs = false;
@@ -135,9 +126,6 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
       prev:  [t1, t2],
       acc:   { angle: 0, midY: 0, dist: 0 },
     };
-
-    // stash target on state so touchmove can access it after lock
-    (state as any)._target = target;
   }, { passive: true });
 
   canvas.addEventListener('touchmove', (e: TouchEvent) => {
@@ -163,14 +151,16 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
           state.acc.angle >= state.acc.midY && state.acc.angle >= state.acc.dist ? 'rotate' :
           state.acc.midY  >  state.acc.dist * 2                                  ? 'tilt'   :
                                                                                    'zoom';
-        const target: Cesium.Cartesian3 | null = (state as any)._target ?? null;
+        // For rotate: pivot at screen center — the camera is already looking there,
+        // so the first lookAt call won't snap the view to an unexpected point.
+        // For tilt: no pivot needed (setView changes orientation only).
+        const rotatePivot = gesture === 'rotate'
+          ? camera.pickEllipsoid(new Cesium.Cartesian2(canvas.width / 2, canvas.height / 2)) ?? null
+          : null;
 
-        // Seed tiltPitch from current camera state in the ENU frame so the first
-        // applyTilt call doesn't snap the camera to a different position.
-        const pivot = target ?? camera.positionWC;
-        const tiltPitch = readTiltPitch(pivot);
+        const tiltPitch = readTiltPitch();
 
-        state = { phase: 'locked', gesture, prev: [t1, t2], target, lastVelocity: 0, recentDeltas: [], tiltPitch };
+        state = { phase: 'locked', gesture, prev: [t1, t2], target: rotatePivot, lastVelocity: 0, recentDeltas: [], tiltPitch };
 
         if (gesture === 'zoom') {
           // hand zoom back to Cesium — re-enable SSC which we killed on touchstart
@@ -199,7 +189,7 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
           MIN_PITCH,
           MAX_PITCH,
         );
-        applyTilt(state.tiltPitch, state.target);
+        applyTilt(state.tiltPitch);
       }
       // zoom: do nothing — Cesium handles it
       state.prev = [t1, t2];
