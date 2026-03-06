@@ -6,7 +6,7 @@ const CLASSIFY_THRESHOLD = 15;                        // px accumulated before g
 const TILT_SENSITIVITY   = 0.003;                     // rad/px
 const MIN_PITCH          = -Math.PI / 2;              // straight down
 const MAX_PITCH          = Cesium.Math.toRadians(-15); // near horizon
-const INERTIA_DECAY      = 0.85;                      // matches ssc.inertiaSpin
+const INERTIA_DECAY      = 0.72;                      // decay per frame at 60fps; 0.85 was too floaty
 const INERTIA_EPSILON    = 0.0001;                    // rad — stop threshold
 const ANGLE_JUMP_LIMIT   = 0.3;                       // rad — discard atan2 sign-flip noise
 
@@ -21,7 +21,8 @@ type GestureState =
       gesture: 'rotate' | 'tilt' | 'zoom';
       prev: [Touch, Touch];
       target: Cesium.Cartesian3 | null;  // ellipsoid pivot for orbit-rotate (null = off-globe)
-      lastVelocity: number; };           // captured on each frame for inertia
+      lastVelocity: number;              // rolling average of recentDeltas; used to seed inertia
+      recentDeltas: number[]; };         // last 3 per-frame deltas for smoothed velocity
 
 // --- geometry helper ---
 
@@ -60,17 +61,16 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     camera.lookAt(pivot, new Cesium.HeadingPitchRange(camera.heading + dAngle, camera.pitch, range));
   }
 
-  function applyTilt(dMidY: number) {
+  function applyTilt(dMidY: number, target: Cesium.Cartesian3 | null) {
+    const pivot = target ?? camera.positionWC;
+    const range = Cesium.Cartesian3.distance(camera.position, pivot);
     // fingers up (dMidY < 0) → tilt toward horizon (pitch increases toward 0)
     const newPitch = Cesium.Math.clamp(
       camera.pitch - dMidY * TILT_SENSITIVITY,
       MIN_PITCH,
       MAX_PITCH,
     );
-    camera.setView({
-      destination: camera.position.clone(),
-      orientation: { heading: camera.heading, pitch: newPitch, roll: camera.roll },
-    });
+    camera.lookAt(pivot, new Cesium.HeadingPitchRange(camera.heading, newPitch, range));
   }
 
   function startInertia(gesture: 'rotate' | 'tilt', velocity: number, target: Cesium.Cartesian3 | null) {
@@ -78,14 +78,14 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     function tick() {
       v *= INERTIA_DECAY;
       if (Math.abs(v) < INERTIA_EPSILON) {
-        if (gesture === 'rotate') exitLookAt();
+        exitLookAt();
         inertiaRaf = null;
         return;
       }
       if (gesture === 'rotate') {
         applyRotate(target, v);
       } else {
-        applyTilt(v);
+        applyTilt(v, target);
       }
       inertiaRaf = requestAnimationFrame(tick);
     }
@@ -151,7 +151,7 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
                                                                                    'zoom';
         const target: Cesium.Cartesian3 | null = (state as any)._target ?? null;
 
-        state = { phase: 'locked', gesture, prev: [t1, t2], target, lastVelocity: 0 };
+        state = { phase: 'locked', gesture, prev: [t1, t2], target, lastVelocity: 0, recentDeltas: [] };
 
         if (gesture === 'zoom') {
           // hand zoom back to Cesium — re-enable SSC which we killed on touchstart
@@ -166,11 +166,15 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     // locked phase
     if (state.phase === 'locked') {
       if (state.gesture === 'rotate') {
-        state.lastVelocity = dAngle;
-        applyRotate(state.target, dAngle);
+        state.recentDeltas.push(dAngle);
+        if (state.recentDeltas.length > 3) state.recentDeltas.shift();
+        state.lastVelocity = state.recentDeltas.reduce((s, v) => s + v, 0) / state.recentDeltas.length;
+        applyRotate(state.target, dAngle * 0.5);
       } else if (state.gesture === 'tilt') {
-        state.lastVelocity = dMidY;
-        applyTilt(dMidY);
+        state.recentDeltas.push(dMidY);
+        if (state.recentDeltas.length > 3) state.recentDeltas.shift();
+        state.lastVelocity = state.recentDeltas.reduce((s, v) => s + v, 0) / state.recentDeltas.length;
+        applyTilt(dMidY, state.target);
       }
       // zoom: do nothing — Cesium handles it
       state.prev = [t1, t2];
@@ -182,8 +186,6 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
 
     if (state.phase === 'locked' && state.gesture !== 'zoom' && Math.abs(state.lastVelocity) > INERTIA_EPSILON) {
       const { gesture, target, lastVelocity } = state;
-      // exit lookAt before inertia only if tilt (inertia will re-enter for rotate)
-      if (gesture === 'tilt') exitLookAt();
       startInertia(gesture, lastVelocity, target);
     } else {
       exitLookAt();
