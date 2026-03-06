@@ -31,6 +31,11 @@ vi.mock('cesium', () => ({
   // IDENTITY is passed verbatim to camera.lookAtTransform on exit — use a
   // sentinel string so tests can assert the right value without importing Cesium
   Matrix4: { IDENTITY: '__IDENTITY__' },
+  // eastNorthUpToFixedFrame is called before each lookAt to ensure camera.heading
+  // is read in the ENU frame (not raw ECEF) — return a sentinel for assertions
+  Transforms: {
+    eastNorthUpToFixedFrame: vi.fn().mockReturnValue('__ENU__'),
+  },
 }));
 
 import * as Cesium from 'cesium'; // resolves to the vi.mock above

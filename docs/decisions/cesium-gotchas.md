@@ -68,6 +68,36 @@ const range = Cartesian3.distance(camera.position, pivot);
 const range = Cartesian3.distance(camera.positionWC, pivot);
 ```
 
+## `camera.heading` is ECEF-based in the IDENTITY frame, not geographic
+
+After `camera.lookAtTransform(Matrix4.IDENTITY)` (or at app startup), the camera is
+in the raw ECEF world frame.  `camera.heading` is then computed as:
+
+```
+atan2(dir_ecef.y, dir_ecef.x) - π/2  →  2π - zeroToTwoPi(…)
+```
+
+where `dir_ecef.{x,y}` are the **ECEF world axes** — not geographic East/North.
+Passing this value as the heading in `HeadingPitchRange` (which expects ENU heading)
+causes the camera to snap to a completely wrong position on the first `lookAt` call
+of each gesture.
+
+**Fix:** call `camera.lookAtTransform(Transforms.eastNorthUpToFixedFrame(pivot))`
+**without an offset** before reading `camera.heading` or `camera.pitch`.
+`_setTransform` converts the camera's direction/up vectors to the new frame without
+moving the camera, so both properties are then correctly geographic.  The subsequent
+`camera.lookAt(pivot, hpr)` call re-applies the same ENU transform internally, so
+there's no double-move.
+
+```ts
+// wrong — camera.heading is in ECEF axes after exitLookAt()
+camera.lookAt(pivot, new HeadingPitchRange(camera.heading - dAngle, camera.pitch, range));
+
+// correct — heading/pitch read in ENU frame
+camera.lookAtTransform(Transforms.eastNorthUpToFixedFrame(pivot));
+camera.lookAt(pivot, new HeadingPitchRange(camera.heading - dAngle, camera.pitch, range));
+```
+
 ## Promise.all in feature init is fragile
 - One feature throwing kills all features silently
 - Globe + imagery still render (set up before initAll), so app looks "mostly working"
