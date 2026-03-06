@@ -12,13 +12,13 @@ export interface AppState {
 }
 
 export const DEFAULT_STATE: AppState = {
-  exaggeration: 1, // perf: start at 1x so terrain swap-in (PERF-4) isn't jarring
+  exaggeration: 100,
   imagery: 'terraformed',
   layers: {
-    contours: false,
+    contours: true,
     graticule: false,
-    labels: true,
-    rovers: true,
+    labels: false,
+    rovers: false,
     satellites: false,
   },
 };
