@@ -247,7 +247,7 @@ describe('rotate gesture', () => {
     // dAngle = atan2(34,96) − atan2(17,98)
     const classifyAngle = Math.atan2(17, 98);
     const applyAngle    = Math.atan2(34, 96);
-    const expectedHeading = camera.heading + (applyAngle - classifyAngle) * 0.5;
+    const expectedHeading = camera.heading - (applyAngle - classifyAngle) * 0.5;
 
     const hpr = (camera.lookAt.mock.calls[0] as any[])[1];
     expect(hpr.heading).toBeCloseTo(expectedHeading, 5);
