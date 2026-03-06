@@ -59,12 +59,19 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
   function applyRotate(target: Cesium.Cartesian3 | null, dAngle: number) {
     const pivot = target ?? camera.positionWC;
     const range = Cesium.Cartesian3.distance(camera.positionWC, pivot);
+    // Switch to ENU frame at pivot before reading heading/pitch.  When the camera
+    // is in the IDENTITY (ECEF) frame — as it is after exitLookAt — camera.heading
+    // is computed from raw ECEF axes (not geographic North/East), so passing it
+    // directly to HeadingPitchRange produces a snap.  lookAtTransform without an
+    // offset converts the camera's orientation to the new frame without moving it.
+    camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(pivot));
     camera.lookAt(pivot, new Cesium.HeadingPitchRange(camera.heading - dAngle, camera.pitch, range));
   }
 
   function applyTilt(dMidY: number, target: Cesium.Cartesian3 | null) {
     const pivot = target ?? camera.positionWC;
     const range = Cesium.Cartesian3.distance(camera.positionWC, pivot);
+    camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(pivot));
     // fingers up (dMidY < 0) → tilt toward horizon (pitch increases toward 0)
     const newPitch = Cesium.Math.clamp(
       camera.pitch - dMidY * TILT_SENSITIVITY,
