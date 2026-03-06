@@ -2,6 +2,7 @@ import { mark } from './perf';
 mark('script-start');
 import './App.css';
 import { inject } from '@vercel/analytics';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 import * as renderer from './renderer';
 import { imagery } from './features/imagery';
 import { contours } from './features/contours';
@@ -24,6 +25,7 @@ import roverIcon       from './assets/icons/rover.png';
 import satelliteIcon   from './assets/icons/satellite.png';
 
 inject();
+injectSpeedInsights();
 
 const state = { ...DEFAULT_STATE };
 
