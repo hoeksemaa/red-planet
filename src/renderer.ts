@@ -6,7 +6,7 @@ import { createTerrainProvider } from './terrain';
 import { LayerRegistry } from './features/registry';
 import { INITIAL_CAMERA_HEIGHT } from './constants';
 import { mark, report } from './perf';
-import { initTouchControls } from './touch-controls';
+// import { initTouchControls } from './touch-controls';
 
 let viewer: Cesium.Viewer;
 let lastState: AppState;
@@ -83,7 +83,7 @@ export async function init(initialState: AppState): Promise<void> {
   ssc.enableLook = false;
   ssc.enableTranslate = false;
   viewer.camera.constrainedAxis = undefined; // remove polar gimbal lock
-  initTouchControls(viewer);
+  // initTouchControls(viewer); // commented out — testing Cesium native two-finger controls
 
   // Initial camera position
   viewer.camera.setView({
