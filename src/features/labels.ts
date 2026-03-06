@@ -43,7 +43,13 @@ function labelFade(diameterKm: number): Cesium.NearFarScalar {
 export const labels: Feature = {
   init(viewer: Cesium.Viewer) {
     // Fire-and-forget: labels load after init, so they're off the critical path.
-    fetch(NOMENCLATURE_DATA_URL).then((r) => r.json()).then((nomenclatureGeoJSON) => {
+    // Wait for Geist Mono before building the glyph atlas — without this, Cesium
+    // renders glyphs against a fallback font before the web font resolves, and on
+    // some browsers/devices those glyphs are empty or invisible.
+    Promise.all([
+      fetch(NOMENCLATURE_DATA_URL).then((r) => r.json()),
+      document.fonts.load('600 14px "Geist Mono"'),
+    ]).then(([nomenclatureGeoJSON]) => {
     labelCollection = viewer.scene.primitives.add(new Cesium.LabelCollection({ scene: viewer.scene }));
     labelData = [];
 
