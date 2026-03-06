@@ -158,12 +158,19 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
           ? camera.pickEllipsoid(new Cesium.Cartesian2(canvas.width / 2, canvas.height / 2)) ?? null
           : null;
 
-        const tiltPitch = readTiltPitch();
+        // readTiltPitch() calls lookAtTransform(ENU), which moves the camera out of the
+        // IDENTITY frame. Only do this for tilt/rotate — if we called it for zoom and
+        // then immediately re-enabled SSC, Cesium's SSC tick would read camera.position
+        // in local ENU space, pass it to cartesianToCartographic, get undefined (the point
+        // is near-origin, inside the ellipsoid), and crash on .height.
+        const tiltPitch = gesture !== 'zoom' ? readTiltPitch() : MIN_PITCH;
 
         state = { phase: 'locked', gesture, prev: [t1, t2], target: rotatePivot, lastVelocity: 0, recentDeltas: [], tiltPitch };
 
         if (gesture === 'zoom') {
-          // hand zoom back to Cesium — re-enable SSC which we killed on touchstart
+          // Reset to IDENTITY frame before handing back to Cesium so camera.position
+          // is in valid ECEF space when SSC's update tick runs.
+          exitLookAt();
           ssc.enableInputs = true;
         }
       } else {
@@ -197,16 +204,23 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
   }, { passive: true });
 
   function onTouchEnd() {
-    ssc.enableInputs = true;
-
     if (state.phase === 'locked' && state.gesture !== 'zoom' && Math.abs(state.lastVelocity) > INERTIA_EPSILON) {
       const { gesture, target, lastVelocity, tiltPitch } = state;
+      // Camera stays in lookAt frame during inertia; exitLookAt() is called
+      // inside the inertia tick once velocity decays. Re-enabling SSC here is safe
+      // because there are no active touch events — the SSC zoom path that reads
+      // camera.position as ECEF is only triggered by live pinch gestures.
       startInertia(gesture, lastVelocity, target, tiltPitch);
     } else {
+      // Reset the lookAt transform BEFORE re-enabling SSC. If SSC's per-frame
+      // update tick fires while the camera is in a non-IDENTITY (ENU local) frame,
+      // camera.position is not a valid ECEF point — cartesianToCartographic returns
+      // undefined and the subsequent .height access crashes.
       exitLookAt();
     }
 
     state = { phase: 'idle' };
+    ssc.enableInputs = true;
   }
 
   canvas.addEventListener('touchend',    onTouchEnd, { passive: true });
