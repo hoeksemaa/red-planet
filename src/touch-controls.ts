@@ -67,6 +67,12 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     // offset converts the camera's orientation to the new frame without moving it.
     camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(pivot));
     camera.lookAt(pivot, new Cesium.HeadingPitchRange(camera.heading - dAngle, camera.pitch, range));
+    // Bug fix (3): camera.lookAt leaves the camera in a local lookAt frame.
+    // SSC.update() runs every render frame regardless of enableInputs and reads
+    // camera.position as ECEF — in a local frame that vector is near-origin
+    // (inside the ellipsoid), so cartesianToCartographic returns undefined → crash.
+    // Restore IDENTITY immediately; the next applyRotate call re-establishes ENU.
+    exitLookAt();
   }
 
   function applyTilt(pitch: number) {
@@ -76,12 +82,19 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
     // in the IDENTITY frame heading is ECEF-based, not north-referenced.
     camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(camera.positionWC));
     camera.setView({ orientation: { heading: camera.heading, pitch, roll: 0 } });
+    // Bug fix (3): setView leaves the camera in the ENU frame set above.
+    // Restore IDENTITY so SSC.update() never sees a local-frame camera.position.
+    exitLookAt();
   }
 
   // Read current pitch in geographic (ENU) terms for seeding tiltPitch at lock-in.
   function readTiltPitch(): number {
     camera.lookAtTransform(Cesium.Transforms.eastNorthUpToFixedFrame(camera.positionWC));
-    return camera.pitch;
+    const pitch = camera.pitch;
+    // Bug fix (4): lookAtTransform is a side-effect — restore IDENTITY so this
+    // read-only helper doesn't leave the camera in a non-IDENTITY frame.
+    exitLookAt();
+    return pitch;
   }
 
   function startInertia(gesture: 'rotate' | 'tilt', velocity: number, target: Cesium.Cartesian3 | null, tiltPitch: number) {
@@ -204,19 +217,25 @@ export function initTouchControls(viewer: Cesium.Viewer): void {
   }, { passive: true });
 
   function onTouchEnd() {
-    if (state.phase === 'locked' && state.gesture !== 'zoom' && Math.abs(state.lastVelocity) > INERTIA_EPSILON) {
+    // Bug fix (1 & 2): always restore IDENTITY before re-enabling SSC.
+    // Previously the inertia branch skipped exitLookAt(), leaving the camera in
+    // ENU frame while SSC was re-enabled.  Cesium's SSC.update() runs every render
+    // frame regardless of enableInputs; with camera.position in local ENU space,
+    // cartesianToCartographic returns undefined and .height crashes.
+    //
+    // applyTilt/applyRotate now call exitLookAt() themselves (bug fix 3), so the
+    // camera is already in IDENTITY here — this call is a belt-and-suspenders guard.
+    //
+    // When inertia is enabled (INERTIA_DECAY > 0), each inertia tick re-enters ENU
+    // via applyRotate/applyTilt and exits it again, so SSC stays safe between ticks.
+    exitLookAt();
+
+    if (INERTIA_DECAY > 0 &&
+        state.phase === 'locked' &&
+        state.gesture !== 'zoom' &&
+        Math.abs(state.lastVelocity) > INERTIA_EPSILON) {
       const { gesture, target, lastVelocity, tiltPitch } = state;
-      // Camera stays in lookAt frame during inertia; exitLookAt() is called
-      // inside the inertia tick once velocity decays. Re-enabling SSC here is safe
-      // because there are no active touch events — the SSC zoom path that reads
-      // camera.position as ECEF is only triggered by live pinch gestures.
       startInertia(gesture, lastVelocity, target, tiltPitch);
-    } else {
-      // Reset the lookAt transform BEFORE re-enabling SSC. If SSC's per-frame
-      // update tick fires while the camera is in a non-IDENTITY (ENU local) frame,
-      // camera.position is not a valid ECEF point — cartesianToCartographic returns
-      // undefined and the subsequent .height access crashes.
-      exitLookAt();
     }
 
     state = { phase: 'idle' };
