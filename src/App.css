@@ -398,7 +398,7 @@ body {
   width: min(480px, 100%);
   padding: 4px 0 8px;
   z-index: 10;
-  border-radius: 0;
+  border-radius: 16px 16px 0 0;
   will-change: transform;
   transform: translateX(-50%) translateY(calc(100% + 20px));
   opacity: 0;
