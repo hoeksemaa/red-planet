@@ -81,6 +81,27 @@ export class UI {
   }
 
   private initSearch(): void {
+    const SEARCH_HINTS = [
+      'Rover',
+      'Satellite',
+      'Olympus Mons',
+      'Valles Marineris',
+      'Hellas Planitia',
+      'Noctis Labyrinthus',
+      'Planum Boreum',
+      'Kasei Valles',
+      'Cerberus Fossae',
+      'Jezero',
+      'Curiosity',
+      'Perseverance',
+      'Spirit',
+      'MAVEN',
+      'Mars Express',
+      'Hope',
+    ];
+    const hint = SEARCH_HINTS[Math.floor(Math.random() * SEARCH_HINTS.length)];
+    this.searchInput.placeholder = `Search for ${hint}…`;
+
     this.searchInput.addEventListener('focus', () => {
       this.showOverlay();
     });
@@ -237,6 +258,7 @@ export class UI {
     this.searchInput.value = entry.name;
     this.searchClear.style.display = 'block';
     this.hideResults();
+    this.hideOverlay();
     this.hideRoverInfo();
     this.hideRoverPhotoInfo();
     this.hideSatelliteInfo();
@@ -275,6 +297,7 @@ export class UI {
     (document.getElementById('rpDesc') as HTMLElement).textContent =
       meta?.description ?? '';
     this.hideFeatureInfo();
+    this.hideOverlay();
     this.hideRoverPhotoInfo();
     this.hideSatelliteInfo();
     this.roverPanel.style.display = 'block';
@@ -306,6 +329,7 @@ export class UI {
         : `${entry.periodMinutes} min`;
     (document.getElementById('spDesc') as HTMLElement).textContent = entry.description;
     this.hideFeatureInfo();
+    this.hideOverlay();
     this.hideRoverInfo();
     this.hideRoverPhotoInfo();
     this.satellitePanel.style.display = 'block';
@@ -347,6 +371,7 @@ export class UI {
     (document.getElementById('rphCaption') as HTMLElement).textContent = entry.caption;
 
     this.hideFeatureInfo();
+    this.hideOverlay();
     this.hideRoverInfo();
     this.hideSatelliteInfo();
     this.roverPhotoPanel.style.display = 'block';

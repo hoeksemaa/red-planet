@@ -67,9 +67,9 @@ renderer.register('satellites', satellites);
 
   function unifiedSearch(query: string): UnifiedSearchResult[] {
     const q = query.trim().toLowerCase();
-    if (q === 'rover')     return searchRovers('*');
-    if (q === 'satellite') return searchSatellites('*');
-    if (q === 'place')     return searchLabels('*');
+    if (q.length >= 3 && 'rover'.startsWith(q))     return searchRovers('*');
+    if (q.length >= 3 && 'satellite'.startsWith(q)) return searchSatellites('*');
+    if (q.length >= 3 && 'place'.startsWith(q))     return searchLabels('*');
     const rs = searchRovers(query);
     const ss = searchSatellites(query);
     const priority = [...rs, ...ss];
