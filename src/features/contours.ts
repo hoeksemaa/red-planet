@@ -60,22 +60,29 @@ function buildPrimitive(geojson: ContourGeoJSON, exaggeration: number): Cesium.P
 }
 
 export const contours: Feature = {
-  init(viewer: Cesium.Viewer) {
+  init(viewer: Cesium.Viewer): Promise<void> {
     viewerRef = viewer;
     prefetch();
-    geojsonPromise!
-      .then((geojson: ContourGeoJSON) => {
-        cachedGeojson = geojson;
-        // Only build the primitive for the currently-active exaggeration.
-        // The other is built lazily in apply() if the user ever switches.
-        const activeScale = pendingState?.exaggeration ?? EXAGGERATION_SCALE;
-        const primitive = buildPrimitive(geojson, activeScale);
-        viewer.scene.primitives.add(primitive);
-        primitives.set(activeScale, primitive);
-        initialized = true;
-        if (pendingState) contours.apply(pendingState);
-      })
-      .catch((e) => console.error('[contours] Failed to load:', e));
+    return new Promise<void>((resolve) => {
+      geojsonPromise!
+        .then((geojson: ContourGeoJSON) => {
+          cachedGeojson = geojson;
+          // Only build the primitive for the currently-active exaggeration.
+          // The other is built lazily in apply() if the user ever switches.
+          const activeScale = pendingState?.exaggeration ?? EXAGGERATION_SCALE;
+          const primitive = buildPrimitive(geojson, activeScale);
+          viewer.scene.primitives.add(primitive);
+          primitives.set(activeScale, primitive);
+          initialized = true;
+          if (pendingState) contours.apply(pendingState);
+          // Cesium compiles async primitives over multiple frames; wait until
+          // geometry is GPU-ready before signalling init complete.
+          const unsub = viewer.scene.postRender.addEventListener(() => {
+            if (primitive.ready) { unsub(); resolve(); }
+          });
+        })
+        .catch((e) => { console.error('[contours] Failed to load:', e); resolve(); });
+    });
   },
 
   apply(state: AppState) {
