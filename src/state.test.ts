@@ -11,8 +11,8 @@ describe('DEFAULT_STATE', () => {
     expect(DEFAULT_STATE.exaggeration).toBe(1);
   });
 
-  it('starts with terraformed imagery', () => {
-    expect(DEFAULT_STATE.imagery).toBe('terraformed');
+  it('starts with real imagery (Today view)', () => {
+    expect(DEFAULT_STATE.imagery).toBe('real');
   });
 
   describe('layer defaults', () => {
@@ -20,12 +20,12 @@ describe('DEFAULT_STATE', () => {
       expect(DEFAULT_STATE.layers.labels).toBe(true);
     });
 
-    it('rovers are on by default', () => {
-      expect(DEFAULT_STATE.layers.rovers).toBe(true);
+    it('rovers are off by default', () => {
+      expect(DEFAULT_STATE.layers.rovers).toBe(false);
     });
 
-    it('contours are off by default (expensive, opt-in)', () => {
-      expect(DEFAULT_STATE.layers.contours).toBe(false);
+    it('contours are on by default', () => {
+      expect(DEFAULT_STATE.layers.contours).toBe(true);
     });
 
     it('graticule is off by default', () => {

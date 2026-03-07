@@ -12,6 +12,10 @@ let viewer: Cesium.Viewer;
 let lastState: AppState;
 const registry = new LayerRegistry();
 
+let _tilesLoadedResolve!: () => void;
+const _tilesLoaded = new Promise<void>(r => { _tilesLoadedResolve = r; });
+export function onceFirstTilesLoaded(): Promise<void> { return _tilesLoaded; }
+
 let pickCallback: ((featureId: string, result: unknown) => void) | null = null;
 let pickMissCallback: (() => void) | null = null;
 
@@ -57,6 +61,7 @@ export async function init(initialState: AppState): Promise<void> {
       (window as any).__firstTileLoad = performance.now();
       mark('first-tile-load');
       report();
+      _tilesLoadedResolve();
       removePostRenderListener();
     }
   });

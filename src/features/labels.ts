@@ -16,6 +16,7 @@ interface LabelEntry {
 let labelCollection: Cesium.LabelCollection;
 let labelData: LabelEntry[] = [];
 let hoveredLabel: Cesium.Label | null = null;
+let cachedState: AppState | null = null;
 
 // Label visibility: fade in when camera is within `diameterKm * SCALE` meters.
 // Floor ensures tiny features still appear at close zoom.
@@ -51,6 +52,7 @@ export const labels: Feature = {
       document.fonts.load('600 14px "Geist Mono"'),
     ]).then(([nomenclatureGeoJSON]) => {
     labelCollection = viewer.scene.primitives.add(new Cesium.LabelCollection({ scene: viewer.scene }));
+    if (cachedState) labelCollection.show = cachedState.layers.labels;
     labelData = [];
 
     for (const feature of nomenclatureGeoJSON.features) {
@@ -99,6 +101,7 @@ export const labels: Feature = {
   },
 
   apply(state: AppState) {
+    cachedState = state;
     if (labelCollection) labelCollection.show = state.layers.labels;
   },
 
