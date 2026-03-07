@@ -241,20 +241,6 @@ export const ROVER_META: Record<string, { description: string; imageUrl: string 
   },
 };
 
-// Limb cutoff: pins/icons snap off before reaching the perceived planet edge.
-const MARS_RADIUS = 3_389_500;
-const LIMB_BUFFER = 0.1;
-const _rN = new Cesium.Cartesian3();
-const _rC = new Cesium.Cartesian3();
-
-function limbAlpha(position: Cesium.Cartesian3, cameraWC: Cesium.Cartesian3): number {
-  const camDist = Cesium.Cartesian3.magnitude(cameraWC);
-  const horizonDot = MARS_RADIUS / camDist;
-  Cesium.Cartesian3.normalize(position, _rN);
-  Cesium.Cartesian3.normalize(cameraWC, _rC);
-  const dot = Cesium.Cartesian3.dot(_rN, _rC);
-  return dot > horizonDot + LIMB_BUFFER ? 1 : 0;
-}
 
 // Module-level state
 let traversePrimitive: Cesium.GroundPolylinePrimitive;
@@ -336,24 +322,6 @@ export const rovers: Feature = {
         });
         photoData.push({ pin, kind: 'photo', ...photo });
       }
-
-      // Per-frame limb fade: hide pins/icons before they reach the perceived planet edge.
-      viewer.scene.preRender.addEventListener(() => {
-        if (!pinCollection?.show) return;
-        const camWC = viewer.camera.positionWC;
-        for (const entry of pinData) {
-          const alpha = limbAlpha(entry.pin.position, camWC);
-          if (Math.abs((entry.pin.color?.alpha ?? 1) - alpha) > 0.01) {
-            entry.pin.color = Cesium.Color.WHITE.withAlpha(alpha);
-          }
-        }
-        for (const entry of photoData) {
-          const alpha = limbAlpha(entry.pin.position, camWC);
-          if (Math.abs((entry.pin.color?.alpha ?? 1) - alpha) > 0.01) {
-            entry.pin.color = Cesium.Color.WHITE.withAlpha(alpha);
-          }
-        }
-      });
 
       mark('rovers-ready');
     }).catch((e) => console.error('[rovers] fetch failed:', e));
