@@ -49,15 +49,16 @@ export async function init(initialState: AppState): Promise<void> {
   });
   mark('viewer-created');
 
-  // One-shot: set __firstTileLoad the first frame after tiles finish loading.
+  // One-shot: resolve _tilesLoaded once tiles are painted AND all features are GPU-ready.
   // Polls globe.tilesLoaded via postRender — more reliable than tileLoadProgressEvent
   // in headless/SwiftShader where the progress event may never reach 0.
   // tilesEverBusy guards against firing before any tiles are actually requested.
   let tilesEverBusy = false;
+  let featuresReady = false;
   const removePostRenderListener = viewer.scene.postRender.addEventListener(() => {
     if (!viewer.scene.globe.tilesLoaded) {
       tilesEverBusy = true;
-    } else if (tilesEverBusy) {
+    } else if (tilesEverBusy && featuresReady) {
       (window as any).__firstTileLoad = performance.now();
       mark('first-tile-load');
       report();
@@ -126,8 +127,8 @@ export async function init(initialState: AppState): Promise<void> {
   apply(initialState);
 
   registry.initAll(viewer)
-    .then(() => apply(lastState))
-    .catch((e: unknown) => console.error('[renderer] Init failed:', e));
+    .then(() => { featuresReady = true; apply(lastState); })
+    .catch((e: unknown) => { console.error('[renderer] Init failed:', e); featuresReady = true; });
 }
 
 export function apply(state: AppState): void {
