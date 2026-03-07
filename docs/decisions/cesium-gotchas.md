@@ -98,6 +98,38 @@ camera.lookAtTransform(Transforms.eastNorthUpToFixedFrame(pivot));
 camera.lookAt(pivot, new HeadingPitchRange(camera.heading - dAngle, camera.pitch, range));
 ```
 
+## `Label.fillColor` getter returns an internal reference, not a copy
+
+Reading `const before = label.fillColor` gives you a reference to Cesium's internal
+`Color` object. When you subsequently set `label.fillColor = newColor`, Cesium copies
+the new values *into that same internal object* rather than replacing the reference.
+So `before` now reflects the new color — any "snapshot before the set" captured this
+way is invalid.
+
+```ts
+const before = label.fillColor;           // reference to internal Color
+label.fillColor = Color.BLUE;             // mutates the internal Color in-place
+console.log(before.red);                  // 0 — looks like "before" was always blue!
+```
+
+If you need the actual previous color, clone it first:
+```ts
+const before = label.fillColor.clone();
+```
+
+## `translucencyByDistance` and manual `fillColor.alpha` management conflict
+
+`translucencyByDistance` is a Cesium-native fade applied *on top of* `fillColor` as a
+separate multiplier. It does not touch `fillColor` at all, leaving it free for direct
+mutation (e.g. hover highlight: white → blue).
+
+If you instead manage fade manually in a `preRender` loop by writing `fillColor.alpha`
+each frame, you now have two writers on `fillColor`: the preRender loop and any hover
+logic. The loop will overwrite hover colors unless it's also made aware of hover state.
+
+**Prefer `translucencyByDistance` for distance-based fading** — it's zero-conflict,
+GPU-handled, and leaves `fillColor.rgb` available for highlight state.
+
 ## Promise.all in feature init is fragile
 - One feature throwing kills all features silently
 - Globe + imagery still render (set up before initAll), so app looks "mostly working"

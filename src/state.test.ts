@@ -11,8 +11,8 @@ describe('DEFAULT_STATE', () => {
     expect(DEFAULT_STATE.exaggeration).toBe(1);
   });
 
-  it('starts with terraformed imagery', () => {
-    expect(DEFAULT_STATE.imagery).toBe('terraformed');
+  it('starts with real imagery (Today view)', () => {
+    expect(DEFAULT_STATE.imagery).toBe('real');
   });
 
   describe('layer defaults', () => {

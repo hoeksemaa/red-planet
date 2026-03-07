@@ -14,7 +14,10 @@
 
 <body>
     <div id="cesiumContainer"></div>
-    <div id="rp-title">EXPLORE MARS!</div>
+    <div id="rp-title">
+        EXPLORE MARS!
+        <a id="rp-learn-more" href="https://hoeksemaa.github.io/2026/03/06/explore-mars.html" target="_blank" rel="noopener">Learn More</a>
+    </div>
 
     <div id="searchOverlay"></div>
     <div id="searchWrap" class="rp-card">
@@ -81,8 +84,8 @@
                 <span>Terraformed</span>
             </button>
             <button class="layer-btn" id="layerBtnReal">
-                <img src="" alt="Current View" />
-                <span>Current View</span>
+                <img src="" alt="Today" />
+                <span>Today</span>
             </button>
         </div>
         <div class="layers-divider"></div>
@@ -113,6 +116,13 @@
                 <span>Satellites</span>
             </button>
         </div>
+    </div>
+
+    <div id="loadingScreen">
+      <span id="loadingText">LOADING...</span>
+      <div id="loadingBarTrack">
+        <div id="loadingBar"></div>
+      </div>
     </div>
 
     <script type="module" src="/src/main.ts"></script>

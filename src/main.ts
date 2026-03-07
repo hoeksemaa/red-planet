@@ -40,6 +40,12 @@ renderer.register('rovers',     rovers);
 renderer.register('satellites', satellites);
 
 (async () => {
+  const loadingScreen = document.getElementById('loadingScreen')!;
+  const bar = document.getElementById('loadingBar') as HTMLElement;
+
+  // Kick bar to 75% — CSS transition (2s ease-out) animates it smoothly while init happens
+  requestAnimationFrame(() => { bar.style.width = '75%'; });
+
   // perf: terrain downloads in background and swaps in silently (PERF-4)
   // globe appears immediately on flat ellipsoid, real MOLA terrain arrives ~seconds later
   fetch(TERRAIN_DATA_URL)
@@ -117,4 +123,10 @@ renderer.register('satellites', satellites);
     ui.hideRoverPhotoInfo();
     ui.hideSatelliteInfo();
   });
+
+  // Complete loading screen once tiles are actually rendered
+  await renderer.onceFirstTilesLoaded();
+  bar.style.transition = 'width 0.4s ease';
+  bar.style.width = '100%';
+  setTimeout(() => loadingScreen.classList.add('is-done'), 400);
 })().catch((e) => console.error('[App] Init failed:', e));

@@ -13,7 +13,7 @@ export interface AppState {
 
 export const DEFAULT_STATE: AppState = {
   exaggeration: 100,
-  imagery: 'terraformed',
+  imagery: 'real',
   layers: {
     contours: true,
     graticule: false,
